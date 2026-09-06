@@ -73,6 +73,15 @@ const colorButton =
 const leaveRoomButton =
     document.getElementById("leaveRoomButton");
 
+const playerList =
+    document.getElementById("playerList");
+
+const startGameButton =
+    document.getElementById("startGameButton");
+
+const waitingForHost =
+    document.getElementById("waitingForHost");
+
 
 /*
  * =========================
