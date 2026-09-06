@@ -878,6 +878,12 @@ socket.on(
         currentGameState =
             data.state || "lobby";
 
+        if (currentGameState === "roundEnd") {
+            showRoundCountdown(data.roundEndAt);
+        } else {
+            roundCountdown.style.display = "none";
+        }
+
         currentHost =
             data.host || null;
 
@@ -1316,6 +1322,32 @@ function movementLoop(timestamp) {
 }
 
 requestAnimationFrame(movementLoop);
+
+function showRoundCountdown(roundEndAt) {
+    if (!roundEndAt) return;
+
+    roundCountdown.style.display = "block";
+
+    function updateRoundCountdown() {
+        if (currentGameState !== "roundEnd") {
+            roundCountdown.style.display = "none";
+            return;
+        }
+
+        const remaining = Math.max(
+            0,
+            Math.ceil((roundEndAt - Date.now()) / 1000)
+        );
+
+        roundCountdownNumber.textContent = remaining;
+
+        if (remaining > 0) {
+            setTimeout(updateRoundCountdown, 100);
+        }
+    }
+
+    updateRoundCountdown();
+}
 
 /*
  * =========================
