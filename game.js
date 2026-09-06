@@ -1178,241 +1178,77 @@ window.addEventListener(
 
 const keys = {};
 
+document.addEventListener("keydown", (e) => {
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
 
-window.addEventListener(
-    "keydown",
-    (e) => {
+    const key = e.key.toLowerCase();
 
-        if (
-            e.target.tagName ===
-                "INPUT" ||
-            e.target.tagName ===
-                "TEXTAREA"
-        ) {
-
-            return;
-
-        }
-
-
-        if (!e.key) {
-            return;
-        }
-
-
-        const key =
-            e.key.toLowerCase();
-
-
-        if (
-            [
-                "w",
-                "a",
-                "s",
-                "d",
-                "arrowup",
-                "arrowdown",
-                "arrowleft",
-                "arrowright"
-            ].includes(key)
-        ) {
-
-            e.preventDefault();
-
-            keys[key] =
-                true;
-
-        }
-
+    if (key === "w" || e.key === "arrowup") {
+        keys.w = true;
+        e.preventDefault();
     }
-);
 
-
-window.addEventListener(
-    "keyup",
-    (e) => {
-
-        if (!e.key) {
-            return;
-        }
-
-
-        keys[
-            e.key.toLowerCase()
-        ] = false;
-
+    if (key === "a" || e.key === "arrowleft") {
+        keys.a = true;
+        e.preventDefault();
     }
-);
 
+    if (key === "s" || e.key === "arrowdown") {
+        keys.s = true;
+        e.preventDefault();
+    }
 
-/*
- * =========================
- * MOVEMENT LOOP
- * =========================
- */
+    if (key === "d" || e.key === "arrowright") {
+        keys.d = true;
+        e.preventDefault();
+    }
+});
+
+document.addEventListener("keyup", (e) => {
+    const key = e.key.toLowerCase();
+
+    if (key === "w" || e.key === "arrowup") keys.w = false;
+    if (key === "a" || e.key === "arrowleft") keys.a = false;
+    if (key === "s" || e.key === "arrowdown") keys.s = false;
+    if (key === "d" || e.key === "arrowright") keys.d = false;
+});
 
 function movementLoop() {
-
     if (
         socket &&
         socket.connected &&
         myPlayerId &&
-        players[myPlayerId]
+        players[myPlayerId] &&
+        !players[myPlayerId].dead &&
+        !players[myPlayerId].spectating
     ) {
+        let x = 0;
+        let y = 0;
 
-        /*
-         * Spectators cannot move.
-         */
+        // Fixed world directions
+        if (keys.w) y -= 1;
+        if (keys.s) y += 1;
+        if (keys.a) x -= 1;
+        if (keys.d) x += 1;
 
-        if (
-            players[myPlayerId].spectating
-        ) {
+        // Normalize diagonal movement
+        if (x !== 0 || y !== 0) {
+            const length = Math.sqrt(x * x + y * y);
 
-            requestAnimationFrame(
-                movementLoop
-            );
+            x /= length;
+            y /= length;
 
-            return;
-
+            socket.emit("move", {
+                x: x * speed,
+                y: y * speed
+            });
         }
-
-
-        let forward = 0;
-        let strafe = 0;
-
-
-        /*
-         * FORWARD / BACKWARD
-         */
-
-        if (
-            keys["w"] ||
-            keys["arrowup"]
-        ) {
-
-            forward += 1;
-
-        }
-
-
-        if (
-            keys["s"] ||
-            keys["arrowdown"]
-        ) {
-
-            forward -= 1;
-
-        }
-
-
-        /*
-         * LEFT / RIGHT
-         */
-
-        if (
-            keys["a"] ||
-            keys["arrowleft"]
-        ) {
-
-            strafe -= 1;
-
-        }
-
-
-        if (
-            keys["d"] ||
-            keys["arrowright"]
-        ) {
-
-            strafe += 1;
-
-        }
-
-
-        /*
-         * Convert movement using angle.
-         */
-
-        if (
-            forward !== 0 ||
-            strafe !== 0
-        ) {
-
-            const angle =
-                myAngle;
-
-
-            let x =
-                Math.cos(angle) *
-                forward
-                +
-                Math.cos(
-                    angle +
-                    Math.PI / 2
-                ) *
-                strafe;
-
-
-            let y =
-                Math.sin(angle) *
-                forward
-                +
-                Math.sin(
-                    angle +
-                    Math.PI / 2
-                ) *
-                strafe;
-
-
-            /*
-             * Normalize diagonal movement.
-             */
-
-            const length =
-                Math.sqrt(
-                    x * x +
-                    y * y
-                );
-
-
-            if (
-                length > 0
-            ) {
-
-                x /=
-                    length;
-
-                y /=
-                    length;
-
-            }
-
-
-            socket.emit(
-                "move",
-                {
-                    x:
-                        x * speed,
-
-                    y:
-                        y * speed
-                }
-            );
-
-        }
-
     }
 
-
-    requestAnimationFrame(
-        movementLoop
-    );
-
+    requestAnimationFrame(movementLoop);
 }
 
-
 movementLoop();
-
 
 /*
  * =========================
