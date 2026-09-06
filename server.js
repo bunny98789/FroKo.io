@@ -692,6 +692,7 @@ for (
         false;
 
     resetPlayerForRound(
+        room,
         player
     );
 
@@ -2363,11 +2364,6 @@ io.on(
 
                 }
 
-                io.to(roomCode).emit(
-                    "updatePlayers",
-                    room.players
-                );
-
             }
         );
 
@@ -2425,11 +2421,6 @@ io.on(
 
                 player.angle =
                     data.angle;
-
-                io.to(roomCode).emit(
-                    "updatePlayers",
-                    room.players
-                );
 
             }
         );
