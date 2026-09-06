@@ -107,7 +107,7 @@ let mouseY =
 
 let myAngle = 0;
 
-const speed = 8;
+const speed = 10;
 
 let shooting = false;
 
