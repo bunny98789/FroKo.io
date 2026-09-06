@@ -2248,6 +2248,7 @@ io.on(
         socket.on(
             "move",
             (data) => {
+                console.log("MOVE", Date.now());
 
                 const roomCode =
                     socket.roomCode;
