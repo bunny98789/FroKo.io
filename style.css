@@ -522,3 +522,23 @@ button:hover {
 #leaveRoomButton:hover {
     background: #aa2222;
 }
+
+#performanceMenu {
+    position: absolute;
+    top: 10px;
+    left: calc(100% + 15px);
+
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+
+    padding: 10px 14px;
+    border-radius: 8px;
+
+    font-family: monospace;
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    z-index: 1000;
+    pointer-events: none;
+}
