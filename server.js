@@ -629,48 +629,48 @@ function startCountdown(
     room.roundEndAt =
         null;
 
-    player.participatedThisRound = 
-        false;
-
     room.obstacles =
         generateObstacles();
 
     room.bullets =
         {};
 
-    // ====================================
-    // Prepare players
-    // ====================================
+   // ====================================
+// Prepare players
+// ====================================
 
-    for (
-        const playerId in room.players
-    ) {
+for (
+    const playerId in room.players
+) {
 
-        const player =
-            room.players[playerId];
+    const player =
+        room.players[playerId];
 
-        if (!player) {
-            continue;
-        }
-
-        // Players who were already in the room
-        // participate in the new round.
-
-        // Players who joined during the previous
-        // active round now become eligible.
-
-        player.joinedDuringGame =
-            false;
-
-        resetPlayerForRound(
-            player
-        );
-
-        player.dead =
-            false;
-
+    if (!player) {
+        continue;
     }
 
+    // Players who were already in the room
+    // participate in the new round.
+
+    // Players who joined during the previous
+    // active round now become eligible.
+
+    player.joinedDuringGame =
+        false;
+
+    player.participatedThisRound =
+        false;
+
+    resetPlayerForRound(
+        player
+    );
+
+    player.dead =
+        false;
+
+}
+    
     console.log(
         `Room ${roomCode}: Round ${nextRound} countdown`
     );
