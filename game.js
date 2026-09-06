@@ -1863,6 +1863,61 @@ window.addEventListener(
 
 }
 
+let fps = 0;
+let fpsFrames = 0;
+let fpsLastTime = performance.now();
+
+function updateFPS(timestamp) {
+
+    fpsFrames++;
+
+    if (timestamp - fpsLastTime >= 1000) {
+
+        fps = fpsFrames;
+        fpsFrames = 0;
+        fpsLastTime = timestamp;
+
+        const fpsDisplay =
+            document.getElementById("fpsDisplay");
+
+        if (fpsDisplay) {
+            fpsDisplay.textContent = fps;
+        }
+
+    }
+
+    requestAnimationFrame(updateFPS);
+}
+
+requestAnimationFrame(updateFPS);
+
+setInterval(() => {
+
+    if (!socket || !socket.connected) {
+        return;
+    }
+
+    const start = performance.now();
+
+    socket.emit("pingCheck");
+
+    socket.once("pongCheck", () => {
+
+        const ping =
+            Math.round(
+                performance.now() - start
+            );
+
+        const pingDisplay =
+            document.getElementById("pingDisplay");
+
+        if (pingDisplay) {
+            pingDisplay.textContent = ping;
+        }
+
+    });
+
+}, 1000);
 
 /*
  * =========================
