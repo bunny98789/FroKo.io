@@ -2590,6 +2590,25 @@ io.on(
     }
 );
 
+setInterval(() => {
+
+    for (const roomCode in rooms) {
+
+        const room = rooms[roomCode];
+
+        if (
+            room.gameState === "playing" ||
+            room.gameState === "suddenDeath"
+        ) {
+            io.to(roomCode).emit(
+                "updateBullets",
+                room.bullets
+            );
+        }
+
+    }
+
+}, 50);
 
 // ========================================
 // BULLET LOOP
@@ -2919,10 +2938,6 @@ setInterval(
                             delete room.bullets[
                                 bulletId
                             ];
-
-                            sendGameState(
-                                roomCode
-                            );
 
                             // Check whether this
                             // ends the round
