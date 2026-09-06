@@ -833,21 +833,17 @@ function connectToServer() {
      * =========================
      */
 
-    socket.on(
-    "updatePlayers",
-    (newPlayers) => {
+   socket.on("updatePlayers", (newPlayers) => {
+    players = newPlayers;
 
-        players =
-            newPlayers;
-
+    // Only update the lobby UI while actually in the lobby
+    if (currentGameState === "lobby") {
         updatePlayerList();
-
         updateLobbyControls();
-
-        updateHUD();
-
     }
-);
+
+    updateHUD();
+});
 
     socket.on(
         "updateBullets",
