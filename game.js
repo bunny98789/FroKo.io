@@ -1272,7 +1272,7 @@ document.addEventListener("keyup", (e) => {
 });
 
 let lastMoveTime = 0;
-const MOVE_INTERVAL = 16; // 60 movement updates per second
+const MOVE_INTERVAL = 25; // 40 movement updates per second
 
 function movementLoop(timestamp) {
 
