@@ -1,6 +1,6 @@
 // ========================================
-// FREE MULTIPLAYER GAME - SERVER
-// ROOMS + USERNAMES + SPECTATING + COLORS
+// FROKO.IO - MULTIPLAYER GAME SERVER
+// ROOMS + ROUNDS + STATS + SUDDEN DEATH
 // ========================================
 
 const http = require("http");
@@ -16,6 +16,11 @@ const io = new Server(server, {
 
 const rooms = {};
 
+
+// ========================================
+// GAME SETTINGS
+// ========================================
+
 const BULLET_SPEED = 10;
 const BULLET_RADIUS = 5;
 const BULLET_LIFETIME = 3000;
@@ -25,6 +30,16 @@ const BULLET_DAMAGE = 25;
 
 const MAX_AMMO = 6;
 const RELOAD_TIME = 2000;
+
+const TOTAL_ROUNDS = 5;
+
+const COUNTDOWN_TIME = 3000;
+const ROUND_END_TIME = 3000;
+const GAME_END_TIME = 10000;
+
+const PLAYER_START_HEALTH = 100;
+
+const SUDDEN_DEATH_HEALTH = 1;
 
 
 // ========================================
@@ -49,6 +64,7 @@ function getRandomColor() {
             Math.random() * COLORS.length
         )
     ];
+
 }
 
 
@@ -74,49 +90,170 @@ function createRoomCode() {
     }
 
     return code;
-}
-
-
-// ========================================
-// SEND ROOM STATE
-// ========================================
-
-function sendGameState(roomCode) {
-
-    const room = rooms[roomCode];
-
-    if (!room) return;
-
-
-    io.to(roomCode).emit(
-        "updatePlayers",
-        room.players
-    );
-
-
-    io.to(roomCode).emit(
-        "updateBullets",
-        room.bullets
-    );
 
 }
 
 
 // ========================================
-// CREATE PLAYER
+// OBSTACLES
 // ========================================
 
-function createPlayer(socket, username) {
+function generateObstacles() {
+
+    const obstacles = [];
+
+    const obstacleCount = 8;
+
+    for (let i = 0; i < obstacleCount; i++) {
+
+        const width =
+            40 +
+            Math.random() * 70;
+
+        const height =
+            30 +
+            Math.random() * 60;
+
+        const x =
+            30 +
+            Math.random() *
+            (600 - width - 60);
+
+        const y =
+            30 +
+            Math.random() *
+            (400 - height - 60);
+
+        obstacles.push({
+
+            x: x,
+            y: y,
+
+            width: width,
+            height: height
+
+        });
+
+    }
+
+    return obstacles;
+
+}
+
+
+// ========================================
+// COLLISION HELPERS
+// ========================================
+
+function circleIntersectsRectangle(
+    circleX,
+    circleY,
+    radius,
+    rectangle
+) {
+
+    const closestX =
+        Math.max(
+            rectangle.x,
+            Math.min(
+                circleX,
+                rectangle.x +
+                rectangle.width
+            )
+        );
+
+    const closestY =
+        Math.max(
+            rectangle.y,
+            Math.min(
+                circleY,
+                rectangle.y +
+                rectangle.height
+            )
+        );
+
+    const dx =
+        circleX -
+        closestX;
+
+    const dy =
+        circleY -
+        closestY;
+
+    return (
+        dx * dx +
+        dy * dy
+        <=
+        radius * radius
+    );
+
+}
+
+
+function bulletIntersectsRectangle(
+    bullet,
+    rectangle
+) {
+
+    const closestX =
+        Math.max(
+            rectangle.x,
+            Math.min(
+                bullet.x,
+                rectangle.x +
+                rectangle.width
+            )
+        );
+
+    const closestY =
+        Math.max(
+            rectangle.y,
+            Math.min(
+                bullet.y,
+                rectangle.y +
+                rectangle.height
+            )
+        );
+
+    const dx =
+        bullet.x -
+        closestX;
+
+    const dy =
+        bullet.y -
+        closestY;
+
+    return (
+        dx * dx +
+        dy * dy
+        <=
+        BULLET_RADIUS *
+        BULLET_RADIUS
+    );
+
+}
+
+
+// ========================================
+// PLAYER CREATION
+// ========================================
+
+function createPlayer(
+    socket,
+    username
+) {
 
     return {
 
         x:
             50 +
-            Math.random() * 500,
+            Math.random() *
+            500,
 
         y:
             50 +
-            Math.random() * 300,
+            Math.random() *
+            300,
 
         angle: 0,
 
@@ -126,20 +263,1182 @@ function createPlayer(socket, username) {
         username:
             username,
 
-        health: 100,
+        health:
+            PLAYER_START_HEALTH,
 
         ammo:
             MAX_AMMO,
 
-        reloading: false,
+        reloading:
+            false,
 
-        dead: false,
+        dead:
+            true,
 
-        spectating: false,
+        spectating:
+            false,
 
-        round: 1
+        round:
+            1,
+
+        // ================================
+        // STATS
+        // ================================
+
+        kills:
+            0,
+
+        deaths:
+            0,
+
+        roundWins:
+            0,
+
+        survivalTime:
+            0,
+
+        roundsParticipated:
+            0,
+
+        currentRoundStart:
+            null,
+
+        // Used when joining during a game
+        joinedDuringGame:
+            false
 
     };
+
+}
+
+
+// ========================================
+// CREATE ROOM
+// ========================================
+
+function createRoom() {
+
+    let roomCode =
+        createRoomCode();
+
+    while (rooms[roomCode]) {
+
+        roomCode =
+            createRoomCode();
+
+    }
+
+    rooms[roomCode] = {
+
+        players: {},
+
+        bullets: {},
+
+        nextBulletId: 1,
+
+        host: null,
+
+        settings: {
+
+            maxPlayers: 8,
+
+            rounds: TOTAL_ROUNDS
+
+        },
+
+        // ================================
+        // GAME STATE
+        // ================================
+
+        gameState:
+            "lobby",
+
+        currentRound:
+            0,
+
+        roundStartTime:
+            null,
+
+        countdownEndsAt:
+            null,
+
+        roundEndAt:
+            null,
+
+        gameEndAt:
+            null,
+
+        obstacles:
+            [],
+
+        gameToken:
+            0
+
+    };
+
+    return roomCode;
+
+}
+
+
+// ========================================
+// SEND COMPLETE ROOM STATE
+// ========================================
+
+function sendGameState(roomCode) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    io.to(roomCode).emit(
+        "updatePlayers",
+        room.players
+    );
+
+    io.to(roomCode).emit(
+        "updateBullets",
+        room.bullets
+    );
+
+    io.to(roomCode).emit(
+        "gameState",
+        {
+
+            state:
+                room.gameState,
+
+            currentRound:
+                room.currentRound,
+
+            totalRounds:
+                room.settings.rounds,
+
+            host:
+                room.host,
+
+            countdownEndsAt:
+                room.countdownEndsAt,
+
+            roundEndAt:
+                room.roundEndAt,
+
+            gameEndAt:
+                room.gameEndAt,
+
+            obstacles:
+                room.obstacles
+
+        }
+    );
+
+}
+
+
+// ========================================
+// SEND GAME STATE ONLY
+// ========================================
+
+function sendRoomState(roomCode) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    io.to(roomCode).emit(
+        "gameState",
+        {
+
+            state:
+                room.gameState,
+
+            currentRound:
+                room.currentRound,
+
+            totalRounds:
+                room.settings.rounds,
+
+            host:
+                room.host,
+
+            countdownEndsAt:
+                room.countdownEndsAt,
+
+            roundEndAt:
+                room.roundEndAt,
+
+            gameEndAt:
+                room.gameEndAt,
+
+            obstacles:
+                room.obstacles
+
+        }
+    );
+
+}
+
+
+// ========================================
+// RESET PLAYER FOR ROUND
+// ========================================
+
+function resetPlayerForRound(
+    player
+) {
+
+    player.x =
+        50 +
+        Math.random() *
+        500;
+
+    player.y =
+        50 +
+        Math.random() *
+        300;
+
+    player.angle =
+        0;
+
+    player.health =
+        PLAYER_START_HEALTH;
+
+    player.ammo =
+        MAX_AMMO;
+
+    player.reloading =
+        false;
+
+    player.dead =
+        false;
+
+    player.currentRoundStart =
+        Date.now();
+
+}
+
+
+// ========================================
+// GET ACTIVE PLAYERS
+// ========================================
+
+function getActivePlayers(room) {
+
+    return Object.keys(
+        room.players
+    )
+        .map(
+            id =>
+                room.players[id]
+        )
+        .filter(
+            player =>
+                player &&
+                !player.spectating
+        );
+
+}
+
+
+// ========================================
+// GET ALIVE PLAYERS
+// ========================================
+
+function getAlivePlayers(room) {
+
+    return getActivePlayers(room)
+        .filter(
+            player =>
+                !player.dead
+        );
+
+}
+
+
+// ========================================
+// RECORD SURVIVAL TIME
+// ========================================
+
+function recordSurvivalTime(
+    player
+) {
+
+    if (
+        player.currentRoundStart ===
+        null
+    ) {
+
+        return;
+
+    }
+
+    const elapsed =
+        Date.now() -
+        player.currentRoundStart;
+
+    player.survivalTime +=
+        Math.max(
+            0,
+            elapsed
+        );
+
+    player.currentRoundStart =
+        null;
+
+}
+
+
+// ========================================
+// START COUNTDOWN
+// ========================================
+
+function startCountdown(
+    roomCode,
+    nextRound
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    room.gameToken++;
+
+    const token =
+        room.gameToken;
+
+    room.gameState =
+        "countdown";
+
+    room.currentRound =
+        nextRound;
+
+    room.countdownEndsAt =
+        Date.now() +
+        COUNTDOWN_TIME;
+
+    room.roundEndAt =
+        null;
+
+    room.obstacles =
+        generateObstacles();
+
+    room.bullets =
+        {};
+
+    // ====================================
+    // Prepare players
+    // ====================================
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        // Players who were already in the room
+        // participate in the new round.
+
+        // Players who joined during the previous
+        // active round now become eligible.
+
+        player.joinedDuringGame =
+            false;
+
+        resetPlayerForRound(
+            player
+        );
+
+        player.dead =
+            false;
+
+    }
+
+    console.log(
+        `Room ${roomCode}: Round ${nextRound} countdown`
+    );
+
+    sendGameState(roomCode);
+
+    setTimeout(() => {
+
+        const currentRoom =
+            rooms[roomCode];
+
+        if (!currentRoom) {
+            return;
+        }
+
+        if (
+            currentRoom.gameToken !==
+            token
+        ) {
+            return;
+        }
+
+        if (
+            currentRoom.gameState !==
+            "countdown"
+        ) {
+            return;
+        }
+
+        beginRound(
+            roomCode,
+            token
+        );
+
+    }, COUNTDOWN_TIME);
+
+}
+
+
+// ========================================
+// BEGIN ROUND
+// ========================================
+
+function beginRound(
+    roomCode,
+    token
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    if (
+        room.gameToken !==
+        token
+    ) {
+        return;
+    }
+
+    room.gameState =
+        "playing";
+
+    room.roundStartTime =
+        Date.now();
+
+    room.countdownEndsAt =
+        null;
+
+    room.roundEndAt =
+        null;
+
+    // ====================================
+    // Count participants
+    // ====================================
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        if (
+            !player.spectating
+        ) {
+
+            player.roundsParticipated++;
+
+            player.currentRoundStart =
+                Date.now();
+
+        }
+
+    }
+
+    console.log(
+        `Room ${roomCode}: Round ${room.currentRound} started`
+    );
+
+    sendGameState(roomCode);
+
+    checkRoundEnd(
+        roomCode
+    );
+
+}
+
+
+// ========================================
+// CHECK ROUND END
+// ========================================
+
+function checkRoundEnd(
+    roomCode
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    if (
+        room.gameState !==
+        "playing" &&
+        room.gameState !==
+        "suddenDeath"
+    ) {
+
+        return;
+
+    }
+
+    const activePlayers =
+        getActivePlayers(room);
+
+    const alivePlayers =
+        getAlivePlayers(room);
+
+    // ====================================
+    // No players
+    // ====================================
+
+    if (
+        activePlayers.length === 0
+    ) {
+
+        return;
+
+    }
+
+    // ====================================
+    // One player alive
+    // ====================================
+
+    if (
+        alivePlayers.length === 1
+    ) {
+
+        finishRound(
+            roomCode,
+            alivePlayers[0]
+        );
+
+        return;
+
+    }
+
+    // ====================================
+    // Everyone died
+    // ====================================
+
+    if (
+        alivePlayers.length === 0
+    ) {
+
+        finishRound(
+            roomCode,
+            null
+        );
+
+    }
+
+}
+
+
+// ========================================
+// FINISH ROUND
+// ========================================
+
+function finishRound(
+    roomCode,
+    winner
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    if (
+        room.gameState !==
+        "playing" &&
+        room.gameState !==
+        "suddenDeath"
+    ) {
+
+        return;
+
+    }
+
+    room.gameToken++;
+
+    const token =
+        room.gameToken;
+
+    room.gameState =
+        "roundEnd";
+
+    room.roundEndAt =
+        Date.now() +
+        ROUND_END_TIME;
+
+    room.countdownEndsAt =
+        null;
+
+    // ====================================
+    // Record survival times
+    // ====================================
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        if (
+            !player.spectating
+        ) {
+
+            if (
+                player.currentRoundStart !==
+                null
+            ) {
+
+                recordSurvivalTime(
+                    player
+                );
+
+            }
+
+        }
+
+    }
+
+    // ====================================
+    // Award round winner
+    // ====================================
+
+    if (winner) {
+
+        winner.roundWins++;
+
+        console.log(
+            `${winner.username} won round ${room.currentRound}`
+        );
+
+    }
+
+    console.log(
+        `Room ${roomCode}: Round ${room.currentRound} ended`
+    );
+
+    sendGameState(roomCode);
+
+    setTimeout(() => {
+
+        const currentRoom =
+            rooms[roomCode];
+
+        if (!currentRoom) {
+            return;
+        }
+
+        if (
+            currentRoom.gameToken !==
+            token
+        ) {
+            return;
+        }
+
+        continueAfterRound(
+            roomCode
+        );
+
+    }, ROUND_END_TIME);
+
+}
+
+
+// ========================================
+// CONTINUE AFTER ROUND
+// ========================================
+
+function continueAfterRound(
+    roomCode
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    // ====================================
+    // MORE ROUNDS
+    // ====================================
+
+    if (
+        room.currentRound <
+        room.settings.rounds
+    ) {
+
+        startCountdown(
+            roomCode,
+            room.currentRound + 1
+        );
+
+        return;
+
+    }
+
+    // ====================================
+    // FINAL ROUND
+    // ====================================
+
+    const tiedPlayers =
+        getFinalTiedPlayers(room);
+
+    if (
+        tiedPlayers.length > 1
+    ) {
+
+        startSuddenDeath(
+            roomCode,
+            tiedPlayers
+        );
+
+        return;
+
+    }
+
+    // ====================================
+    // GAME COMPLETE
+    // ====================================
+
+    finishGame(
+        roomCode
+    );
+
+}
+
+
+// ========================================
+// GET FINAL TIED PLAYERS
+// ========================================
+
+function getFinalTiedPlayers(
+    room
+) {
+
+    const activePlayers =
+        getActivePlayers(room);
+
+    if (
+        activePlayers.length === 0
+    ) {
+
+        return [];
+
+    }
+
+    let highestScore = -1;
+
+    for (
+        const player of activePlayers
+    ) {
+
+        highestScore =
+            Math.max(
+                highestScore,
+                player.roundWins
+            );
+
+    }
+
+    return activePlayers.filter(
+        player =>
+            player.roundWins ===
+            highestScore
+    );
+
+}
+
+
+// ========================================
+// SUDDEN DEATH
+// ========================================
+
+function startSuddenDeath(
+    roomCode,
+    tiedPlayers
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    room.gameToken++;
+
+    room.gameState =
+        "suddenDeath";
+
+    room.currentRound =
+        room.settings.rounds;
+
+    room.roundStartTime =
+        Date.now();
+
+    room.countdownEndsAt =
+        Date.now() +
+        COUNTDOWN_TIME;
+
+    room.roundEndAt =
+        null;
+
+    room.obstacles =
+        generateObstacles();
+
+    room.bullets =
+        {};
+
+    const tiedIds =
+        new Set(
+            tiedPlayers.map(
+                player =>
+                    Object.keys(
+                        room.players
+                    ).find(
+                        id =>
+                            room.players[id] ===
+                            player
+                    )
+            )
+        );
+
+    // ====================================
+    // Prepare all players
+    // ====================================
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        player.currentRoundStart =
+            null;
+
+        player.reloading =
+            false;
+
+        player.ammo =
+            MAX_AMMO;
+
+        if (
+            tiedIds.has(playerId)
+        ) {
+
+            player.spectating =
+                false;
+
+            player.dead =
+                false;
+
+            player.health =
+                SUDDEN_DEATH_HEALTH;
+
+            player.x =
+                50 +
+                Math.random() *
+                500;
+
+            player.y =
+                50 +
+                Math.random() *
+                300;
+
+            player.currentRoundStart =
+                Date.now();
+
+        } else {
+
+            player.dead =
+                true;
+
+            player.spectating =
+                true;
+
+        }
+
+    }
+
+    console.log(
+        `Room ${roomCode}: SUDDEN DEATH`
+    );
+
+    sendGameState(roomCode);
+
+    const token =
+        room.gameToken;
+
+    setTimeout(() => {
+
+        const currentRoom =
+            rooms[roomCode];
+
+        if (!currentRoom) {
+            return;
+        }
+
+        if (
+            currentRoom.gameToken !==
+            token
+        ) {
+            return;
+        }
+
+        if (
+            currentRoom.gameState !==
+            "suddenDeath"
+        ) {
+            return;
+        }
+
+        room.countdownEndsAt =
+            null;
+
+        room.roundStartTime =
+            Date.now();
+
+        for (
+            const playerId of tiedIds
+        ) {
+
+            const player =
+                room.players[playerId];
+
+            if (!player) {
+                continue;
+            }
+
+            player.currentRoundStart =
+                Date.now();
+
+        }
+
+        sendGameState(roomCode);
+
+        checkRoundEnd(
+            roomCode
+        );
+
+    }, COUNTDOWN_TIME);
+
+}
+
+
+// ========================================
+// FINISH GAME
+// ========================================
+
+function finishGame(
+    roomCode
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    room.gameToken++;
+
+    room.gameState =
+        "gameEnd";
+
+    room.gameEndAt =
+        Date.now() +
+        GAME_END_TIME;
+
+    room.countdownEndsAt =
+        null;
+
+    room.roundEndAt =
+        null;
+
+    room.obstacles =
+        [];
+
+    room.bullets =
+        {};
+
+    // Record any remaining survival time
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        if (
+            player.currentRoundStart !==
+            null
+        ) {
+
+            recordSurvivalTime(
+                player
+            );
+
+        }
+
+    }
+
+    console.log(
+        `Room ${roomCode}: GAME END`
+    );
+
+    sendGameState(roomCode);
+
+    setTimeout(() => {
+
+        const currentRoom =
+            rooms[roomCode];
+
+        if (!currentRoom) {
+            return;
+        }
+
+        resetToLobby(
+            roomCode
+        );
+
+    }, GAME_END_TIME);
+
+}
+
+
+// ========================================
+// RESET ROOM TO LOBBY
+// ========================================
+
+function resetToLobby(
+    roomCode
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    room.gameToken++;
+
+    room.gameState =
+        "lobby";
+
+    room.currentRound =
+        0;
+
+    room.roundStartTime =
+        null;
+
+    room.countdownEndsAt =
+        null;
+
+    room.roundEndAt =
+        null;
+
+    room.gameEndAt =
+        null;
+
+    room.obstacles =
+        [];
+
+    room.bullets =
+        {};
+
+    // ====================================
+    // Reset player combat state
+    // ====================================
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        player.health =
+            PLAYER_START_HEALTH;
+
+        player.ammo =
+            MAX_AMMO;
+
+        player.reloading =
+            false;
+
+        player.dead =
+            true;
+
+        player.spectating =
+            false;
+
+        player.currentRoundStart =
+            null;
+
+        player.joinedDuringGame =
+            false;
+
+    }
+
+    console.log(
+        `Room ${roomCode}: returned to lobby`
+    );
+
+    sendGameState(roomCode);
+
 }
 
 
@@ -147,7 +1446,9 @@ function createPlayer(socket, username) {
 // REMOVE PLAYER FROM ROOM
 // ========================================
 
-function removePlayerFromRoom(socket) {
+function removePlayerFromRoom(
+    socket
+) {
 
     const roomCode =
         socket.roomCode;
@@ -156,36 +1457,37 @@ function removePlayerFromRoom(socket) {
         return;
     }
 
-
     const room =
         rooms[roomCode];
 
     if (!room) {
 
-        socket.roomCode = null;
+        socket.roomCode =
+            null;
 
         return;
-    }
 
+    }
 
     const player =
         room.players[socket.id];
 
-
     if (!player) {
 
-        socket.roomCode = null;
+        socket.roomCode =
+            null;
 
         return;
-    }
 
+    }
 
     console.log(
         `${player.username} left room ${roomCode}`
     );
 
-
-    // Remove player's bullets
+    // ====================================
+    // Remove bullets
+    // ====================================
 
     for (
         const bulletId in room.bullets
@@ -204,26 +1506,36 @@ function removePlayerFromRoom(socket) {
 
     }
 
+    const wasAlive =
+        !player.dead &&
+        !player.spectating;
 
-    // Remove player
+    if (wasAlive) {
+
+        recordSurvivalTime(
+            player
+        );
+
+    }
 
     delete room.players[
         socket.id
     ];
 
+    socket.leave(
+        roomCode
+    );
 
-    // Leave Socket.IO room
+    socket.roomCode =
+        null;
 
-    socket.leave(roomCode);
-
-
-    socket.roomCode = null;
-
-
-    // Delete empty room
+    // ====================================
+    // Empty room
+    // ====================================
 
     if (
-        Object.keys(room.players).length === 0
+        Object.keys(room.players).length ===
+        0
     ) {
 
         delete rooms[roomCode];
@@ -233,13 +1545,16 @@ function removePlayerFromRoom(socket) {
         );
 
         return;
+
     }
 
-
-    // Transfer host
+    // ====================================
+    // Host transfer
+    // ====================================
 
     if (
-        room.host === socket.id
+        room.host ===
+        socket.id
     ) {
 
         room.host =
@@ -247,12 +1562,10 @@ function removePlayerFromRoom(socket) {
                 room.players
             )[0];
 
-
         const newHost =
             room.players[
                 room.host
             ];
-
 
         if (newHost) {
 
@@ -264,8 +1577,26 @@ function removePlayerFromRoom(socket) {
 
     }
 
+    sendGameState(
+        roomCode
+    );
 
-    sendGameState(roomCode);
+    // ====================================
+    // Leaving can end a round
+    // ====================================
+
+    if (
+        room.gameState ===
+        "playing" ||
+        room.gameState ===
+        "suddenDeath"
+    ) {
+
+        checkRoundEnd(
+            roomCode
+        );
+
+    }
 
 }
 
@@ -274,19 +1605,29 @@ function removePlayerFromRoom(socket) {
 // RELOAD
 // ========================================
 
-function startReload(roomCode, playerId) {
+function startReload(
+    roomCode,
+    playerId
+) {
 
     const room =
         rooms[roomCode];
 
     if (!room) return;
 
-
     const player =
         room.players[playerId];
 
     if (!player) return;
 
+    if (
+        room.gameState !==
+        "playing" &&
+        room.gameState !==
+        "suddenDeath"
+    ) {
+        return;
+    }
 
     if (player.dead) return;
 
@@ -296,26 +1637,47 @@ function startReload(roomCode, playerId) {
 
     if (player.ammo >= MAX_AMMO) return;
 
+    player.reloading =
+        true;
 
-    player.reloading = true;
+    sendGameState(
+        roomCode
+    );
 
-
-    sendGameState(roomCode);
-
+    const token =
+        room.gameToken;
 
     setTimeout(() => {
 
         const currentRoom =
             rooms[roomCode];
 
-        if (!currentRoom) return;
-
+        if (!currentRoom) {
+            return;
+        }
 
         const currentPlayer =
             currentRoom.players[playerId];
 
-        if (!currentPlayer) return;
+        if (!currentPlayer) {
+            return;
+        }
 
+        if (
+            currentRoom.gameToken !==
+            token
+        ) {
+
+            currentPlayer.reloading =
+                false;
+
+            sendGameState(
+                roomCode
+            );
+
+            return;
+
+        }
 
         if (
             currentPlayer.dead ||
@@ -325,11 +1687,13 @@ function startReload(roomCode, playerId) {
             currentPlayer.reloading =
                 false;
 
-            sendGameState(roomCode);
+            sendGameState(
+                roomCode
+            );
 
             return;
-        }
 
+        }
 
         currentPlayer.ammo =
             MAX_AMMO;
@@ -337,8 +1701,9 @@ function startReload(roomCode, playerId) {
         currentPlayer.reloading =
             false;
 
-
-        sendGameState(roomCode);
+        sendGameState(
+            roomCode
+        );
 
     }, RELOAD_TIME);
 
@@ -349,951 +1714,1242 @@ function startReload(roomCode, playerId) {
 // SOCKET CONNECTION
 // ========================================
 
-io.on("connection", (socket) => {
-
-    console.log(
-        `Player connected: ${socket.id}`
-    );
-
-
-    // ====================================
-    // CREATE ROOM
-    // ====================================
-
-    socket.on("createRoom", (username) => {
-
-        if (
-            typeof username !== "string"
-        ) {
-            return;
-        }
-
-
-        username =
-            username.trim();
-
-
-        if (!username) {
-            return;
-        }
-
-
-        username =
-            username.substring(0, 16);
-
-
-        let roomCode =
-            createRoomCode();
-
-
-        while (rooms[roomCode]) {
-
-            roomCode =
-                createRoomCode();
-
-        }
-
-
-        rooms[roomCode] = {
-
-            players: {},
-
-            bullets: {},
-
-            nextBulletId: 1,
-
-            host:
-                socket.id,
-
-            settings: {
-
-                maxPlayers: 8,
-
-                rounds: 5
-
-            }
-
-        };
-
-
-        socket.join(roomCode);
-
-        socket.roomCode =
-            roomCode;
-
-        socket.username =
-            username;
-
-
-        rooms[roomCode].players[
-            socket.id
-        ] =
-            createPlayer(
-                socket,
-                username
-            );
-
+io.on(
+    "connection",
+    (socket) => {
 
         console.log(
-            `${username} created room ${roomCode}`
+            `Player connected: ${socket.id}`
         );
 
 
-        socket.emit(
-            "roomJoined",
-            {
-                roomCode:
+        // ====================================
+        // CREATE ROOM
+        // ====================================
+
+        socket.on(
+            "createRoom",
+            (username) => {
+
+                if (
+                    typeof username !==
+                    "string"
+                ) {
+                    return;
+                }
+
+                username =
+                    username.trim();
+
+                if (!username) {
+                    return;
+                }
+
+                username =
+                    username.substring(
+                        0,
+                        16
+                    );
+
+                // Leave existing room first
+                if (socket.roomCode) {
+
+                    removePlayerFromRoom(
+                        socket
+                    );
+
+                }
+
+                const roomCode =
+                    createRoom();
+
+                const room =
+                    rooms[roomCode];
+
+                room.host =
+                    socket.id;
+
+                socket.join(
+                    roomCode
+                );
+
+                socket.roomCode =
+                    roomCode;
+
+                socket.username =
+                    username;
+
+                const player =
+                    createPlayer(
+                        socket,
+                        username
+                    );
+
+                room.players[
+                    socket.id
+                ] =
+                    player;
+
+                console.log(
+                    `${username} created room ${roomCode}`
+                );
+
+                socket.emit(
+                    "roomJoined",
+                    {
+
+                        roomCode:
+                            roomCode,
+
+                        username:
+                            username
+
+                    }
+                );
+
+                sendGameState(
+                    roomCode
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // JOIN ROOM
+        // ====================================
+
+        socket.on(
+            "joinRoom",
+            (data) => {
+
+                if (
+                    !data ||
+                    typeof data !==
+                    "object"
+                ) {
+                    return;
+                }
+
+                let roomCode =
+                    data.roomCode;
+
+                let username =
+                    data.username;
+
+                if (
+                    typeof roomCode !==
+                    "string" ||
+                    typeof username !==
+                    "string"
+                ) {
+                    return;
+                }
+
+                roomCode =
+                    roomCode
+                        .trim()
+                        .toUpperCase();
+
+                username =
+                    username.trim();
+
+                if (
+                    !roomCode ||
+                    !username
+                ) {
+
+                    socket.emit(
+                        "roomError",
+                        "Enter a username and room code."
+                    );
+
+                    return;
+
+                }
+
+                username =
+                    username.substring(
+                        0,
+                        16
+                    );
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) {
+
+                    socket.emit(
+                        "roomError",
+                        "That room does not exist."
+                    );
+
+                    return;
+
+                }
+
+                if (
+                    Object.keys(
+                        room.players
+                    ).length >=
+                    room.settings.maxPlayers
+                ) {
+
+                    socket.emit(
+                        "roomError",
+                        "That room is full."
+                    );
+
+                    return;
+
+                }
+
+                // Leave current room first
+                if (socket.roomCode) {
+
+                    removePlayerFromRoom(
+                        socket
+                    );
+
+                }
+
+                socket.join(
+                    roomCode
+                );
+
+                socket.roomCode =
+                    roomCode;
+
+                socket.username =
+                    username;
+
+                const player =
+                    createPlayer(
+                        socket,
+                        username
+                    );
+
+                // ====================================
+                // Mid-game join
+                // ====================================
+
+                if (
+                    room.gameState !==
+                    "lobby"
+                ) {
+
+                    player.dead =
+                        true;
+
+                    player.joinedDuringGame =
+                        true;
+
+                    player.spectating =
+                        true;
+
+                }
+
+                room.players[
+                    socket.id
+                ] =
+                    player;
+
+                console.log(
+                    `${username} joined room ${roomCode}`
+                );
+
+                socket.emit(
+                    "roomJoined",
+                    {
+
+                        roomCode:
+                            roomCode,
+
+                        username:
+                            username
+
+                    }
+                );
+
+                sendGameState(
+                    roomCode
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // START GAME
+        // ====================================
+
+        socket.on(
+            "startGame",
+            () => {
+
+                const roomCode =
+                    socket.roomCode;
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) return;
+
+                // Only host
+                if (
+                    room.host !==
+                    socket.id
+                ) {
+
+                    return;
+
+                }
+
+                // Only from lobby
+                if (
+                    room.gameState !==
+                    "lobby"
+                ) {
+
+                    return;
+
+                }
+
+                const playerCount =
+                    Object.keys(
+                        room.players
+                    ).length;
+
+                if (
+                    playerCount < 1
+                ) {
+
+                    return;
+
+                }
+
+                // Reset game stats
+                for (
+                    const playerId in
+                    room.players
+                ) {
+
+                    const player =
+                        room.players[
+                            playerId
+                        ];
+
+                    player.kills =
+                        0;
+
+                    player.deaths =
+                        0;
+
+                    player.roundWins =
+                        0;
+
+                    player.survivalTime =
+                        0;
+
+                    player.roundsParticipated =
+                        0;
+
+                    player.currentRoundStart =
+                        null;
+
+                    player.joinedDuringGame =
+                        false;
+
+                    player.spectating =
+                        false;
+
+                }
+
+                console.log(
+                    `${room.players[socket.id].username} started game in ${roomCode}`
+                );
+
+                startCountdown(
                     roomCode,
+                    1
+                );
 
-                username:
-                    username
             }
         );
 
 
-        sendGameState(roomCode);
+        // ====================================
+        // SPECTATE
+        // ====================================
 
-    });
+        socket.on(
+            "spectate",
+            () => {
 
+                const roomCode =
+                    socket.roomCode;
 
-    // ====================================
-    // JOIN ROOM
-    // ====================================
+                const room =
+                    rooms[roomCode];
 
-    socket.on("joinRoom", (data) => {
+                if (!room) return;
 
-        if (
-            !data ||
-            typeof data !== "object"
-        ) {
-            return;
-        }
+                const player =
+                    room.players[
+                        socket.id
+                    ];
 
+                if (!player) return;
 
-        let roomCode =
-            data.roomCode;
+                // Spectating is only allowed
+                // while dead or waiting
+                if (
+                    !player.dead &&
+                    !player.joinedDuringGame
+                ) {
 
-        let username =
-            data.username;
+                    return;
 
+                }
 
-        if (
-            typeof roomCode !== "string" ||
-            typeof username !== "string"
-        ) {
-            return;
-        }
+                player.spectating =
+                    true;
 
+                console.log(
+                    `${player.username} is spectating in ${roomCode}`
+                );
 
-        roomCode =
-            roomCode
-                .trim()
-                .toUpperCase();
+                sendGameState(
+                    roomCode
+                );
 
-        username =
-            username.trim();
-
-
-        if (
-            !roomCode ||
-            !username
-        ) {
-
-            socket.emit(
-                "roomError",
-                "Enter a username and room code."
-            );
-
-            return;
-        }
-
-
-        username =
-            username.substring(0, 16);
-
-
-        const room =
-            rooms[roomCode];
-
-
-        if (!room) {
-
-            socket.emit(
-                "roomError",
-                "That room does not exist."
-            );
-
-            return;
-        }
-
-
-        if (
-            Object.keys(room.players).length >=
-            room.settings.maxPlayers
-        ) {
-
-            socket.emit(
-                "roomError",
-                "That room is full."
-            );
-
-            return;
-        }
-
-
-        socket.join(roomCode);
-
-        socket.roomCode =
-            roomCode;
-
-        socket.username =
-            username;
-
-
-        room.players[socket.id] =
-            createPlayer(
-                socket,
-                username
-            );
-
-
-        console.log(
-            `${username} joined room ${roomCode}`
+            }
         );
 
 
-        socket.emit(
-            "roomJoined",
-            {
-                roomCode:
+        // ====================================
+        // CHANGE COLOR
+        // ====================================
+
+        socket.on(
+            "changeColor",
+            () => {
+
+                const roomCode =
+                    socket.roomCode;
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) return;
+
+                const player =
+                    room.players[
+                        socket.id
+                    ];
+
+                if (!player) return;
+
+                const currentIndex =
+                    COLORS.indexOf(
+                        player.color
+                    );
+
+                const nextIndex =
+                    currentIndex === -1
+                        ? 0
+                        : (
+                            currentIndex + 1
+                        ) %
+                        COLORS.length;
+
+                player.color =
+                    COLORS[
+                        nextIndex
+                    ];
+
+                sendGameState(
+                    roomCode
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // LEAVE ROOM
+        // ====================================
+
+        socket.on(
+            "leaveRoom",
+            () => {
+
+                removePlayerFromRoom(
+                    socket
+                );
+
+                socket.emit(
+                    "leftRoom"
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // MOVE
+        // ====================================
+
+        socket.on(
+            "move",
+            (data) => {
+
+                const roomCode =
+                    socket.roomCode;
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) return;
+
+                const player =
+                    room.players[
+                        socket.id
+                    ];
+
+                if (!player) return;
+
+                if (
+                    room.gameState !==
+                    "playing" &&
+                    room.gameState !==
+                    "suddenDeath"
+                ) {
+
+                    return;
+
+                }
+
+                if (player.dead) return;
+
+                if (player.spectating) return;
+
+                if (
+                    typeof data !==
+                    "object" ||
+                    data === null ||
+                    typeof data.x !==
+                    "number" ||
+                    typeof data.y !==
+                    "number" ||
+                    !Number.isFinite(data.x) ||
+                    !Number.isFinite(data.y)
+                ) {
+
+                    return;
+
+                }
+
+                const moveX =
+                    Math.max(
+                        -20,
+                        Math.min(
+                            20,
+                            data.x
+                        )
+                    );
+
+                const moveY =
+                    Math.max(
+                        -20,
+                        Math.min(
+                            20,
+                            data.y
+                        )
+                    );
+
+                const newX =
+                    Math.max(
+                        20,
+                        Math.min(
+                            580,
+                            player.x +
+                            moveX
+                        )
+                    );
+
+                const newY =
+                    Math.max(
+                        20,
+                        Math.min(
+                            380,
+                            player.y +
+                            moveY
+                        )
+                    );
+
+                // ====================================
+                // Obstacle collision
+                // ====================================
+
+                let blocked =
+                    false;
+
+                for (
+                    const obstacle of
+                    room.obstacles
+                ) {
+
+                    if (
+                        circleIntersectsRectangle(
+                            newX,
+                            newY,
+                            PLAYER_RADIUS,
+                            obstacle
+                        )
+                    ) {
+
+                        blocked =
+                            true;
+
+                        break;
+
+                    }
+
+                }
+
+                if (!blocked) {
+
+                    player.x =
+                        newX;
+
+                    player.y =
+                        newY;
+
+                }
+
+                io.to(roomCode).emit(
+                    "updatePlayers",
+                    room.players
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // AIM
+        // ====================================
+
+        socket.on(
+            "aim",
+            (data) => {
+
+                const roomCode =
+                    socket.roomCode;
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) return;
+
+                const player =
+                    room.players[
+                        socket.id
+                    ];
+
+                if (!player) return;
+
+                if (
+                    room.gameState !==
+                    "playing" &&
+                    room.gameState !==
+                    "suddenDeath"
+                ) {
+
+                    return;
+
+                }
+
+                if (player.dead) return;
+
+                if (player.spectating) return;
+
+                if (
+                    !data ||
+                    typeof data.angle !==
+                    "number" ||
+                    !Number.isFinite(
+                        data.angle
+                    )
+                ) {
+
+                    return;
+
+                }
+
+                player.angle =
+                    data.angle;
+
+                io.to(roomCode).emit(
+                    "updatePlayers",
+                    room.players
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // SHOOT
+        // ====================================
+
+        socket.on(
+            "shoot",
+            () => {
+
+                const roomCode =
+                    socket.roomCode;
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) return;
+
+                const player =
+                    room.players[
+                        socket.id
+                    ];
+
+                if (!player) return;
+
+                if (
+                    room.gameState !==
+                    "playing" &&
+                    room.gameState !==
+                    "suddenDeath"
+                ) {
+
+                    return;
+
+                }
+
+                if (player.dead) return;
+
+                if (player.spectating) return;
+
+                if (player.reloading) return;
+
+                if (player.ammo <= 0) return;
+
+                player.ammo--;
+
+                const bulletId =
+                    String(
+                        room.nextBulletId++
+                    );
+
+                const angle =
+                    player.angle || 0;
+
+                const startDistance =
+                    25;
+
+                room.bullets[
+                    bulletId
+                ] = {
+
+                    id:
+                        bulletId,
+
+                    x:
+                        player.x +
+                        Math.cos(angle) *
+                        startDistance,
+
+                    y:
+                        player.y +
+                        Math.sin(angle) *
+                        startDistance,
+
+                    previousX:
+                        player.x +
+                        Math.cos(angle) *
+                        startDistance,
+
+                    previousY:
+                        player.y +
+                        Math.sin(angle) *
+                        startDistance,
+
+                    angle:
+                        angle,
+
+                    owner:
+                        socket.id,
+
+                    createdAt:
+                        Date.now()
+
+                };
+
+                if (
+                    player.ammo === 0
+                ) {
+
+                    startReload(
+                        roomCode,
+                        socket.id
+                    );
+
+                }
+
+                sendGameState(
+                    roomCode
+                );
+
+            }
+        );
+
+
+        // ====================================
+        // RELOAD
+        // ====================================
+
+        socket.on(
+            "reload",
+            () => {
+
+                const roomCode =
+                    socket.roomCode;
+
+                const room =
+                    rooms[roomCode];
+
+                if (!room) return;
+
+                const player =
+                    room.players[
+                        socket.id
+                    ];
+
+                if (!player) return;
+
+                if (
+                    room.gameState !==
+                    "playing" &&
+                    room.gameState !==
+                    "suddenDeath"
+                ) {
+
+                    return;
+
+                }
+
+                if (player.dead) return;
+
+                if (player.spectating) return;
+
+                startReload(
                     roomCode,
+                    socket.id
+                );
 
-                username:
-                    username
             }
         );
 
 
-        sendGameState(roomCode);
+        // ====================================
+        // DISCONNECT
+        // ====================================
 
-    });
+        socket.on(
+            "disconnect",
+            () => {
 
+                console.log(
+                    `Player disconnected: ${socket.id}`
+                );
 
-    // ====================================
-    // SPECTATE
-    // ====================================
+                removePlayerFromRoom(
+                    socket
+                );
 
-    socket.on("spectate", () => {
-
-        const roomCode =
-            socket.roomCode;
-
-        const room =
-            rooms[roomCode];
-
-        if (!room) return;
-
-
-        const player =
-            room.players[socket.id];
-
-        if (!player) return;
-
-
-        player.spectating =
-            !player.spectating;
-
-
-        // Reset combat-related state
-        // when entering spectate mode
-
-        if (player.spectating) {
-
-            player.reloading =
-                false;
-
-            console.log(
-                `${player.username} is now spectating in ${roomCode}`
-            );
-
-        } else {
-
-            console.log(
-                `${player.username} returned to the game in ${roomCode}`
-            );
-
-        }
-
-
-        sendGameState(roomCode);
-
-    });
-
-
-    // ====================================
-    // CHANGE COLOR
-    // ====================================
-
-    socket.on("changeColor", () => {
-
-        const roomCode =
-            socket.roomCode;
-
-        const room =
-            rooms[roomCode];
-
-        if (!room) return;
-
-
-        const player =
-            room.players[socket.id];
-
-        if (!player) return;
-
-
-        const currentIndex =
-            COLORS.indexOf(
-                player.color
-            );
-
-
-        const nextIndex =
-            currentIndex === -1
-                ? 0
-                : (
-                    currentIndex + 1
-                ) % COLORS.length;
-
-
-        player.color =
-            COLORS[nextIndex];
-
-
-        console.log(
-            `${player.username} changed color to ${player.color}`
+            }
         );
 
-
-        sendGameState(roomCode);
-
-    });
-
-
-    // ====================================
-    // LEAVE ROOM
-    // ====================================
-
-    socket.on("leaveRoom", () => {
-
-        removePlayerFromRoom(socket);
-
-        socket.emit(
-            "leftRoom"
-        );
-
-    });
-
-
-    // ====================================
-    // MOVE
-    // ====================================
-
-    socket.on("move", (data) => {
-
-        const roomCode =
-            socket.roomCode;
-
-        const room =
-            rooms[roomCode];
-
-        if (!room) return;
-
-
-        const player =
-            room.players[socket.id];
-
-        if (!player) return;
-
-
-        if (player.dead) return;
-
-        if (player.spectating) return;
-
-
-        if (
-            typeof data !== "object" ||
-            data === null ||
-            typeof data.x !== "number" ||
-            typeof data.y !== "number" ||
-            !Number.isFinite(data.x) ||
-            !Number.isFinite(data.y)
-        ) {
-            return;
-        }
-
-
-        const moveX =
-            Math.max(
-                -20,
-                Math.min(20, data.x)
-            );
-
-        const moveY =
-            Math.max(
-                -20,
-                Math.min(20, data.y)
-            );
-
-
-        player.x =
-            Math.max(
-                20,
-                Math.min(
-                    580,
-                    player.x + moveX
-                )
-            );
-
-
-        player.y =
-            Math.max(
-                20,
-                Math.min(
-                    380,
-                    player.y + moveY
-                )
-            );
-
-
-        io.to(roomCode).emit(
-            "updatePlayers",
-            room.players
-        );
-
-    });
-
-
-    // ====================================
-    // AIM
-    // ====================================
-
-    socket.on("aim", (data) => {
-
-        const roomCode =
-            socket.roomCode;
-
-        const room =
-            rooms[roomCode];
-
-        if (!room) return;
-
-
-        const player =
-            room.players[socket.id];
-
-        if (!player) return;
-
-
-        if (player.dead) return;
-
-        if (player.spectating) return;
-
-
-        if (
-            !data ||
-            typeof data.angle !== "number" ||
-            !Number.isFinite(data.angle)
-        ) {
-            return;
-        }
-
-
-        player.angle =
-            data.angle;
-
-
-        io.to(roomCode).emit(
-            "updatePlayers",
-            room.players
-        );
-
-    });
-
-
-    // ====================================
-    // SHOOT
-    // ====================================
-
-    socket.on("shoot", () => {
-
-        const roomCode =
-            socket.roomCode;
-
-        const room =
-            rooms[roomCode];
-
-        if (!room) return;
-
-
-        const player =
-            room.players[socket.id];
-
-        if (!player) return;
-
-
-        if (player.dead) return;
-
-        if (player.spectating) return;
-
-        if (player.reloading) return;
-
-        if (player.ammo <= 0) return;
-
-
-        player.ammo--;
-
-
-        const bulletId =
-            String(
-                room.nextBulletId++
-            );
-
-
-        const angle =
-            player.angle || 0;
-
-
-        const startDistance =
-            25;
-
-
-        room.bullets[bulletId] = {
-
-            id:
-                bulletId,
-
-            x:
-                player.x +
-                Math.cos(angle) *
-                startDistance,
-
-            y:
-                player.y +
-                Math.sin(angle) *
-                startDistance,
-
-            previousX:
-                player.x +
-                Math.cos(angle) *
-                startDistance,
-
-            previousY:
-                player.y +
-                Math.sin(angle) *
-                startDistance,
-
-            angle:
-                angle,
-
-            owner:
-                socket.id,
-
-            createdAt:
-                Date.now()
-
-        };
-
-
-        console.log(
-            `${player.username} fired bullet ${bulletId}`
-        );
-
-
-        if (player.ammo === 0) {
-
-            startReload(
-                roomCode,
-                socket.id
-            );
-
-        }
-
-
-        sendGameState(roomCode);
-
-    });
-
-
-    // ====================================
-    // RELOAD
-    // ====================================
-
-    socket.on("reload", () => {
-
-        const roomCode =
-            socket.roomCode;
-
-        const room =
-            rooms[roomCode];
-
-        if (!room) return;
-
-
-        const player =
-            room.players[socket.id];
-
-        if (!player) return;
-
-        if (player.spectating) return;
-
-
-        startReload(
-            roomCode,
-            socket.id
-        );
-
-    });
-
-
-    // ====================================
-    // DISCONNECT
-    // ====================================
-
-    socket.on("disconnect", () => {
-
-        console.log(
-            `Player disconnected: ${socket.id}`
-        );
-
-
-        removePlayerFromRoom(socket);
-
-    });
-
-});
+    }
+);
 
 
 // ========================================
 // BULLET LOOP
 // ========================================
 
-setInterval(() => {
+setInterval(
+    () => {
 
-    const now =
-        Date.now();
-
-
-    for (
-        const roomCode in rooms
-    ) {
-
-        const room =
-            rooms[roomCode];
-
+        const now =
+            Date.now();
 
         for (
-            const bulletId in room.bullets
+            const roomCode in rooms
         ) {
 
-            const bullet =
-                room.bullets[bulletId];
-
-            if (!bullet) continue;
-
-
-            bullet.previousX =
-                bullet.x;
-
-            bullet.previousY =
-                bullet.y;
-
-
-            bullet.x +=
-                Math.cos(bullet.angle) *
-                BULLET_SPEED;
-
-            bullet.y +=
-                Math.sin(bullet.angle) *
-                BULLET_SPEED;
-
-
-            // ====================================
-            // BULLET LIFETIME
-            // ====================================
+            const room =
+                rooms[roomCode];
 
             if (
-                now -
-                bullet.createdAt >
-                BULLET_LIFETIME
+                room.gameState !==
+                "playing" &&
+                room.gameState !==
+                "suddenDeath"
             ) {
 
-                delete room.bullets[
-                    bulletId
-                ];
+                // Make sure bullets cannot
+                // remain during non-game states.
+
+                room.bullets =
+                    {};
 
                 continue;
+
             }
-
-
-            // ====================================
-            // OUT OF BOUNDS
-            // ====================================
-
-            if (
-                bullet.x <
-                    -BULLET_RADIUS ||
-
-                bullet.x >
-                    600 +
-                    BULLET_RADIUS ||
-
-                bullet.y <
-                    -BULLET_RADIUS ||
-
-                bullet.y >
-                    400 +
-                    BULLET_RADIUS
-            ) {
-
-                delete room.bullets[
-                    bulletId
-                ];
-
-                continue;
-            }
-
-
-            // ====================================
-            // PLAYER COLLISION
-            // ====================================
 
             for (
-                const playerId in room.players
+                const bulletId in
+                room.bullets
             ) {
 
-                const player =
-                    room.players[playerId];
+                const bullet =
+                    room.bullets[
+                        bulletId
+                    ];
 
-
-                if (!player) continue;
-
-
-                // Don't hit bullet owner
-
-                if (
-                    playerId ===
-                    bullet.owner
-                ) {
+                if (!bullet) {
                     continue;
                 }
 
+                bullet.previousX =
+                    bullet.x;
 
-                // Dead players cannot be hit
+                bullet.previousY =
+                    bullet.y;
 
-                if (player.dead) continue;
+                bullet.x +=
+                    Math.cos(
+                        bullet.angle
+                    ) *
+                    BULLET_SPEED;
 
+                bullet.y +=
+                    Math.sin(
+                        bullet.angle
+                    ) *
+                    BULLET_SPEED;
 
-                // Spectators cannot be hit
-
-                if (player.spectating) continue;
-
-
-                const dx =
-                    bullet.x -
-                    bullet.previousX;
-
-                const dy =
-                    bullet.y -
-                    bullet.previousY;
-
-
-                const lengthSquared =
-                    dx * dx +
-                    dy * dy;
-
-
-                let t = 0;
-
+                // ====================================
+                // Lifetime
+                // ====================================
 
                 if (
-                    lengthSquared > 0
+                    now -
+                    bullet.createdAt >
+                    BULLET_LIFETIME
                 ) {
-
-                    t =
-                        (
-                            (
-                                player.x -
-                                bullet.previousX
-                            ) * dx +
-
-                            (
-                                player.y -
-                                bullet.previousY
-                            ) * dy
-                        ) /
-                        lengthSquared;
-
-
-                    t =
-                        Math.max(
-                            0,
-                            Math.min(
-                                1,
-                                t
-                            )
-                        );
-
-                }
-
-
-                const closestX =
-                    bullet.previousX +
-                    t * dx;
-
-                const closestY =
-                    bullet.previousY +
-                    t * dy;
-
-
-                const distanceX =
-                    player.x -
-                    closestX;
-
-                const distanceY =
-                    player.y -
-                    closestY;
-
-
-                const distance =
-                    Math.sqrt(
-                        distanceX *
-                        distanceX +
-
-                        distanceY *
-                        distanceY
-                    );
-
-
-                if (
-                    distance <=
-                    PLAYER_RADIUS +
-                    BULLET_RADIUS
-                ) {
-
-                    player.health -=
-                        BULLET_DAMAGE;
-
-
-                    console.log(
-                        `${player.username} was hit!`,
-                        player.health,
-                        "HP remaining"
-                    );
-
 
                     delete room.bullets[
                         bulletId
                     ];
 
+                    continue;
+
+                }
+
+                // ====================================
+                // Bounds
+                // ====================================
+
+                if (
+                    bullet.x <
+                    -BULLET_RADIUS ||
+
+                    bullet.x >
+                    600 +
+                    BULLET_RADIUS ||
+
+                    bullet.y <
+                    -BULLET_RADIUS ||
+
+                    bullet.y >
+                    400 +
+                    BULLET_RADIUS
+                ) {
+
+                    delete room.bullets[
+                        bulletId
+                    ];
+
+                    continue;
+
+                }
+
+                // ====================================
+                // Obstacle collision
+                // ====================================
+
+                let hitObstacle =
+                    false;
+
+                for (
+                    const obstacle of
+                    room.obstacles
+                ) {
 
                     if (
-                        player.health <= 0
+                        bulletIntersectsRectangle(
+                            bullet,
+                            obstacle
+                        )
                     ) {
 
-                        player.health = 0;
+                        hitObstacle =
+                            true;
 
-                        player.dead = true;
+                        break;
 
-                        player.reloading =
-                            false;
+                    }
 
+                }
 
-                        console.log(
-                            `${player.username} DIED`
+                if (hitObstacle) {
+
+                    delete room.bullets[
+                        bulletId
+                    ];
+
+                    continue;
+
+                }
+
+                // ====================================
+                // Player collision
+                // ====================================
+
+                let bulletHitPlayer =
+                    false;
+
+                for (
+                    const playerId in
+                    room.players
+                ) {
+
+                    const player =
+                        room.players[
+                            playerId
+                        ];
+
+                    if (!player) {
+                        continue;
+                    }
+
+                    if (
+                        playerId ===
+                        bullet.owner
+                    ) {
+
+                        continue;
+
+                    }
+
+                    if (player.dead) {
+                        continue;
+                    }
+
+                    if (
+                        player.spectating
+                    ) {
+
+                        continue;
+
+                    }
+
+                    const dx =
+                        bullet.x -
+                        bullet.previousX;
+
+                    const dy =
+                        bullet.y -
+                        bullet.previousY;
+
+                    const lengthSquared =
+                        dx * dx +
+                        dy * dy;
+
+                    let t = 0;
+
+                    if (
+                        lengthSquared >
+                        0
+                    ) {
+
+                        t =
+                            (
+                                (
+                                    player.x -
+                                    bullet.previousX
+                                ) * dx +
+
+                                (
+                                    player.y -
+                                    bullet.previousY
+                                ) * dy
+                            ) /
+                            lengthSquared;
+
+                        t =
+                            Math.max(
+                                0,
+                                Math.min(
+                                    1,
+                                    t
+                                )
+                            );
+
+                    }
+
+                    const closestX =
+                        bullet.previousX +
+                        t * dx;
+
+                    const closestY =
+                        bullet.previousY +
+                        t * dy;
+
+                    const distanceX =
+                        player.x -
+                        closestX;
+
+                    const distanceY =
+                        player.y -
+                        closestY;
+
+                    const distance =
+                        Math.sqrt(
+                            distanceX *
+                            distanceX +
+
+                            distanceY *
+                            distanceY
                         );
 
+                    if (
+                        distance <=
+                        PLAYER_RADIUS +
+                        BULLET_RADIUS
+                    ) {
 
-                        // Temporary respawn
-                        // until round system is added
+                        bulletHitPlayer =
+                            true;
 
-                        setTimeout(() => {
+                        // ====================================
+                        // Damage
+                        // ====================================
 
-                            const currentRoom =
-                                rooms[roomCode];
+                        player.health -=
+                            room.gameState ===
+                            "suddenDeath"
+                                ? SUDDEN_DEATH_HEALTH
+                                : BULLET_DAMAGE;
 
-                            if (!currentRoom) {
-                                return;
-                            }
+                        // ====================================
+                        // Death
+                        // ====================================
 
+                        if (
+                            player.health <=
+                            0
+                        ) {
 
-                            const respawnPlayer =
-                                currentRoom.players[
-                                    playerId
+                            player.health =
+                                0;
+
+                            player.dead =
+                                true;
+
+                            player.reloading =
+                                false;
+
+                            // Record survival time
+                            recordSurvivalTime(
+                                player
+                            );
+
+                            player.deaths++;
+
+                            // Award kill
+                            const killer =
+                                room.players[
+                                    bullet.owner
                                 ];
 
                             if (
-                                !respawnPlayer
+                                killer &&
+                                killer !==
+                                player
                             ) {
-                                return;
+
+                                killer.kills++;
+
                             }
 
+                            console.log(
+                                `${player.username} died`
+                            );
 
-                            // Don't respawn a spectator
-
-                            if (
-                                respawnPlayer.spectating
-                            ) {
-                                return;
-                            }
-
-
-                            respawnPlayer.health =
-                                100;
-
-                            respawnPlayer.ammo =
-                                MAX_AMMO;
-
-                            respawnPlayer.reloading =
-                                false;
-
-                            respawnPlayer.dead =
-                                false;
-
-
-                            respawnPlayer.x =
-                                50 +
-                                Math.random() *
-                                500;
-
-                            respawnPlayer.y =
-                                50 +
-                                Math.random() *
-                                300;
-
+                            delete room.bullets[
+                                bulletId
+                            ];
 
                             sendGameState(
                                 roomCode
                             );
 
-                        }, 2000);
+                            // Check whether this
+                            // ends the round
+                            checkRoundEnd(
+                                roomCode
+                            );
+
+                            break;
+
+                        }
 
                     }
 
+                }
 
-                    break;
+                if (
+                    bulletHitPlayer
+                ) {
+
+                    delete room.bullets[
+                        bulletId
+                    ];
 
                 }
 
             }
 
+            sendGameState(
+                roomCode
+            );
+
         }
 
-
-        sendGameState(roomCode);
-
-    }
-
-}, 1000 / 60);
+    },
+    1000 / 60
+);
 
 
 // ========================================
@@ -1302,7 +2958,6 @@ setInterval(() => {
 
 const PORT =
     process.env.PORT || 3000;
-
 
 server.listen(
     PORT,
@@ -1314,7 +2969,7 @@ server.listen(
         );
 
         console.log(
-            "FREE MULTIPLAYER GAME SERVER"
+            "FROKO.IO MULTIPLAYER SERVER"
         );
 
         console.log(
@@ -1322,11 +2977,12 @@ server.listen(
         );
 
         console.log(
-            "Server running on port " + PORT
+            "Server running on port " +
+            PORT
         );
 
         console.log(
-            "Rooms + usernames + spectating enabled"
+            "Rooms + rounds + stats enabled"
         );
 
         console.log(
