@@ -398,11 +398,6 @@ function sendGameState(roomCode) {
     }
 
     io.to(roomCode).emit(
-        "updatePlayers",
-        room.players
-    );
-
-    io.to(roomCode).emit(
         "updateBullets",
         room.bullets
     );
@@ -2584,6 +2579,19 @@ io.on(
 
     }
 );
+
+setInterval(() => {
+    for (const roomCode in rooms) {
+        const room = rooms[roomCode];
+
+        if (
+            room.gameState === "playing" ||
+            room.gameState === "suddenDeath"
+        ) {
+            io.to(roomCode).emit("updatePlayers", room.players);
+        }
+    }
+}, 50);
 
 setInterval(() => {
 
