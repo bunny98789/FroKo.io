@@ -1806,7 +1806,7 @@ function updateHUD() {
 
 
     roundText.innerText =
-    `${currentRound}/${totalRounds}`;
+    `Round: ${currentRound}/${totalRounds}`;
 
 
     if (
