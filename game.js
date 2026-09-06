@@ -1855,3 +1855,4 @@ window.addEventListener(
  */
 
 connectToServer();
+}
