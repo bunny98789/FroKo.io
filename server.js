@@ -274,7 +274,7 @@ function createPlayer(
             false,
 
         dead:
-            true,
+            false,
 
         spectating:
             false,
