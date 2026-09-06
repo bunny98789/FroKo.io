@@ -1,38 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>FroKo.io</title>
-
-    <link
-        rel="icon"
-        type="image/png"
-        href="icon.png"
-    >
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <h1>FroKo.io</h1>
-
-
-<!-- ========================================
-     CONNECTION
-======================================== -->
 
 <div id="connection-panel">
 
@@ -54,50 +33,110 @@
 </div>
 
 
-<!-- ========================================
-     GAME HUD
-======================================== -->
+<!-- MAIN GAME AREA -->
 
-<div id="hud">
+<div id="main-game-layout">
 
-    <div id="health">
-        ❤️ 100 HP
+    <!-- GAME -->
+
+    <div id="game-section">
+
+        <!-- GAME HUD -->
+
+        <div id="hud">
+
+            <div id="health">
+                ❤️ 100 HP
+            </div>
+
+            <div id="round">
+                ROUND 1 / 5
+            </div>
+
+            <div id="ammo">
+                🔫 6 / 6
+            </div>
+
+        </div>
+
+        <div id="gameRoomInfo">
+            Room: <span id="gameRoomCode">---</span>
+        </div>
+
+        <div id="game-wrapper">
+
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+            <div id="reload">
+                RELOADING...
+            </div>
+
+        </div>
+
+        <div id="instructions">
+            WASD / Arrow Keys = Move &nbsp; | &nbsp;
+            Mouse = Aim &nbsp; | &nbsp;
+            Left Click = Shoot &nbsp; | &nbsp;
+            R = Reload
+        </div>
+
     </div>
 
-    <div id="round">
-        ROUND 1 / 5
-    </div>
 
-    <div id="ammo">
-        🔫 6 / 6
+    <!-- PLAYER / LOBBY PANEL -->
+
+    <div id="playerPanel">
+
+        <div id="playerPanelTitle">
+            MULTIPLAYER
+        </div>
+
+        <div id="playerPanelRoom">
+            ROOM: <span id="panelRoomCode">---</span>
+        </div>
+
+        <div id="lobbyPlayersTitle">
+            PLAYERS
+        </div>
+
+        <div id="playerList">
+            <div class="emptyPlayerList">
+                Join a room to see players
+            </div>
+        </div>
+
+        <div id="hostControls">
+
+            <button id="startGameButton">
+                ▶ START GAME
+            </button>
+
+            <div id="waitingForHost">
+                Waiting for host to start...
+            </div>
+
+        </div>
+
     </div>
 
 </div>
 
 
-<!-- ========================================
-     ROOM MENU
-======================================== -->
+<!-- ROOM CREATION / JOINING -->
 
 <div id="roomMenu">
 
     <input
-        type="text"
         id="usernameInput"
         placeholder="Username"
         maxlength="16"
     >
 
-    <br><br>
-
     <button id="createRoomButton">
         Create Room
     </button>
 
-    <br><br>
-
     <input
-        type="text"
         id="roomInput"
         placeholder="Room Code"
         maxlength="8"
@@ -108,98 +147,12 @@
     </button>
 
     <p id="roomDisplay"></p>
-
     <p id="roomError"></p>
 
-
-    <!-- ====================================
-         PLAYER LIST
-    ==================================== -->
-
-    <div id="lobbyPlayers">
-
-        <div id="lobbyPlayersTitle">
-            PLAYERS
-        </div>
-
-        <div id="playerList">
-            No players yet.
-        </div>
-
-    </div>
-
-
-    <!-- ====================================
-         HOST CONTROLS
-    ==================================== -->
-
-    <div id="hostControls">
-
-        <button id="startGameButton">
-            ▶ START GAME
-        </button>
-
-        <p id="waitingForHost">
-            Waiting for host...
-        </p>
-
-    </div>
-
 </div>
 
 
-<!-- ========================================
-     ROOM INFO
-======================================== -->
-
-<div id="gameRoomInfo">
-
-    Room:
-    <span id="gameRoomCode">
-        ---
-    </span>
-
-</div>
-
-
-<!-- ========================================
-     GAME
-======================================== -->
-
-<div id="game-wrapper">
-
-    <canvas
-        id="gameCanvas"
-        width="600"
-        height="400"
-    ></canvas>
-
-    <div id="reload">
-        RELOADING...
-    </div>
-
-</div>
-
-
-<div id="instructions">
-
-    WASD / Arrow Keys = Move
-    &nbsp; | &nbsp;
-
-    Mouse = Aim
-    &nbsp; | &nbsp;
-
-    Left Click = Shoot
-    &nbsp; | &nbsp;
-
-    R = Reload
-
-</div>
-
-
-<!-- ========================================
-     PAUSE MENU
-======================================== -->
+<!-- PAUSE MENU -->
 
 <div id="pauseMenu">
 
@@ -220,14 +173,8 @@
 </div>
 
 
-<!-- ========================================
-     SOCKET.IO
-======================================== -->
-
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-
 <script src="game.js"></script>
 
 </body>
-
 </html>
