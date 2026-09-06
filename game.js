@@ -1344,6 +1344,195 @@ function showRoundCountdown(roundEndAt) {
 
 /*
  * =========================
+ * HUD
+ * =========================
+ */
+
+function updateHUD() {
+
+    if (
+        !myPlayerId ||
+        !players[myPlayerId]
+    ) {
+
+        healthText.innerText =
+            "❤️ --- HP";
+
+        ammoText.innerText =
+            "🔫 --- / 6";
+
+        roundText.innerText =
+            "ROUND ---";
+
+        reloadText.style.display =
+            "none";
+
+        return;
+
+    }
+
+
+    const player =
+        players[myPlayerId];
+
+
+    /*
+     * SPECTATOR HUD
+     */
+
+    if (
+        player.spectating
+    ) {
+
+        healthText.innerText =
+            "👻 SPECTATING";
+
+        ammoText.innerText =
+            "👀 WATCHING";
+
+        roundText.innerText =
+            "SPECTATOR";
+
+
+        reloadText.style.display =
+            "none";
+
+
+        return;
+
+    }
+
+
+    /*
+     * NORMAL HUD
+     */
+
+    const health =
+        player.health ??
+        100;
+
+
+    const ammo =
+        player.ammo ??
+        6;
+
+
+    healthText.innerText =
+        "❤️ " +
+        health +
+        " HP";
+
+
+    ammoText.innerText =
+        "🔫 " +
+        ammo +
+        " / 6";
+
+
+    roundText.innerText =
+    `Round: ${currentRound}/${totalRounds}`;
+
+
+    if (
+        player.reloading
+    ) {
+
+        reloadText.style.display =
+            "block";
+
+    } else {
+
+        reloadText.style.display =
+            "none";
+
+    }
+
+}
+
+
+/*
+ * =========================
+ * CONNECT BUTTON
+ * =========================
+ */
+
+connectBtn.addEventListener(
+    "click",
+    connectToServer
+);
+
+
+/*
+ * =========================
+ * ESCAPE KEY
+ * =========================
+ */
+
+window.addEventListener(
+    "keydown",
+    (e) => {
+
+        /*
+         * Don't open pause menu
+         * while typing.
+         */
+
+        if (
+            e.target.tagName ===
+                "INPUT" ||
+            e.target.tagName ===
+                "TEXTAREA"
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            e.key &&
+            e.key === "Escape"
+        ) {
+
+            /*
+             * Only allow pause menu
+             * when actually inside a room.
+             */
+
+            if (
+                !myPlayerId ||
+                !players[myPlayerId]
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                pauseMenu.style.display ===
+                "flex"
+            ) {
+
+                pauseMenu.style.display =
+                    "none";
+
+            } else {
+
+                pauseMenu.style.display =
+                    "flex";
+
+            }
+
+        }
+
+    }
+);
+
+}
+
+/*
+ * =========================
  * DRAW GAME
  * =========================
  */
@@ -1711,196 +1900,6 @@ obstacles.forEach(obstacle => {
 
     ctx.globalAlpha =
         1;
-
-}
-
-
-/*
- * =========================
- * HUD
- * =========================
- */
-
-function updateHUD() {
-
-    if (
-        !myPlayerId ||
-        !players[myPlayerId]
-    ) {
-
-        healthText.innerText =
-            "❤️ --- HP";
-
-        ammoText.innerText =
-            "🔫 --- / 6";
-
-        roundText.innerText =
-            "ROUND ---";
-
-        reloadText.style.display =
-            "none";
-
-        return;
-
-    }
-
-
-    const player =
-        players[myPlayerId];
-
-
-    /*
-     * SPECTATOR HUD
-     */
-
-    if (
-        player.spectating
-    ) {
-
-        healthText.innerText =
-            "👻 SPECTATING";
-
-        ammoText.innerText =
-            "👀 WATCHING";
-
-        roundText.innerText =
-            "SPECTATOR";
-
-
-        reloadText.style.display =
-            "none";
-
-
-        return;
-
-    }
-
-
-    /*
-     * NORMAL HUD
-     */
-
-    const health =
-        player.health ??
-        100;
-
-
-    const ammo =
-        player.ammo ??
-        6;
-
-
-    healthText.innerText =
-        "❤️ " +
-        health +
-        " HP";
-
-
-    ammoText.innerText =
-        "🔫 " +
-        ammo +
-        " / 6";
-
-
-    roundText.innerText =
-    `Round: ${currentRound}/${totalRounds}`;
-
-
-    if (
-        player.reloading
-    ) {
-
-        reloadText.style.display =
-            "block";
-
-    } else {
-
-        reloadText.style.display =
-            "none";
-
-    }
-
-}
-
-
-/*
- * =========================
- * CONNECT BUTTON
- * =========================
- */
-
-connectBtn.addEventListener(
-    "click",
-    connectToServer
-);
-
-
-/*
- * =========================
- * ESCAPE KEY
- * =========================
- */
-
-window.addEventListener(
-    "keydown",
-    (e) => {
-
-        /*
-         * Don't open pause menu
-         * while typing.
-         */
-
-        if (
-            e.target.tagName ===
-                "INPUT" ||
-            e.target.tagName ===
-                "TEXTAREA"
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            e.key &&
-            e.key === "Escape"
-        ) {
-
-            /*
-             * Only allow pause menu
-             * when actually inside a room.
-             */
-
-            if (
-                !myPlayerId ||
-                !players[myPlayerId]
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                pauseMenu.style.display ===
-                "flex"
-            ) {
-
-                pauseMenu.style.display =
-                    "none";
-
-            } else {
-
-                pauseMenu.style.display =
-                    "flex";
-
-            }
-
-        }
-
-    }
-);
 
 }
 
