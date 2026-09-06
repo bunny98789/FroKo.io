@@ -844,8 +844,6 @@ function connectToServer() {
 
         updateLobbyControls();
 
-        drawGame();
-
         updateHUD();
 
     }
@@ -857,8 +855,6 @@ function connectToServer() {
 
             bullets =
                 newBullets;
-
-            drawGame();
 
         }
     );
@@ -2020,6 +2016,13 @@ setInterval(() => {
     });
 
 }, 1000);
+
+function renderLoop() {
+    drawGame();
+    requestAnimationFrame(renderLoop);
+}
+
+requestAnimationFrame(renderLoop);
 
 /*
  * =========================
