@@ -56,6 +56,9 @@ const roomMenu =
 const gameRoomCode =
     document.getElementById("gameRoomCode");
 
+const panelRoomCode =
+    document.getElementById("panelRoomCode");
+
 
 /*
  * PAUSE MENU
@@ -418,8 +421,10 @@ function updatePlayerList() {
 function updateLobbyControls() {
 
     if (
-        !myPlayerId
+        !myPlayerId ||
+        !players[myPlayerId]
     ) {
+
         startGameButton.style.display =
             "none";
 
@@ -427,6 +432,7 @@ function updateLobbyControls() {
             "none";
 
         return;
+
     }
 
     if (
@@ -451,7 +457,6 @@ function updateLobbyControls() {
     }
 
 }
-
 
 /*
  * =========================
@@ -664,33 +669,33 @@ function connectToServer() {
      */
 
     socket.on(
-        "roomJoined",
-        (data) => {
+    "roomJoined",
+    (data) => {
 
-            gameRoomCode.innerText =
-                data.roomCode;
+        gameRoomCode.innerText =
+            data.roomCode;
 
+        panelRoomCode.innerText =
+            data.roomCode;
 
-            roomError.innerText =
-                "";
+        roomError.innerText =
+            "";
 
+        /*
+         * Keep the room menu available
+         * so players can see the lobby.
+         */
 
-            /*
-             * Hide lobby.
-             */
+        roomMenu.style.display =
+            "block";
 
-            roomMenu.style.display =
-                "none";
+        console.log(
+            "Joined room:",
+            data.roomCode
+        );
 
-
-            console.log(
-                "Joined room:",
-                data.roomCode
-            );
-
-        }
-    );
-
+    }
+);
 
     /*
      * =========================
