@@ -308,6 +308,8 @@ function createPlayer(
         joinedDuringGame:
             false
 
+        participatedThisRound: false,
+
     };
 
 }
