@@ -1,6 +1,6 @@
 {
-  "name": "froyo.io",
-  "version": "1.0.0",
+  "name": "froKo.io",
+  "version": "ALPHA",
   "description": "Multiplayer browser game server",
   "main": "server.js",
   "scripts": {
