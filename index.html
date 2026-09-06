@@ -1,17 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>FroKo.io</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="stylesheet" href="style.css">
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="icon.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
 
 <body>
 
 <h1>FroKo.io</h1>
+
+
+<!-- ========================================
+     CONNECTION
+======================================== -->
 
 <div id="connection-panel">
 
@@ -33,7 +54,9 @@
 </div>
 
 
-<!-- GAME HUD -->
+<!-- ========================================
+     GAME HUD
+======================================== -->
 
 <div id="hud">
 
@@ -51,9 +74,15 @@
 
 </div>
 
-    <div id="roomMenu">
+
+<!-- ========================================
+     ROOM MENU
+======================================== -->
+
+<div id="roomMenu">
 
     <input
+        type="text"
         id="usernameInput"
         placeholder="Username"
         maxlength="16"
@@ -68,6 +97,7 @@
     <br><br>
 
     <input
+        type="text"
         id="roomInput"
         placeholder="Room Code"
         maxlength="8"
@@ -81,20 +111,68 @@
 
     <p id="roomError"></p>
 
+
+    <!-- ====================================
+         PLAYER LIST
+    ==================================== -->
+
+    <div id="lobbyPlayers">
+
+        <div id="lobbyPlayersTitle">
+            PLAYERS
+        </div>
+
+        <div id="playerList">
+            No players yet.
+        </div>
+
+    </div>
+
+
+    <!-- ====================================
+         HOST CONTROLS
+    ==================================== -->
+
+    <div id="hostControls">
+
+        <button id="startGameButton">
+            ▶ START GAME
+        </button>
+
+        <p id="waitingForHost">
+            Waiting for host...
+        </p>
+
+    </div>
+
 </div>
 
-    <div id="gameRoomInfo">
-    Room: <span id="gameRoomCode">---</span>
+
+<!-- ========================================
+     ROOM INFO
+======================================== -->
+
+<div id="gameRoomInfo">
+
+    Room:
+    <span id="gameRoomCode">
+        ---
+    </span>
+
 </div>
 
+
+<!-- ========================================
+     GAME
+======================================== -->
 
 <div id="game-wrapper">
-    
+
     <canvas
         id="gameCanvas"
         width="600"
-        height="400">
-    </canvas>
+        height="400"
+    ></canvas>
 
     <div id="reload">
         RELOADING...
@@ -102,24 +180,32 @@
 
 </div>
 
+
 <div id="instructions">
-    WASD / Arrow Keys = Move &nbsp; | &nbsp;
-    Mouse = Aim &nbsp; | &nbsp;
-    Left Click = Shoot &nbsp; | &nbsp;
+
+    WASD / Arrow Keys = Move
+    &nbsp; | &nbsp;
+
+    Mouse = Aim
+    &nbsp; | &nbsp;
+
+    Left Click = Shoot
+    &nbsp; | &nbsp;
+
     R = Reload
+
 </div>
 
-<!-- PAUSE MENU -->
+
+<!-- ========================================
+     PAUSE MENU
+======================================== -->
 
 <div id="pauseMenu">
 
     <div id="pauseBox">
 
         <h2>GAME MENU</h2>
-
-        <button id="spectateButton">
-            👻 Spectate
-        </button>
 
         <button id="colorButton">
             🎨 Change Color
@@ -134,17 +220,14 @@
 </div>
 
 
-<!--
-    SOCKET.IO CLIENT
-
-    IMPORTANT:
-    This MUST load BEFORE the game JavaScript below.
--->
+<!-- ========================================
+     SOCKET.IO
+======================================== -->
 
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-
 
 <script src="game.js"></script>
 
 </body>
+
 </html>
