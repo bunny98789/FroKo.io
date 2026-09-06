@@ -1763,6 +1763,10 @@ io.on(
             `Player connected: ${socket.id}`
         );
 
+        socket.on("pingCheck", () => {
+            socket.emit("pongCheck");
+        });
+
 
         // ====================================
         // CREATE ROOM
