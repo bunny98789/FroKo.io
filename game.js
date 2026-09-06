@@ -64,9 +64,6 @@ const gameRoomCode =
 const pauseMenu =
     document.getElementById("pauseMenu");
 
-const spectateButton =
-    document.getElementById("spectateButton");
-
 const colorButton =
     document.getElementById("colorButton");
 
@@ -95,6 +92,7 @@ let players = {};
 let bullets = {};
 
 let myPlayerId = null;
+let currentHost = null;
 
 let mouseX =
     canvas.width / 2;
@@ -208,41 +206,6 @@ joinRoomButton.addEventListener(
  * =========================
  */
 
-
-/*
- * SPECTATE
- */
-
-spectateButton.addEventListener(
-    "click",
-    () => {
-
-        if (
-            !socket ||
-            !socket.connected ||
-            !myPlayerId ||
-            !players[myPlayerId]
-        ) {
-            return;
-        }
-
-
-        socket.emit(
-            "spectate"
-        );
-
-
-        /*
-         * Close menu.
-         */
-
-        pauseMenu.style.display =
-            "none";
-
-    }
-);
-
-
 /*
  * CHANGE COLOR
  */
@@ -291,6 +254,203 @@ leaveRoomButton.addEventListener(
 
     }
 );
+
+/*
+ * =========================
+ * START GAME
+ * =========================
+ */
+
+startGameButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        if (
+            !myPlayerId ||
+            !players[myPlayerId]
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "startGame"
+        );
+
+    }
+);
+
+/*
+ * =========================
+ * LOBBY PLAYER LIST
+ * =========================
+ */
+
+function updatePlayerList() {
+
+    if (!playerList) {
+        return;
+    }
+
+    playerList.innerHTML = "";
+
+    const playerIds =
+        Object.keys(players);
+
+    if (
+        playerIds.length === 0
+    ) {
+
+        playerList.innerText =
+            "No players yet.";
+
+        return;
+
+    }
+
+    playerIds.forEach(
+        (id) => {
+
+            const player =
+                players[id];
+
+            if (!player) {
+                return;
+            }
+
+            const entry =
+                document.createElement(
+                    "div"
+                );
+
+            entry.className =
+                "playerListEntry";
+
+            /*
+             * HOST CROWN
+             */
+
+            const crown =
+                document.createElement(
+                    "span"
+                );
+
+            crown.className =
+                "playerHostCrown";
+
+            if (
+                id === currentHost
+            ) {
+
+                crown.innerText =
+                    "👑";
+
+            }
+
+            /*
+             * COLOR DOT
+             */
+
+            const colorDot =
+                document.createElement(
+                    "span"
+                );
+
+            colorDot.className =
+                "playerColorDot";
+
+            colorDot.style.backgroundColor =
+                player.color ||
+                "green";
+
+            /*
+             * NAME
+             */
+
+            const name =
+                document.createElement(
+                    "span"
+                );
+
+            name.className =
+                "playerName";
+
+            name.innerText =
+                player.username ||
+                "Unknown";
+
+            if (
+                id === myPlayerId
+            ) {
+
+                name.innerText +=
+                    " (You)";
+
+            }
+
+            entry.appendChild(
+                crown
+            );
+
+            entry.appendChild(
+                colorDot
+            );
+
+            entry.appendChild(
+                name
+            );
+
+            playerList.appendChild(
+                entry
+            );
+
+        }
+    );
+
+}
+
+function updateLobbyControls() {
+
+    if (
+        !myPlayerId
+    ) {
+        startGameButton.style.display =
+            "none";
+
+        waitingForHost.style.display =
+            "none";
+
+        return;
+    }
+
+    if (
+        currentHost ===
+        myPlayerId
+    ) {
+
+        startGameButton.style.display =
+            "block";
+
+        waitingForHost.style.display =
+            "none";
+
+    } else {
+
+        startGameButton.style.display =
+            "none";
+
+        waitingForHost.style.display =
+            "block";
+
+    }
+
+}
 
 
 /*
@@ -413,6 +573,9 @@ function connectToServer() {
             myPlayerId =
                 null;
 
+            currentHost =
+                null;
+
 
             players = {};
 
@@ -448,6 +611,10 @@ function connectToServer() {
 
             reloadText.style.display =
                 "none";
+
+            updatePlayerList();
+
+            updateLobbyControls();
 
 
             drawGame();
@@ -570,6 +737,13 @@ function connectToServer() {
 
             shooting = false;
 
+            currentHost =
+            null;
+
+            updatePlayerList();
+
+            updateLobbyControls();
+
 
             /*
              * Close pause menu.
@@ -629,47 +803,22 @@ function connectToServer() {
      */
 
     socket.on(
-        "updatePlayers",
-        (newPlayers) => {
+    "updatePlayers",
+    (newPlayers) => {
 
-            players =
-                newPlayers;
+        players =
+            newPlayers;
 
+        updatePlayerList();
 
-            /*
-             * Update pause button
-             * depending on our state.
-             */
+        updateLobbyControls();
 
-            if (
-                myPlayerId &&
-                players[myPlayerId]
-            ) {
+        drawGame();
 
-                if (
-                    players[myPlayerId].spectating
-                ) {
+        updateHUD();
 
-                    spectateButton.innerText =
-                        "▶ Return to Game";
-
-                } else {
-
-                    spectateButton.innerText =
-                        "👻 Spectate";
-
-                }
-
-            }
-
-
-            drawGame();
-
-            updateHUD();
-
-        }
-    );
-
+    }
+);
 
     socket.on(
         "updateBullets",
@@ -682,6 +831,28 @@ function connectToServer() {
 
         }
     );
+
+    /*
+ * GAME STATE
+ */
+
+socket.on(
+    "gameState",
+    (data) => {
+
+        if (!data) {
+            return;
+        }
+
+        currentHost =
+            data.host || null;
+
+        updatePlayerList();
+
+        updateLobbyControls();
+
+    }
+);
 
 }
 
@@ -925,6 +1096,70 @@ window.addEventListener(
             return;
 
         }
+
+    }
+);
+
+/*
+ * =========================
+ * ENTER TO START GAME
+ * =========================
+ */
+
+window.addEventListener(
+    "keydown",
+    (e) => {
+
+        if (
+            e.target.tagName ===
+                "INPUT" ||
+            e.target.tagName ===
+                "TEXTAREA"
+        ) {
+
+            return;
+
+        }
+
+        if (
+            e.key !==
+            "Enter"
+        ) {
+
+            return;
+
+        }
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+
+            return;
+
+        }
+
+        if (
+            !myPlayerId ||
+            !players[myPlayerId]
+        ) {
+
+            return;
+
+        }
+
+        if (
+            currentHost !==
+            myPlayerId
+        ) {
+
+            return;
+
+        }
+
+        socket.emit(
+            "startGame"
+        );
 
     }
 );
