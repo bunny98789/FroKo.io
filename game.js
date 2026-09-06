@@ -96,6 +96,7 @@ let bullets = {};
 
 let myPlayerId = null;
 let currentHost = null;
+let currentGameState = "lobby";
 
 let mouseX =
     canvas.width / 2;
@@ -435,9 +436,25 @@ function updateLobbyControls() {
 
     }
 
+    /*
+     * Only show lobby controls
+     * while actually in the lobby.
+     */
+
+    if (currentGameState !== "lobby") {
+
+        startGameButton.style.display =
+            "none";
+
+        waitingForHost.style.display =
+            "none";
+
+        return;
+
+    }
+
     if (
-        currentHost ===
-        myPlayerId
+        currentHost === myPlayerId
     ) {
 
         startGameButton.style.display =
@@ -457,7 +474,6 @@ function updateLobbyControls() {
     }
 
 }
-
 /*
  * =========================
  * CONNECTION
@@ -849,8 +865,30 @@ socket.on(
             return;
         }
 
+        currentGameState =
+            data.state || "lobby";
+
         currentHost =
             data.host || null;
+
+        /*
+         * Hide the room lobby once
+         * the game has actually started.
+         */
+
+        if (
+            currentGameState !== "lobby"
+        ) {
+
+            roomMenu.style.display =
+                "none";
+
+        } else {
+
+            roomMenu.style.display =
+                "block";
+
+        }
 
         updatePlayerList();
 
@@ -858,9 +896,6 @@ socket.on(
 
     }
 );
-
-}
-
 
 /*
  * =========================
