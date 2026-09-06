@@ -99,6 +99,9 @@ let myPlayerId = null;
 let currentHost = null;
 let currentGameState = "lobby";
 
+let currentRound = 1;
+let totalRounds = 5;
+
 let mouseX =
     canvas.width / 2;
 
@@ -1760,9 +1763,7 @@ function updateHUD() {
 
 
     roundText.innerText =
-        "ROUND " +
-        (player.round ?? 1) +
-        " / 5";
+    `${currentRound}/${totalRounds}`;
 
 
     if (
