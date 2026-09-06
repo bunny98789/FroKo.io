@@ -2627,7 +2627,7 @@ setInterval(() => {
             io.to(roomCode).emit("updatePlayers", room.players);
         }
     }
-}, 50);
+}, 16);
 
 setInterval(() => {
 
@@ -2647,7 +2647,7 @@ setInterval(() => {
 
     }
 
-}, 50);
+}, 16);
 
 // ========================================
 // BULLET LOOP
