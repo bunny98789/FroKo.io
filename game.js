@@ -877,6 +877,9 @@ socket.on(
 
         obstacles = data.obstacles || [];
 
+        currentRound = data.currentRound || 0;
+        totalRounds = data.totalRounds || 5;
+
         /*
          * Hide the room lobby once
          * the game has actually started.
