@@ -2760,12 +2760,9 @@ setInterval(
 
                 }
 
-                // ====================================
+                              // ====================================
                 // Player collision
                 // ====================================
-
-                let bulletHitPlayer =
-                    false;
 
                 for (
                     const playerId in
@@ -2773,9 +2770,7 @@ setInterval(
                 ) {
 
                     const player =
-                        room.players[
-                            playerId
-                        ];
+                        room.players[playerId];
 
                     if (!player) {
                         continue;
@@ -2785,21 +2780,15 @@ setInterval(
                         playerId ===
                         bullet.owner
                     ) {
-
                         continue;
-
                     }
 
                     if (player.dead) {
                         continue;
                     }
 
-                    if (
-                        player.spectating
-                    ) {
-
+                    if (player.spectating) {
                         continue;
-
                     }
 
                     const dx =
@@ -2816,10 +2805,7 @@ setInterval(
 
                     let t = 0;
 
-                    if (
-                        lengthSquared >
-                        0
-                    ) {
+                    if (lengthSquared > 0) {
 
                         t =
                             (
@@ -2864,77 +2850,85 @@ setInterval(
 
                     const distance =
                         Math.sqrt(
-                            distanceX *
-                            distanceX +
-
-                            distanceY *
-                            distanceY
+                            distanceX * distanceX +
+                            distanceY * distanceY
                         );
 
-                   if (
-    distance <=
-    PLAYER_RADIUS +
-    BULLET_RADIUS
-) {
+                    if (
+                        distance <=
+                        PLAYER_RADIUS +
+                        BULLET_RADIUS
+                    ) {
 
-    bulletHitPlayer = true;
+                        // ================================
+                        // DAMAGE
+                        // ================================
 
-    // ====================================
-    // Damage
-    // ====================================
+                        player.health -=
+                            room.gameState === "suddenDeath"
+                                ? SUDDEN_DEATH_HEALTH
+                                : BULLET_DAMAGE;
 
-    player.health -=
-        room.gameState === "suddenDeath"
-            ? SUDDEN_DEATH_HEALTH
-            : BULLET_DAMAGE;
+                        // Immediately tell clients about damage
+                        sendGameState(roomCode);
 
-    sendGameState(roomCode);
+                        // ================================
+                        // DEATH
+                        // ================================
 
-    // ====================================
-    // Death
-    // ====================================
+                        if (
+                            player.health <= 0
+                        ) {
 
-    if (
-        player.health <= 0
-    ) {
+                            player.health = 0;
+                            player.dead = true;
+                            player.reloading = false;
 
-        player.health = 0;
-        player.dead = true;
-        player.reloading = false;
+                            recordSurvivalTime(
+                                player
+                            );
 
-        recordSurvivalTime(player);
+                            player.deaths++;
 
-        player.deaths++;
+                            const killer =
+                                room.players[
+                                    bullet.owner
+                                ];
 
-        const killer =
-            room.players[bullet.owner];
+                            if (
+                                killer &&
+                                killer !== player
+                            ) {
 
-        if (
-            killer &&
-            killer !== player
-        ) {
-            killer.kills++;
-        }
+                                killer.kills++;
 
-        console.log(
-            `${player.username} died`
-        );
+                            }
 
-        delete room.bullets[bulletId];
+                            console.log(
+                                `${player.username} died`
+                            );
 
-        checkRoundEnd(roomCode);
+                            delete room.bullets[
+                                bulletId
+                            ];
 
-        break;
+                            checkRoundEnd(
+                                roomCode
+                            );
 
-    }
+                            break;
 
-    // Bullet disappears after hitting
-    // a player, even if they survive.
+                        }
 
-    delete room.bullets[bulletId];
+                        // Bullet disappears after hitting
+                        // a player, even if they survive.
 
-    break;
-}
+                        delete room.bullets[
+                            bulletId
+                        ];
+
+                        break;
+
                     }
 
                 }
@@ -2946,7 +2940,6 @@ setInterval(
     },
     1000 / 60
 );
-
 
 // ========================================
 // SERVER
