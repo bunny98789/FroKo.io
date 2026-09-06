@@ -1219,7 +1219,7 @@ const keys = {};
 document.addEventListener("keydown", (e) => {
     if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
 
-    const key = e.key.toLowerCase();
+   const key = (e.key || "").toLowerCase();
 
     if (key === "w" || e.key === "arrowup") {
         keys.w = true;
@@ -1243,8 +1243,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keyup", (e) => {
-    const key = e.key.toLowerCase();
-
+    const key = (e.key || "").toLowerCase();
+    
     if (key === "w" || e.key === "arrowup") keys.w = false;
     if (key === "a" || e.key === "arrowleft") keys.a = false;
     if (key === "s" || e.key === "arrowdown") keys.s = false;
