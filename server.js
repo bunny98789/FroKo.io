@@ -2871,103 +2871,75 @@ setInterval(
                             distanceY
                         );
 
-                    if (
-                        distance <=
-                        PLAYER_RADIUS +
-                        BULLET_RADIUS
-                    ) {
+                   if (
+    distance <=
+    PLAYER_RADIUS +
+    BULLET_RADIUS
+) {
 
-                        bulletHitPlayer =
-                            true;
+    bulletHitPlayer = true;
 
-                        // ====================================
-                        // Damage
-                        // ====================================
+    // ====================================
+    // Damage
+    // ====================================
 
-                        player.health -=
-                            room.gameState ===
-                            "suddenDeath"
-                                ? SUDDEN_DEATH_HEALTH
-                                : BULLET_DAMAGE;
+    player.health -=
+        room.gameState === "suddenDeath"
+            ? SUDDEN_DEATH_HEALTH
+            : BULLET_DAMAGE;
 
-                        // ====================================
-                        // Death
-                        // ====================================
+    sendGameState(roomCode);
 
-                        if (
-                            player.health <=
-                            0
-                        ) {
+    // ====================================
+    // Death
+    // ====================================
 
-                            player.health =
-                                0;
+    if (
+        player.health <= 0
+    ) {
 
-                            player.dead =
-                                true;
+        player.health = 0;
+        player.dead = true;
+        player.reloading = false;
 
-                            player.reloading =
-                                false;
+        recordSurvivalTime(player);
 
-                            // Record survival time
-                            recordSurvivalTime(
-                                player
-                            );
+        player.deaths++;
 
-                            player.deaths++;
+        const killer =
+            room.players[bullet.owner];
 
-                            // Award kill
-                            const killer =
-                                room.players[
-                                    bullet.owner
-                                ];
+        if (
+            killer &&
+            killer !== player
+        ) {
+            killer.kills++;
+        }
 
-                            if (
-                                killer &&
-                                killer !==
-                                player
-                            ) {
+        console.log(
+            `${player.username} died`
+        );
 
-                                killer.kills++;
+        delete room.bullets[bulletId];
 
-                            }
+        checkRoundEnd(roomCode);
 
-                            console.log(
-                                `${player.username} died`
-                            );
+        break;
 
-                            delete room.bullets[
-                                bulletId
-                            ];
+    }
 
-                            // Check whether this
-                            // ends the round
-                            checkRoundEnd(
-                                roomCode
-                            );
+    // Bullet disappears after hitting
+    // a player, even if they survive.
 
-                            break;
+    delete room.bullets[bulletId];
 
-                        }
-
+    break;
+}
                     }
 
                 }
 
-                if (
-                    bulletHitPlayer
-                ) {
-
-                    delete room.bullets[
-                        bulletId
-                    ];
-
-                }
-
             }
-
-            sendGameState(
-                roomCode
-            );
 
         }
 
