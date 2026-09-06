@@ -240,7 +240,8 @@ function bulletIntersectsRectangle(
 
 function createPlayer(
     socket,
-    username
+    username,
+    participatedThisRound,
 ) {
 
     return {
@@ -628,6 +629,9 @@ function startCountdown(
     room.roundEndAt =
         null;
 
+    player.participatedThisRound = 
+        false;
+
     room.obstacles =
         generateObstacles();
 
@@ -764,6 +768,8 @@ function beginRound(
 
             player.currentRoundStart =
                 Date.now();
+
+             player.participatedThisRound = true;
 
         }
 
@@ -1050,12 +1056,14 @@ function continueAfterRound(
 // GET FINAL TIED PLAYERS
 // ========================================
 
-function getFinalTiedPlayers(
-    room
-) {
+function getFinalTiedPlayers(room) {
 
     const activePlayers =
-        getActivePlayers(room);
+        getActivePlayers(room)
+            .filter(
+                player =>
+                    player.roundsParticipated > 0
+            );
 
     if (
         activePlayers.length === 0
@@ -1086,7 +1094,6 @@ function getFinalTiedPlayers(
     );
 
 }
-
 
 // ========================================
 // SUDDEN DEATH
