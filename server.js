@@ -306,7 +306,7 @@ function createPlayer(
 
         // Used when joining during a game
         joinedDuringGame:
-            false
+            false,
 
         participatedThisRound: false,
 
