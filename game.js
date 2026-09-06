@@ -1213,7 +1213,11 @@ document.addEventListener("keyup", (e) => {
     if (key === "d" || e.key === "arrowright") keys.d = false;
 });
 
-function movementLoop() {
+let lastMoveTime = 0;
+const MOVE_INTERVAL = 50; // 20 movement updates per second
+
+function movementLoop(timestamp) {
+
     if (
         socket &&
         socket.connected &&
@@ -1222,33 +1226,40 @@ function movementLoop() {
         !players[myPlayerId].dead &&
         !players[myPlayerId].spectating
     ) {
-        let x = 0;
-        let y = 0;
 
-        // Fixed world directions
-        if (keys.w) y -= 1;
-        if (keys.s) y += 1;
-        if (keys.a) x -= 1;
-        if (keys.d) x += 1;
+        if (timestamp - lastMoveTime >= MOVE_INTERVAL) {
 
-        // Normalize diagonal movement
-        if (x !== 0 || y !== 0) {
-            const length = Math.sqrt(x * x + y * y);
+            let x = 0;
+            let y = 0;
 
-            x /= length;
-            y /= length;
+            if (keys.w) y -= 1;
+            if (keys.s) y += 1;
+            if (keys.a) x -= 1;
+            if (keys.d) x += 1;
 
-            socket.emit("move", {
-                x: x * speed,
-                y: y * speed
-            });
+            if (x !== 0 || y !== 0) {
+
+                const length =
+                    Math.sqrt(x * x + y * y);
+
+                x /= length;
+                y /= length;
+
+                socket.emit("move", {
+                    x: x * speed,
+                    y: y * speed
+                });
+
+            }
+
+            lastMoveTime = timestamp;
         }
     }
 
     requestAnimationFrame(movementLoop);
 }
 
-movementLoop();
+requestAnimationFrame(movementLoop);
 
 /*
  * =========================
