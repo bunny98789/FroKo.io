@@ -398,6 +398,11 @@ function sendGameState(roomCode) {
     }
 
     io.to(roomCode).emit(
+    "updatePlayers",
+    room.players
+);
+
+    io.to(roomCode).emit(
         "updateBullets",
         room.bullets
     );
