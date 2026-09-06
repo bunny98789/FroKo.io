@@ -93,6 +93,7 @@ let socket = null;
 
 let players = {};
 let bullets = {};
+let obstacles = [];
 
 let myPlayerId = null;
 let currentHost = null;
@@ -871,6 +872,8 @@ socket.on(
         currentHost =
             data.host || null;
 
+        obstacles = data.obstacles || [];
+
         /*
          * Hide the room lobby once
          * the game has actually started.
@@ -1368,6 +1371,18 @@ function drawGame() {
 
     }
 
+       // Draw obstacles
+obstacles.forEach(obstacle => {
+    ctx.fillStyle = "#555";
+    ctx.fillRect(
+        obstacle.x,
+        obstacle.y,
+        obstacle.width,
+        obstacle.height
+    );
+});
+
+
 
     /*
      * =========================
@@ -1386,7 +1401,6 @@ function drawGame() {
         if (!player) {
             continue;
         }
-
 
         /*
          * Spectators disappear
