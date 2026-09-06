@@ -2,785 +2,523 @@
     box-sizing: border-box;
 }
 
-
 body {
-
     font-family: sans-serif;
+    text-align: center;
+    background-color: #121212;
+    color: white;
+    margin: 0;
+    padding-top: 20px;
+    user-select: none;
+}
+
+h1 {
+    margin: 0 0 15px 0;
+}
+
+
+/* CONNECTION */
+
+#connection-panel {
+    margin-bottom: 15px;
+}
+
+input {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    width: 280px;
+}
+
+button {
+    padding: 8px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+button:hover {
+    filter: brightness(1.15);
+}
+
+#status {
+    margin-top: 10px;
+    color: #aaa;
+}
+
+
+/* MAIN GAME LAYOUT */
+
+#main-game-layout {
+    position: relative;
+
+    /*
+        The game remains centered at 600px.
+        The player panel is positioned to its right
+        without moving the game.
+    */
+
+    width: 600px;
+    margin: 10px auto 0 auto;
+}
+
+
+/* GAME */
+
+#game-section {
+    width: 600px;
+}
+
+#hud {
+    width: 600px;
+    margin: 10px auto 0 auto;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#health {
+    color: #ff5555;
+}
+
+#ammo {
+    color: #ffd84d;
+}
+
+#round {
+    color: #66aaff;
+}
+
+#gameRoomInfo {
+    margin: 8px 0;
+    color: #aaa;
+    font-size: 14px;
+}
+
+#game-wrapper {
+    position: relative;
+
+    width: 600px;
+    height: 400px;
+
+    margin: 0 auto;
+}
+
+#game-wrapper canvas {
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 600px;
+    height: 400px;
+
+    background-color: #222;
+
+    border: 3px solid #444;
+    border-radius: 10px;
+
+    display: block;
+
+    cursor: crosshair;
+}
+
+#reload {
+    position: absolute;
+
+    left: 0;
+    top: 50%;
+
+    width: 100%;
+
+    transform: translateY(-50%);
 
     text-align: center;
 
-    background-color: #121212;
+    color: #ffaa44;
+
+    font-size: 24px;
+    font-weight: bold;
+
+    text-shadow: 2px 2px 4px black;
+
+    display: none;
+
+    pointer-events: none;
+
+    z-index: 10;
+}
+
+#instructions {
+    margin-top: 10px;
+
+    color: #999;
+
+    font-size: 14px;
+}
+
+
+/* PLAYER PANEL */
+
+#playerPanel {
+
+    position: absolute;
+
+    /*
+        600px game + 20px gap.
+        This means the panel sits to the right
+        while the game stays centered.
+    */
+
+    left: 620px;
+    top: 0;
+
+    width: 230px;
+
+    background: #151515;
+
+    border: 2px solid #333;
+
+    border-radius: 12px;
+
+    padding: 18px;
+
+    text-align: left;
+
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#playerPanelTitle {
+    text-align: center;
+
+    font-size: 22px;
+
+    font-weight: bold;
+
+    margin-bottom: 6px;
+}
+
+#playerPanelRoom {
+    text-align: center;
+
+    color: #888;
+
+    font-size: 13px;
+
+    margin-bottom: 18px;
+}
+
+#lobbyPlayersTitle {
+    font-size: 14px;
+
+    font-weight: bold;
+
+    color: #aaa;
+
+    border-bottom: 1px solid #333;
+
+    padding-bottom: 7px;
+
+    margin-bottom: 8px;
+}
+
+#playerList {
+    min-height: 80px;
+
+    max-height: 260px;
+
+    overflow-y: auto;
+}
+
+
+/* PLAYER LIST ENTRY */
+
+.player-entry {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 8px 6px;
+
+    margin-bottom: 4px;
+
+    border-radius: 6px;
+
+    background: #202020;
+
+    font-size: 15px;
+}
+
+.player-entry.you {
+    border: 1px solid #444;
+}
+
+.player-color {
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+}
+
+.player-name {
+    flex: 1;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.player-status {
+    font-size: 12px;
+
+    color: #888;
+}
+
+.emptyPlayerList {
+    text-align: center;
+
+    color: #777;
+
+    padding: 15px 5px;
+
+    font-size: 13px;
+}
+
+
+/* HOST CONTROLS */
+
+#hostControls {
+    margin-top: 15px;
+
+    border-top: 1px solid #333;
+
+    padding-top: 15px;
+}
+
+#startGameButton {
+    display: none;
+
+    width: 100%;
+
+    background: #28a745;
+
+    font-weight: bold;
+
+    padding: 11px;
+}
+
+#startGameButton:hover {
+    background: #218838;
+}
+
+#waitingForHost {
+    display: none;
+
+    text-align: center;
+
+    color: #888;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+}
+
+
+/* ROOM MENU */
+
+#roomMenu {
+    width: 360px;
+
+    margin: 30px auto;
+
+    padding: 30px;
+
+    background: #151515;
+
+    border: 2px solid #333;
+
+    border-radius: 12px;
+
+    text-align: center;
+
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+#roomMenu::before {
+    content: "MULTIPLAYER LOBBY";
+
+    display: block;
 
     color: white;
 
-    margin: 0;
+    font-size: 28px;
 
-    padding-top: 20px;
+    font-weight: bold;
 
-    user-select: none;
-
+    margin-bottom: 8px;
 }
 
+#roomMenu::after {
+    content: "Create a room or join a friend";
 
-h1 {
+    display: block;
 
-    margin:
-        0 0 15px 0;
+    color: #888;
 
+    font-size: 14px;
+
+    margin-bottom: 25px;
 }
 
+#roomMenu input {
+    width: 100%;
 
-#connection-panel {
+    padding: 12px;
+
+    margin-bottom: 12px;
+
+    background: #222;
+
+    color: white;
+
+    border: 1px solid #444;
+
+    border-radius: 6px;
+
+    font-size: 16px;
+
+    outline: none;
+}
+
+#roomMenu input:focus {
+    border-color: #007bff;
+}
+
+#roomMenu button {
+    width: 100%;
+
+    padding: 12px;
 
     margin-bottom: 15px;
 
-}
-
-
-input {
-
-    padding: 8px;
-
-    font-size: 16px;
-
-    border-radius: 5px;
-
     border: none;
 
-    width: 280px;
+    border-radius: 6px;
 
-}
-
-
-button {
-
-    padding:
-        8px 15px;
-
-    font-size: 16px;
-
-    cursor: pointer;
-
-    background-color:
-        #007bff;
+    background: #007bff;
 
     color: white;
 
-    border: none;
+    font-size: 16px;
 
-    border-radius: 5px;
+    font-weight: bold;
 
-}
-
-
-button:hover {
-
-    filter:
-        brightness(1.15);
-
-}
-
-
-canvas {
-
-    background-color:
-        #222;
-
-    border:
-        3px solid #444;
-
-    border-radius:
-        10px;
-
-    display:
-        block;
-
-    margin:
-        0 auto;
-
-    cursor:
-        crosshair;
-
-}
-
-
-#status {
-
-    margin-top:
-        10px;
-
-    color:
-        #aaa;
-
-}
-
-
-/* ========================================
-   GAME HUD
-======================================== */
-
-#hud {
-
-    width:
-        600px;
-
-    margin:
-        10px auto 0 auto;
-
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-
-    font-size:
-        18px;
-
-    font-weight:
-        bold;
-
-}
-
-
-#health {
-
-    color:
-        #ff5555;
-
-}
-
-
-#ammo {
-
-    color:
-        #ffd84d;
-
-}
-
-
-#round {
-
-    color:
-        #66aaff;
-
-}
-
-
-#instructions {
-
-    margin-top:
-        10px;
-
-    color:
-        #999;
-
-    font-size:
-        14px;
-
-}
-
-
-#game-wrapper {
-
-    position:
-        relative;
-
-    width:
-        600px;
-
-    height:
-        400px;
-
-    margin:
-        0 auto;
-
-}
-
-
-#game-wrapper canvas {
-
-    position:
-        absolute;
-
-    left:
-        0;
-
-    top:
-        0;
-
-}
-
-
-#reload {
-
-    position:
-        absolute;
-
-    left:
-        0;
-
-    top:
-        50%;
-
-    width:
-        100%;
-
-    transform:
-        translateY(-50%);
-
-    text-align:
-        center;
-
-    color:
-        #ffaa44;
-
-    font-size:
-        24px;
-
-    font-weight:
-        bold;
-
-    text-shadow:
-        2px 2px 4px black;
-
-    display:
-        none;
-
-    pointer-events:
-        none;
-
-    z-index:
-        10;
-
-}
-
-
-/* ========================================
-   LOBBY
-======================================== */
-
-#roomMenu {
-
-    width:
-        400px;
-
-    margin:
-        60px auto 30px auto;
-
-    padding:
-        30px;
-
-    background:
-        #151515;
-
-    border:
-        2px solid #333;
-
-    border-radius:
-        12px;
-
-    text-align:
-        center;
-
-    box-shadow:
-        0 0 20px rgba(0, 0, 0, 0.6);
-
-}
-
-
-#roomMenu::before {
-
-    content:
-        "MULTIPLAYER LOBBY";
-
-    display:
-        block;
-
-    color:
-        white;
-
-    font-size:
-        28px;
-
-    font-weight:
-        bold;
-
-    margin-bottom:
-        8px;
-
-}
-
-
-#roomMenu::after {
-
-    content:
-        "Create a room or join a friend";
-
-    display:
-        block;
-
-    color:
-        #888;
-
-    font-size:
-        14px;
-
-    margin-bottom:
-        25px;
-
-}
-
-
-#roomMenu input {
-
-    width:
-        100%;
-
-    padding:
-        12px;
-
-    margin-bottom:
-        12px;
-
-    background:
-        #222;
-
-    color:
-        white;
-
-    border:
-        1px solid #444;
-
-    border-radius:
-        6px;
-
-    font-size:
-        16px;
-
-    outline:
-        none;
-
-}
-
-
-#roomMenu input:focus {
-
-    border-color:
-        #007bff;
-
-}
-
-
-#roomMenu button {
-
-    width:
-        100%;
-
-    padding:
-        12px;
-
-    margin-bottom:
-        12px;
-
-    border:
-        none;
-
-    border-radius:
-        6px;
-
-    background:
-        #007bff;
-
-    color:
-        white;
-
-    font-size:
-        16px;
-
-    font-weight:
-        bold;
-
-    cursor:
-        pointer;
+    cursor: pointer;
 
     transition:
         background 0.15s,
         transform 0.1s;
-
 }
-
 
 #roomMenu button:hover {
-
-    background:
-        #0066d6;
-
+    background: #0066d6;
 }
-
 
 #roomMenu button:active {
-
-    transform:
-        scale(0.98);
-
+    transform: scale(0.98);
 }
-
 
 #roomDisplay {
+    color: #66ff66;
 
-    color:
-        #66ff66;
+    font-size: 18px;
 
-    font-size:
-        18px;
+    font-weight: bold;
 
-    font-weight:
-        bold;
-
-    margin-top:
-        10px;
-
+    margin-top: 10px;
 }
-
 
 #roomError {
+    color: #ff5555;
 
-    color:
-        #ff5555;
+    font-size: 14px;
 
-    font-size:
-        14px;
-
-    min-height:
-        20px;
-
+    min-height: 20px;
 }
 
 
-/* ========================================
-   PLAYER LIST
-======================================== */
-
-#lobbyPlayers {
-
-    margin-top:
-        25px;
-
-    padding-top:
-        20px;
-
-    border-top:
-        1px solid #333;
-
-}
-
-
-#lobbyPlayersTitle {
-
-    font-size:
-        15px;
-
-    font-weight:
-        bold;
-
-    color:
-        #888;
-
-    letter-spacing:
-        1px;
-
-    margin-bottom:
-        10px;
-
-}
-
-
-#playerList {
-
-    width:
-        100%;
-
-    min-height:
-        35px;
-
-    background:
-        #101010;
-
-    border:
-        1px solid #333;
-
-    border-radius:
-        8px;
-
-    padding:
-        8px;
-
-}
-
-
-.playerListEntry {
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    text-align:
-        left;
-
-    padding:
-        7px 10px;
-
-    border-radius:
-        5px;
-
-    font-size:
-        16px;
-
-}
-
-
-.playerListEntry:nth-child(even) {
-
-    background:
-        #181818;
-
-}
-
-
-.playerHostCrown {
-
-    width:
-        25px;
-
-    margin-right:
-        5px;
-
-    text-align:
-        center;
-
-}
-
-
-.playerColorDot {
-
-    width:
-        12px;
-
-    height:
-        12px;
-
-    border-radius:
-        50%;
-
-    margin-right:
-        8px;
-
-    flex-shrink:
-        0;
-
-}
-
-
-.playerName {
-
-    overflow:
-        hidden;
-
-    text-overflow:
-        ellipsis;
-
-    white-space:
-        nowrap;
-
-}
-
-
-/* ========================================
-   HOST CONTROLS
-======================================== */
-
-#hostControls {
-
-    margin-top:
-        20px;
-
-}
-
-
-#startGameButton {
-
-    background:
-        #28a745;
-
-    display:
-        none;
-
-}
-
-
-#startGameButton:hover {
-
-    background:
-        #218838;
-
-}
-
-
-#waitingForHost {
-
-    display:
-        none;
-
-    color:
-        #888;
-
-    font-size:
-        14px;
-
-    margin:
-        8px 0 0 0;
-
-}
-
-
-/* ========================================
-   ROOM INFO
-======================================== */
-
-#gameRoomInfo {
-
-    margin:
-        10px auto;
-
-    font-size:
-        16px;
-
-    font-weight:
-        bold;
-
-    color:
-        #aaa;
-
-}
-
-
-#gameRoomCode {
-
-    color:
-        #66ff66;
-
-    letter-spacing:
-        2px;
-
-}
-
-
-/* ========================================
-   PAUSE MENU
-======================================== */
+/* PAUSE MENU */
 
 #pauseMenu {
+    position: fixed;
 
-    position:
-        fixed;
+    inset: 0;
 
-    inset:
-        0;
+    background: rgba(0, 0, 0, 0.7);
 
-    background:
-        rgba(0, 0, 0, 0.7);
+    display: none;
 
-    display:
-        none;
+    align-items: center;
 
-    align-items:
-        center;
+    justify-content: center;
 
-    justify-content:
-        center;
-
-    z-index:
-        100;
-
+    z-index: 100;
 }
-
 
 #pauseBox {
+    width: 320px;
 
-    width:
-        320px;
+    padding: 30px;
 
-    padding:
-        30px;
+    background: #151515;
 
-    background:
-        #151515;
+    border: 2px solid #444;
 
-    border:
-        2px solid #444;
+    border-radius: 12px;
 
-    border-radius:
-        12px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
 
-    box-shadow:
-        0 0 30px rgba(0, 0, 0, 0.8);
-
-    text-align:
-        center;
-
+    text-align: center;
 }
-
 
 #pauseBox h2 {
+    margin-top: 0;
 
-    margin-top:
-        0;
+    margin-bottom: 25px;
 
-    margin-bottom:
-        25px;
-
-    font-size:
-        28px;
-
+    font-size: 28px;
 }
-
 
 #pauseBox button {
+    width: 100%;
 
-    width:
-        100%;
+    padding: 12px;
 
-    padding:
-        12px;
+    margin-bottom: 12px;
 
-    margin-bottom:
-        12px;
+    font-size: 16px;
 
-    font-size:
-        16px;
-
-    font-weight:
-        bold;
-
+    font-weight: bold;
 }
-
 
 #leaveRoomButton {
-
-    background:
-        #cc3333;
-
+    background: #cc3333;
 }
 
-
 #leaveRoomButton:hover {
-
-    background:
-        #aa2222;
-
+    background: #aa2222;
 }
