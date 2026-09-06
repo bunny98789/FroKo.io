@@ -1847,6 +1847,8 @@ window.addEventListener(
     }
 );
 
+}
+
 
 /*
  * =========================
@@ -1855,4 +1857,4 @@ window.addEventListener(
  */
 
 connectToServer();
-}
+
