@@ -834,7 +834,6 @@ function connectToServer() {
      */
 
    socket.on("updatePlayers", (newPlayers) => {
-    console.log("PLAYER UPDATE", performance.now());
        
     players = newPlayers;
 
