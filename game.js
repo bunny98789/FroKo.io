@@ -83,6 +83,12 @@ const waitingForHost =
     document.getElementById("waitingForHost");
 
 
+const gameEndScreen = document.getElementById("gameEndScreen");
+const gameWinner = document.getElementById("gameWinner");
+const finalStats = document.getElementById("finalStats");
+const gameEndCountdown = document.getElementById("gameEndCountdown");
+
+
 /*
  * =========================
  * GAME VARIABLES
@@ -897,6 +903,12 @@ socket.on(
             roomMenu.style.display =
                 "block";
 
+        }
+
+        if (currentGameState === "gameEnd") {
+            showGameEnd(data);
+        } else {
+            gameEndScreen.style.display = "none";
         }
 
         updatePlayerList();
@@ -1865,6 +1877,60 @@ window.addEventListener(
     }
 );
 
+}
+
+function showGameEnd(data) {
+    gameEndScreen.style.display = "flex";
+
+    let winner = null;
+
+    for (const id in players) {
+        const player = players[id];
+
+        if (!player.dead && !player.spectating) {
+            winner = player;
+            break;
+        }
+    }
+
+    gameWinner.textContent = winner
+        ? `🏆 Winner: ${winner.username}`
+        : "🏆 Winner: Draw!";
+
+    let html = "";
+
+    for (const id in players) {
+        const player = players[id];
+
+        html += `
+            <div style="margin:10px 0; padding:8px; background:#333; border-radius:6px;">
+                <strong>${player.username}</strong><br>
+                Kills: ${player.kills || 0} |
+                Deaths: ${player.deaths || 0} |
+                Round Wins: ${player.roundWins || 0}
+            </div>
+        `;
+    }
+
+    finalStats.innerHTML = html;
+
+    const endTime = data.gameEndAt || Date.now();
+
+    function updateCountdown() {
+        const remaining = Math.max(
+            0,
+            Math.ceil((endTime - Date.now()) / 1000)
+        );
+
+        gameEndCountdown.textContent =
+            `Returning to lobby in ${remaining}...`;
+
+        if (remaining > 0 && currentGameState === "gameEnd") {
+            setTimeout(updateCountdown, 250);
+        }
+    }
+
+    updateCountdown();
 }
 
 let fps = 0;
