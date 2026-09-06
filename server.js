@@ -482,20 +482,57 @@ function sendRoomState(roomCode) {
 
 }
 
+    function getSafeSpawn(room) {
+    for (let attempt = 0; attempt < 100; attempt++) {
+        const x = 40 + Math.random() * 520;
+        const y = 40 + Math.random() * 320;
+
+        let blocked = false;
+
+        for (const obstacle of room.obstacles) {
+            if (
+                x + PLAYER_RADIUS > obstacle.x &&
+                x - PLAYER_RADIUS < obstacle.x + obstacle.width &&
+                y + PLAYER_RADIUS > obstacle.y &&
+                y - PLAYER_RADIUS < obstacle.y + obstacle.height
+            ) {
+                blocked = true;
+                break;
+            }
+        }
+
+        if (!blocked) {
+            return { x, y };
+        }
+    }
+
+    // Fallback if somehow no safe position was found
+    return {
+        x: 50,
+        y: 50
+    };
+}
+
+
 
 // ========================================
 // RESET PLAYER FOR ROUND
 // ========================================
 
 function resetPlayerForRound(
+    room,
     player
 ) {
 
-   const spawn = getSafeSpawn(room);
+    const spawn =
+        getSafeSpawn(room);
 
-player.x = spawn.x;
-player.y = spawn.y;
+    player.x =
+        spawn.x;
 
+    player.y =
+        spawn.y;
+    
     player.angle =
         0;
 
@@ -1178,15 +1215,14 @@ function startSuddenDeath(
             player.health =
                 SUDDEN_DEATH_HEALTH;
 
-            player.x =
-                50 +
-                Math.random() *
-                500;
+            const spawn =
+    getSafeSpawn(room);
 
-            player.y =
-                50 +
-                Math.random() *
-                300;
+player.x =
+    spawn.x;
+
+player.y =
+    spawn.y;
 
             player.currentRoundStart =
                 Date.now();
@@ -2763,37 +2799,7 @@ setInterval(
 
                 }
 
-                function getSafeSpawn(room) {
-    for (let attempt = 0; attempt < 100; attempt++) {
-        const x = 40 + Math.random() * 520;
-        const y = 40 + Math.random() * 320;
-
-        let blocked = false;
-
-        for (const obstacle of room.obstacles) {
-            if (
-                x + PLAYER_RADIUS > obstacle.x &&
-                x - PLAYER_RADIUS < obstacle.x + obstacle.width &&
-                y + PLAYER_RADIUS > obstacle.y &&
-                y - PLAYER_RADIUS < obstacle.y + obstacle.height
-            ) {
-                blocked = true;
-                break;
-            }
-        }
-
-        if (!blocked) {
-            return { x, y };
-        }
-    }
-
-    // Fallback if somehow no safe position was found
-    return {
-        x: 50,
-        y: 50
-    };
-}
-
+            
                 // ====================================
                 // Player collision
                 // ====================================
