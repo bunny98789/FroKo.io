@@ -1470,8 +1470,7 @@ connectBtn.addEventListener(
 * ==========================
 */
 
-    copyBttn.addEventListener(() => {
-        "click",
+    copyBttn.addEventListener("click", () => {
         navigator.clipboard.writeText(roomCode);
     });
 
