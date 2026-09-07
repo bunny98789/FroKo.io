@@ -731,6 +731,9 @@ function connectToServer() {
     "roomJoined",
     (data) => {
 
+        canvas.display =
+            "block";
+
         gameRoomCode.innerText =
             data.roomCode;
 
