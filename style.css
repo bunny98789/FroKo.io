@@ -126,7 +126,7 @@ button:hover {
     border: 3px solid #444;
     border-radius: 10px;
 
-    display: block;
+    display: none;
 
     cursor: crosshair;
 }
