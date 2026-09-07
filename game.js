@@ -493,15 +493,31 @@ function updateLobbyControls() {
  * =========================
  */
 
-function connectToServer() {
+window.addEventListener("offline", () => {
+    statusText.innerText =
+        "Internet Down: Reconnect to play";
 
-     if (!navigator.onLine) {
-         statusText.innerText =
-            "Internet Down: Reconnect to play";
+    statusText.style.color =
+        "red";
+});
+
+window.addEventListener("online", () => {
+    if (socket && socket.connected) {
+        statusText.innerText =
+            "Connected as " + socket.id;
 
         statusText.style.color =
-            "red";
+            "lightgreen";
+    } else {
+        statusText.innerText =
+            "Reconnecting...";
+
+        statusText.style.color =
+            "yellow";
     }
+});
+
+function connectToServer() {
 
 
     if (
