@@ -59,6 +59,9 @@ const gameRoomCode =
 const panelRoomCode =
     document.getElementById("panelRoomCode");
 
+const copyBttn =
+    document.getElementById("copyBttn");
+
 
 /*
  * PAUSE MENU
@@ -1460,6 +1463,17 @@ connectBtn.addEventListener(
     "click",
     connectToServer
 );
+
+/*
+* ==========================
+* COPY BUTTON
+* ==========================
+*/
+
+    copyBttn.addEventListener(
+        "click",
+        navigator.clipboard.writeText(roomCode);
+    );
 
 
 /*
