@@ -495,12 +495,7 @@ function updateLobbyControls() {
 
 function connectToServer() {
 
-    if (
-        typeof io ===
-        "undefined"
-    ) {
-
-    if (!location.online) {
+     if (!navigator.onLine) {
          statusText.innerText =
             "Internet Down: Reconnect to play";
 
@@ -508,6 +503,11 @@ function connectToServer() {
             "red";
     }
 
+
+    if (
+        typeof io ===
+        "undefined"
+    ) {
         console.error(
             "Socket.io failed to load."
         );
