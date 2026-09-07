@@ -519,6 +519,12 @@ window.addEventListener("online", () => {
 
 function connectToServer() {
 
+    if (!navigator.onLine) {
+    statusText.innerText = "Internet Down: Reconnect to play";
+    statusText.style.color = "red";
+    return;
+    }    
+
 
     if (
         typeof io ===
