@@ -1,70 +1,66 @@
+```js
 /*
- * =========================
- * ELEMENTS
- * =========================
+ * ============================================================
+ * FROKO.IO - GAME.JS
+ * ============================================================
  */
 
-const canvas =
-    document.getElementById("gameCanvas");
 
-const ctx =
-    canvas.getContext("2d");
+/*
+ * ============================================================
+ * ELEMENTS
+ * ============================================================
+ */
 
-const connectBtn =
-    document.getElementById("connect-btn");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-const serverUrlInput =
-    document.getElementById("server-url");
+const connectBtn = document.getElementById("connect-btn");
+const serverUrlInput = document.getElementById("server-url");
+const statusText = document.getElementById("status");
 
-const statusText =
-    document.getElementById("status");
+const healthText = document.getElementById("health");
+const ammoText = document.getElementById("ammo");
+const roundText = document.getElementById("round");
+const reloadText = document.getElementById("reload");
 
-const healthText =
-    document.getElementById("health");
+const usernameInput = document.getElementById("usernameInput");
+const createRoomButton = document.getElementById("createRoomButton");
+const joinRoomButton = document.getElementById("joinRoomButton");
+const roomInput = document.getElementById("roomInput");
 
-const ammoText =
-    document.getElementById("ammo");
+const roomDisplay = document.getElementById("roomDisplay");
+const roomError = document.getElementById("roomError");
+const roomMenu = document.getElementById("roomMenu");
 
-const roundText =
-    document.getElementById("round");
+const gameRoomCode = document.getElementById("gameRoomCode");
+const panelRoomCode = document.getElementById("panelRoomCode");
+const copyBttn = document.getElementById("copyBttn");
 
-const reloadText =
-    document.getElementById("reload");
+const playerList = document.getElementById("playerList");
+const startGameButton = document.getElementById("startGameButton");
+const waitingForHost = document.getElementById("waitingForHost");
 
+const roundCountdown =
+    document.getElementById("roundCountdown");
 
-const usernameInput =
-    document.getElementById("usernameInput");
+const roundCountdownNumber =
+    document.getElementById("roundCountdownNumber");
 
-const createRoomButton =
-    document.getElementById("createRoomButton");
+const mainGameLayout =
+    document.getElementById("main-game-layout");
 
-const joinRoomButton =
-    document.getElementById("joinRoomButton");
+const gameSection =
+    document.getElementById("game-section");
 
-const roomInput =
-    document.getElementById("roomInput");
-
-const roomDisplay =
-    document.getElementById("roomDisplay");
-
-const roomError =
-    document.getElementById("roomError");
-
-const roomMenu =
-    document.getElementById("roomMenu");
-
-const gameRoomCode =
-    document.getElementById("gameRoomCode");
-
-const panelRoomCode =
-    document.getElementById("panelRoomCode");
-
-const copyBttn =
-    document.getElementById("copyBttn");
+const playerPanel =
+    document.getElementById("playerPanel");
 
 
 /*
+ * ============================================================
  * PAUSE MENU
+ * ============================================================
  */
 
 const pauseMenu =
@@ -76,26 +72,30 @@ const colorButton =
 const leaveRoomButton =
     document.getElementById("leaveRoomButton");
 
-const playerList =
-    document.getElementById("playerList");
 
-const startGameButton =
-    document.getElementById("startGameButton");
+/*
+ * ============================================================
+ * GAME END SCREEN
+ * ============================================================
+ */
 
-const waitingForHost =
-    document.getElementById("waitingForHost");
+const gameEndScreen =
+    document.getElementById("gameEndScreen");
 
+const gameWinner =
+    document.getElementById("gameWinner");
 
-const gameEndScreen = document.getElementById("gameEndScreen");
-const gameWinner = document.getElementById("gameWinner");
-const finalStats = document.getElementById("finalStats");
-const gameEndCountdown = document.getElementById("gameEndCountdown");
+const finalStats =
+    document.getElementById("finalStats");
+
+const gameEndCountdown =
+    document.getElementById("gameEndCountdown");
 
 
 /*
- * =========================
+ * ============================================================
  * GAME VARIABLES
- * =========================
+ * ============================================================
  */
 
 let socket = null;
@@ -106,16 +106,14 @@ let obstacles = [];
 
 let myPlayerId = null;
 let currentHost = null;
+
 let currentGameState = "lobby";
 
 let currentRound = 1;
 let totalRounds = 5;
 
-let mouseX =
-    canvas.width / 2;
-
-let mouseY =
-    canvas.height / 2;
+let mouseX = canvas.width / 2;
+let mouseY = canvas.height / 2;
 
 let myAngle = 0;
 
@@ -125,188 +123,225 @@ let shooting = false;
 
 
 /*
- * =========================
- * ROOM BUTTONS
- * =========================
+ * ============================================================
+ * VIEW MANAGEMENT
+ * ============================================================
+ *
+ * Lobby:
+ * - Room menu centered
+ * - Canvas hidden
+ * - Player panel hidden
+ *
+ * Game:
+ * - Canvas visible
+ * - Player panel visible
+ * - Room menu hidden
+ *
+ * ============================================================
  */
 
-createRoomButton.addEventListener(
-    "click",
-    () => {
+function showLobbyView() {
 
-        if (
-            !socket ||
-            !socket.connected
-        ) {
-            return;
-        }
+    canvas.style.display = "none";
 
+    playerPanel.style.display = "none";
 
-        const username =
-            usernameInput.value.trim();
+    roomMenu.style.display = "block";
 
-
-        if (!username) {
-
-            roomError.innerText =
-                "Enter a username first.";
-
-            return;
-        }
-
-
-        socket.emit(
-            "createRoom",
-            username
-        );
-
+    if (mainGameLayout) {
+        mainGameLayout.style.justifyContent = "center";
     }
-);
 
-
-joinRoomButton.addEventListener(
-    "click",
-    () => {
-
-        if (
-            !socket ||
-            !socket.connected
-        ) {
-            return;
-        }
-
-
-        const username =
-            usernameInput.value.trim();
-
-
-        const roomCode =
-            roomInput.value.trim();
-
-
-        if (!username) {
-
-            roomError.innerText =
-                "Enter a username first.";
-
-            return;
-        }
-
-
-        if (!roomCode) {
-
-            roomError.innerText =
-                "Enter a room code.";
-
-            return;
-        }
-
-
-        socket.emit(
-            "joinRoom",
-            {
-                username:
-                    username,
-
-                roomCode:
-                    roomCode
-            }
-        );
-
+    if (gameSection) {
+        gameSection.style.alignItems = "center";
     }
-);
+
+    document.getElementById("hud").style.display = "none";
+    document.getElementById("gameRoomInfo").style.display = "none";
+    document.getElementById("instructions").style.display = "none";
+
+}
+
+
+function showGameView() {
+
+    canvas.style.display = "block";
+
+    playerPanel.style.display = "block";
+
+    roomMenu.style.display = "none";
+
+    if (mainGameLayout) {
+        mainGameLayout.style.justifyContent = "center";
+    }
+
+    if (gameSection) {
+        gameSection.style.alignItems = "center";
+    }
+
+    document.getElementById("hud").style.display = "flex";
+    document.getElementById("gameRoomInfo").style.display = "block";
+    document.getElementById("instructions").style.display = "block";
+
+}
 
 
 /*
- * =========================
- * PAUSE MENU BUTTONS
- * =========================
+ * Start in lobby view.
  */
+
+showLobbyView();
+
+
+/*
+ * ============================================================
+ * ROOM BUTTONS
+ * ============================================================
+ */
+
+
+/*
+ * CREATE ROOM
+ */
+
+createRoomButton.addEventListener("click", () => {
+
+    if (!socket || !socket.connected) {
+        return;
+    }
+
+    const username =
+        usernameInput.value.trim();
+
+    if (!username) {
+
+        roomError.innerText =
+            "Enter a username first.";
+
+        return;
+    }
+
+    socket.emit(
+        "createRoom",
+        username
+    );
+
+});
+
+
+/*
+ * JOIN ROOM
+ */
+
+joinRoomButton.addEventListener("click", () => {
+
+    if (!socket || !socket.connected) {
+        return;
+    }
+
+    const username =
+        usernameInput.value.trim();
+
+    const roomCode =
+        roomInput.value.trim();
+
+    if (!username) {
+
+        roomError.innerText =
+            "Enter a username first.";
+
+        return;
+    }
+
+    if (!roomCode) {
+
+        roomError.innerText =
+            "Enter a room code.";
+
+        return;
+    }
+
+    socket.emit(
+        "joinRoom",
+        {
+            username: username,
+            roomCode: roomCode
+        }
+    );
+
+});
+
+
+/*
+ * ============================================================
+ * PAUSE MENU BUTTONS
+ * ============================================================
+ */
+
 
 /*
  * CHANGE COLOR
  */
 
-colorButton.addEventListener(
-    "click",
-    () => {
+colorButton.addEventListener("click", () => {
 
-        if (
-            !socket ||
-            !socket.connected ||
-            !myPlayerId ||
-            !players[myPlayerId]
-        ) {
-            return;
-        }
-
-
-        socket.emit(
-            "changeColor"
-        );
-
+    if (
+        !socket ||
+        !socket.connected ||
+        !myPlayerId ||
+        !players[myPlayerId]
+    ) {
+        return;
     }
-);
+
+    socket.emit("changeColor");
+
+});
 
 
 /*
  * LEAVE ROOM
  */
 
-leaveRoomButton.addEventListener(
-    "click",
-    () => {
+leaveRoomButton.addEventListener("click", () => {
 
-        if (
-            !socket ||
-            !socket.connected
-        ) {
-            return;
-        }
-
-
-        socket.emit(
-            "leaveRoom"
-        );
-
+    if (!socket || !socket.connected) {
+        return;
     }
-);
+
+    socket.emit("leaveRoom");
+
+});
+
 
 /*
- * =========================
+ * ============================================================
  * START GAME
- * =========================
+ * ============================================================
  */
 
-startGameButton.addEventListener(
-    "click",
-    () => {
+startGameButton.addEventListener("click", () => {
 
-        if (
-            !socket ||
-            !socket.connected
-        ) {
-            return;
-        }
-
-        if (
-            !myPlayerId ||
-            !players[myPlayerId]
-        ) {
-            return;
-        }
-
-        socket.emit(
-            "startGame"
-        );
-
+    if (!socket || !socket.connected) {
+        return;
     }
-);
+
+    if (
+        !myPlayerId ||
+        !players[myPlayerId]
+    ) {
+        return;
+    }
+
+    socket.emit("startGame");
+
+});
+
 
 /*
- * =========================
+ * ============================================================
  * LOBBY PLAYER LIST
- * =========================
+ * ============================================================
  */
 
 function updatePlayerList() {
@@ -320,117 +355,99 @@ function updatePlayerList() {
     const playerIds =
         Object.keys(players);
 
-    if (
-        playerIds.length === 0
-    ) {
+    if (playerIds.length === 0) {
 
         playerList.innerText =
             "No players yet.";
 
         return;
-
     }
 
-    playerIds.forEach(
-        (id) => {
+    playerIds.forEach((id) => {
 
-            const player =
-                players[id];
+        const player =
+            players[id];
 
-            if (!player) {
-                return;
-            }
+        if (!player) {
+            return;
+        }
 
-            const entry =
-                document.createElement(
-                    "div"
-                );
+        const entry =
+            document.createElement("div");
 
-            entry.className =
-                "playerListEntry";
+        entry.className =
+            "playerListEntry";
 
-            /*
-             * HOST CROWN
-             */
 
-            const crown =
-                document.createElement(
-                    "span"
-                );
+        /*
+         * HOST CROWN
+         */
 
-            crown.className =
-                "playerHostCrown";
+        const crown =
+            document.createElement("span");
 
-            if (
-                id === currentHost
-            ) {
+        crown.className =
+            "playerHostCrown";
 
-                crown.innerText =
-                    "👑";
+        if (id === currentHost) {
 
-            }
-
-            /*
-             * COLOR DOT
-             */
-
-            const colorDot =
-                document.createElement(
-                    "span"
-                );
-
-            colorDot.className =
-                "playerColorDot";
-
-            colorDot.style.backgroundColor =
-                player.color ||
-                "green";
-
-            /*
-             * NAME
-             */
-
-            const name =
-                document.createElement(
-                    "span"
-                );
-
-            name.className =
-                "playerName";
-
-            name.innerText =
-                player.username ||
-                "Unknown";
-
-            if (
-                id === myPlayerId
-            ) {
-
-                name.innerText +=
-                    " (You)";
-
-            }
-
-            entry.appendChild(
-                crown
-            );
-
-            entry.appendChild(
-                colorDot
-            );
-
-            entry.appendChild(
-                name
-            );
-
-            playerList.appendChild(
-                entry
-            );
+            crown.innerText =
+                "👑";
 
         }
-    );
+
+
+        /*
+         * COLOR DOT
+         */
+
+        const colorDot =
+            document.createElement("span");
+
+        colorDot.className =
+            "playerColorDot";
+
+        colorDot.style.backgroundColor =
+            player.color || "green";
+
+
+        /*
+         * NAME
+         */
+
+        const name =
+            document.createElement("span");
+
+        name.className =
+            "playerName";
+
+        name.innerText =
+            player.username || "Unknown";
+
+        if (id === myPlayerId) {
+
+            name.innerText +=
+                " (You)";
+
+        }
+
+
+        entry.appendChild(crown);
+        entry.appendChild(colorDot);
+        entry.appendChild(name);
+
+        playerList.appendChild(entry);
+
+    });
 
 }
+
+
+/*
+ * ============================================================
+ * LOBBY CONTROLS
+ * ============================================================
+ */
 
 function updateLobbyControls() {
 
@@ -446,12 +463,12 @@ function updateLobbyControls() {
             "none";
 
         return;
-
     }
 
+
     /*
-     * Only show lobby controls
-     * while actually in the lobby.
+     * Only show controls while
+     * actually in the lobby.
      */
 
     if (currentGameState !== "lobby") {
@@ -463,12 +480,14 @@ function updateLobbyControls() {
             "none";
 
         return;
-
     }
 
-    if (
-        currentHost === myPlayerId
-    ) {
+
+    /*
+     * HOST
+     */
+
+    if (currentHost === myPlayerId) {
 
         startGameButton.style.display =
             "block";
@@ -476,7 +495,13 @@ function updateLobbyControls() {
         waitingForHost.style.display =
             "none";
 
-    } else {
+    }
+
+    /*
+     * NOT HOST
+     */
+
+    else {
 
         startGameButton.style.display =
             "none";
@@ -487,53 +512,84 @@ function updateLobbyControls() {
     }
 
 }
+
+
 /*
- * =========================
- * CONNECTION
- * =========================
+ * ============================================================
+ * INTERNET CONNECTION STATUS
+ * ============================================================
  */
 
 window.addEventListener("offline", () => {
+
     statusText.innerText =
         "Internet Down: Reconnect to play";
 
     statusText.style.color =
         "red";
+
 });
 
+
 window.addEventListener("online", () => {
+
     if (socket && socket.connected) {
+
         statusText.innerText =
             "Connected as " + socket.id;
 
         statusText.style.color =
             "lightgreen";
-    } else {
+
+    }
+
+    else {
+
         statusText.innerText =
             "Reconnecting...";
 
         statusText.style.color =
             "yellow";
+
     }
+
 });
+
+
+/*
+ * ============================================================
+ * CONNECT TO SERVER
+ * ============================================================
+ */
 
 function connectToServer() {
 
+    /*
+     * Don't attempt a connection
+     * if the internet is offline.
+     */
+
     if (!navigator.onLine) {
-    statusText.innerText = "Internet Down: Reconnect to play";
-    statusText.style.color = "red";
-    return;
-    }    
+
+        statusText.innerText =
+            "Internet Down: Reconnect to play";
+
+        statusText.style.color =
+            "red";
+
+        return;
+    }
 
 
-    if (
-        typeof io ===
-        "undefined"
-    ) {
+    /*
+     * Make sure Socket.IO loaded.
+     */
+
+    if (typeof io === "undefined") {
+
         console.error(
             "Socket.io failed to load."
         );
-
 
         statusText.innerText =
             "ERROR: Socket.io library failed to load.";
@@ -545,16 +601,17 @@ function connectToServer() {
     }
 
 
+    /*
+     * Disconnect an old socket.
+     */
+
     if (socket) {
-
         socket.disconnect();
-
     }
 
 
     const url =
         serverUrlInput.value.trim();
-
 
     console.log(
         "Connecting to:",
@@ -568,7 +625,6 @@ function connectToServer() {
     statusText.style.color =
         "yellow";
 
-
     connectBtn.innerText =
         "Connecting...";
 
@@ -576,139 +632,152 @@ function connectToServer() {
         "#b8860b";
 
 
-    socket =
-        io(url);
+    socket = io(url);
 
 
     /*
-     * =========================
+     * ========================================================
      * CONNECTED
-     * =========================
+     * ========================================================
      */
 
-    socket.on(
-        "connect",
-        () => {
+    socket.on("connect", () => {
 
-            console.log(
-                "Connected!",
-                socket.id
-            );
+        console.log(
+            "Connected!",
+            socket.id
+        );
+
+        myPlayerId =
+            socket.id;
+
+        connectBtn.innerText =
+            "Connected!";
+
+        connectBtn.style.backgroundColor =
+            "green";
+
+        statusText.innerText =
+            "Connected as " +
+            socket.id;
+
+        statusText.style.color =
+            "lightgreen";
+
+    });
 
 
-            myPlayerId =
-                socket.id;
+    /*
+     * ========================================================
+     * DISCONNECTED
+     * ========================================================
+     */
+
+    socket.on("disconnect", (reason) => {
+
+        console.log(
+            "Disconnected:",
+            reason
+        );
+
+        myPlayerId = null;
+        currentHost = null;
+
+        players = {};
+        bullets = {};
+
+        connectBtn.innerText =
+            "Connect to Server";
+
+        connectBtn.style.backgroundColor =
+            "#007bff";
 
 
-            connectBtn.innerText =
-                "Connected!";
+        /*
+         * Don't replace the internet-down
+         * message with "Disconnected" if
+         * the internet is actually offline.
+         */
 
-            connectBtn.style.backgroundColor =
-                "green";
-
+        if (!navigator.onLine) {
 
             statusText.innerText =
-                "Connected as " +
-                socket.id;
+                "Internet Down: Reconnect to play";
 
             statusText.style.color =
-                "lightgreen";
+                "red";
 
         }
-    );
 
-
-    /*
-     * =========================
-     * DISCONNECTED
-     * =========================
-     */
-
-    socket.on(
-        "disconnect",
-        (reason) => {
-
-            console.log(
-                "Disconnected:",
-                reason
-            );
-
-
-            myPlayerId =
-                null;
-
-            currentHost =
-                null;
-
-
-            players = {};
-
-            bullets = {};
-
-
-            connectBtn.innerText =
-                "Connect to Server";
-
-            connectBtn.style.backgroundColor =
-                "#007bff";
-
+        else {
 
             statusText.innerText =
-                "Disconnected: " +
-                reason;
+                "Disconnected: " + reason;
 
             statusText.style.color =
                 "orange";
 
-
-            pauseMenu.style.display =
-                "none";
-
-
-            roomMenu.style.display =
-                "block";
-
-
-            gameRoomCode.innerText =
-                "---";
-
-
-            reloadText.style.display =
-                "none";
-
-            updatePlayerList();
-
-            updateLobbyControls();
-
-
-            drawGame();
-
         }
-    );
+
+
+        pauseMenu.style.display =
+            "none";
+
+
+        gameRoomCode.innerText =
+            "---";
+
+        reloadText.style.display =
+            "none";
+
+
+        updatePlayerList();
+        updateLobbyControls();
+
+        showLobbyView();
+
+        drawGame();
+
+    });
 
 
     /*
-     * =========================
+     * ========================================================
      * CONNECTION ERROR
-     * =========================
+     * ========================================================
      */
 
-    socket.on(
-        "connect_error",
-        (error) => {
+    socket.on("connect_error", (error) => {
 
-            console.error(
-                "Connection error:",
-                error
-            );
+        console.error(
+            "Connection error:",
+            error
+        );
 
 
-            connectBtn.innerText =
-                "Connection Failed";
+        connectBtn.innerText =
+            "Connection Failed";
 
-            connectBtn.style.backgroundColor =
+        connectBtn.style.backgroundColor =
+            "red";
+
+
+        /*
+         * If the internet is down,
+         * keep the useful message.
+         */
+
+        if (!navigator.onLine) {
+
+            statusText.innerText =
+                "Internet Down: Reconnect to play";
+
+            statusText.style.color =
                 "red";
 
+        }
+
+        else {
 
             statusText.innerText =
                 "Connection error: " +
@@ -718,21 +787,17 @@ function connectToServer() {
                 "red";
 
         }
-    );
+
+    });
 
 
     /*
-     * =========================
+     * ========================================================
      * ROOM JOINED
-     * =========================
+     * ========================================================
      */
 
-    socket.on(
-    "roomJoined",
-    (data) => {
-
-        canvas.display =
-            "block";
+    socket.on("roomJoined", (data) => {
 
         gameRoomCode.innerText =
             data.roomCode;
@@ -743,244 +808,286 @@ function connectToServer() {
         roomError.innerText =
             "";
 
+
         /*
-         * Keep the room menu available
-         * so players can see the lobby.
+         * Stay in lobby view.
+         * The arena should not appear
+         * until the game actually starts.
          */
 
-        roomMenu.style.display =
-            "block";
+        showLobbyView();
+
 
         console.log(
             "Joined room:",
             data.roomCode
         );
 
-    }
-);
+    });
+
 
     /*
-     * =========================
+     * ========================================================
      * ROOM ERROR
-     * =========================
+     * ========================================================
      */
 
-    socket.on(
-        "roomError",
-        (message) => {
+    socket.on("roomError", (message) => {
 
-            roomError.innerText =
-                message;
+        roomError.innerText =
+            message;
 
-        }
-    );
+    });
 
 
     /*
-     * =========================
+     * ========================================================
      * LEFT ROOM
-     * =========================
+     * ========================================================
      */
 
-    socket.on(
-        "leftRoom",
-        () => {
+    socket.on("leftRoom", () => {
 
-            console.log(
-                "Left room."
-            );
+        console.log(
+            "Left room."
+        );
 
 
-            /*
-             * Reset local game state.
-             */
+        /*
+         * Reset local game state.
+         */
 
-            players = {};
+        players = {};
+        bullets = {};
 
-            bullets = {};
+        myAngle = 0;
+        shooting = false;
 
+        currentHost = null;
+        currentGameState = "lobby";
 
-            myAngle = 0;
-
-            shooting = false;
-
-            currentHost =
-            null;
-
-            updatePlayerList();
-
-            updateLobbyControls();
+        obstacles = [];
 
 
-            /*
-             * Close pause menu.
-             */
+        /*
+         * Close pause menu.
+         */
 
-            pauseMenu.style.display =
-                "none";
-
-
-            /*
-             * Show lobby again.
-             */
-
-            roomMenu.style.display =
-                "block";
+        pauseMenu.style.display =
+            "none";
 
 
-            /*
-             * Clear room code.
-             */
+        /*
+         * Reset UI.
+         */
 
-            gameRoomCode.innerText =
-                "---";
+        gameRoomCode.innerText =
+            "---";
 
+        panelRoomCode.innerText =
+            "---";
 
-            roomDisplay.innerText =
-                "";
+        roomDisplay.innerText =
+            "";
 
-            roomError.innerText =
-                "";
+        roomError.innerText =
+            "";
 
-
-            /*
-             * Clear reload message.
-             */
-
-            reloadText.style.display =
-                "none";
+        reloadText.style.display =
+            "none";
 
 
-            /*
-             * Redraw empty game.
-             */
+        /*
+         * Return to centered lobby.
+         */
 
-            drawGame();
+        showLobbyView();
 
-            updateHUD();
-
-        }
-    );
-
-
-    /*
-     * =========================
-     * PLAYER / GAME STATE
-     * =========================
-     */
-
-   socket.on("updatePlayers", (newPlayers) => {
-       
-    players = newPlayers;
-
-    // Only update the lobby UI while actually in the lobby
-    if (currentGameState === "lobby") {
         updatePlayerList();
         updateLobbyControls();
-    }
+        updateHUD();
 
-    updateHUD();
-});
+        drawGame();
 
-    socket.on(
-        "updateBullets",
-        (newBullets) => {
+    });
 
-            bullets =
-                newBullets;
-
-        }
-    );
 
     /*
- * GAME STATE
- */
+     * ========================================================
+     * PLAYER UPDATES
+     * ========================================================
+     */
 
-socket.on(
-    "gameState",
-    (data) => {
+    socket.on("updatePlayers", (newPlayers) => {
+
+        players = newPlayers;
+
+
+        /*
+         * Only update the lobby player
+         * controls while actually in lobby.
+         */
+
+        if (currentGameState === "lobby") {
+
+            updatePlayerList();
+            updateLobbyControls();
+
+        }
+
+        updateHUD();
+
+    });
+
+
+    /*
+     * ========================================================
+     * BULLET UPDATES
+     * ========================================================
+     */
+
+    socket.on("updateBullets", (newBullets) => {
+
+        bullets =
+            newBullets;
+
+    });
+
+
+    /*
+     * ========================================================
+     * GAME STATE
+     * ========================================================
+     */
+
+    socket.on("gameState", (data) => {
 
         if (!data) {
             return;
         }
 
+
         currentGameState =
             data.state || "lobby";
 
-        if (currentGameState === "roundEnd") {
-            showRoundCountdown(data.roundEndAt);
-        } else {
-            roundCountdown.style.display = "none";
+
+        /*
+         * ROUND COUNTDOWN
+         */
+
+        if (
+            currentGameState === "roundEnd"
+        ) {
+
+            showRoundCountdown(
+                data.roundEndAt
+            );
+
         }
+
+        else {
+
+            roundCountdown.style.display =
+                "none";
+
+        }
+
+
+        /*
+         * HOST
+         */
 
         currentHost =
             data.host || null;
 
-        obstacles = data.obstacles || [];
-
-        currentRound = data.currentRound || 0;
-        totalRounds = data.totalRounds || 5;
 
         /*
-         * Hide the room lobby once
-         * the game has actually started.
+         * MAP
+         */
+
+        obstacles =
+            data.obstacles || [];
+
+
+        /*
+         * ROUND
+         */
+
+        currentRound =
+            data.currentRound || 0;
+
+        totalRounds =
+            data.totalRounds || 5;
+
+
+        /*
+         * LOBBY VS GAME VIEW
          */
 
         if (
-            currentGameState !== "lobby"
+            currentGameState === "lobby"
         ) {
 
-            roomMenu.style.display =
+            showLobbyView();
+
+        }
+
+        else {
+
+            showGameView();
+
+        }
+
+
+        /*
+         * GAME END
+         */
+
+        if (
+            currentGameState === "gameEnd"
+        ) {
+
+            showGameEnd(data);
+
+        }
+
+        else {
+
+            gameEndScreen.style.display =
                 "none";
 
-        } else {
-
-            roomMenu.style.display =
-                "block";
-
         }
 
-        if (currentGameState === "gameEnd") {
-            showGameEnd(data);
-        } else {
-            gameEndScreen.style.display = "none";
-        }
 
         updatePlayerList();
-
         updateLobbyControls();
+        updateHUD();
 
-    }
-);
+    });
+
+}
+
 
 /*
- * =========================
+ * ============================================================
  * MOUSE AIMING
- * =========================
+ * ============================================================
  */
 
-canvas.addEventListener(
-    "mousemove",
-    (e) => {
+canvas.addEventListener("mousemove", (e) => {
 
-        const rect =
-            canvas.getBoundingClientRect();
+    const rect =
+        canvas.getBoundingClientRect();
 
+    mouseX =
+        e.clientX - rect.left;
 
-        mouseX =
-            e.clientX -
-            rect.left;
+    mouseY =
+        e.clientY - rect.top;
 
+    updateAim();
 
-        mouseY =
-            e.clientY -
-            rect.top;
-
-
-        updateAim();
-
-    }
-);
+});
 
 
 function updateAim() {
@@ -1001,9 +1108,7 @@ function updateAim() {
      * Don't aim while spectating.
      */
 
-    if (
-        player.spectating
-    ) {
+    if (player.spectating) {
         return;
     }
 
@@ -1016,8 +1121,7 @@ function updateAim() {
 
 
     /*
-     * Update our local player
-     * immediately.
+     * Update local player immediately.
      */
 
     player.angle =
@@ -1025,7 +1129,7 @@ function updateAim() {
 
 
     /*
-     * Tell server too.
+     * Send aim to server.
      */
 
     if (
@@ -1036,8 +1140,7 @@ function updateAim() {
         socket.emit(
             "aim",
             {
-                angle:
-                    myAngle
+                angle: myAngle
             }
         );
 
@@ -1050,63 +1153,49 @@ function updateAim() {
 
 
 /*
- * =========================
+ * ============================================================
  * SHOOTING
- * =========================
+ * ============================================================
  */
 
-canvas.addEventListener(
-    "mousedown",
-    (e) => {
+canvas.addEventListener("mousedown", (e) => {
 
-        if (
-            e.button !== 0
-        ) {
-            return;
-        }
+    if (e.button !== 0) {
+        return;
+    }
 
 
-        /*
-         * Don't shoot while
-         * spectating.
-         */
+    /*
+     * Don't shoot while spectating.
+     */
 
-        if (
-            myPlayerId &&
-            players[myPlayerId] &&
-            players[myPlayerId].spectating
-        ) {
+    if (
+        myPlayerId &&
+        players[myPlayerId] &&
+        players[myPlayerId].spectating
+    ) {
 
-            return;
-
-        }
-
-
-        shooting =
-            true;
-
-
-        shoot();
+        return;
 
     }
-);
 
 
-window.addEventListener(
-    "mouseup",
-    (e) => {
+    shooting = true;
 
-        if (
-            e.button === 0
-        ) {
+    shoot();
 
-            shooting =
-                false;
+});
 
-        }
+
+window.addEventListener("mouseup", (e) => {
+
+    if (e.button === 0) {
+
+        shooting = false;
 
     }
-);
+
+});
 
 
 function shoot() {
@@ -1134,178 +1223,248 @@ function shoot() {
     }
 
 
-    socket.emit(
-        "shoot"
-    );
+    socket.emit("shoot");
 
 }
 
 
 /*
- * =========================
+ * ============================================================
  * RELOADING
- * =========================
+ * ============================================================
  */
 
-window.addEventListener(
-    "keydown",
-    (e) => {
+window.addEventListener("keydown", (e) => {
 
-        /*
-         * Don't control the game
-         * while typing in inputs.
-         */
+    /*
+     * Don't control the game
+     * while typing.
+     */
+
+    if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA"
+    ) {
+
+        return;
+
+    }
+
+
+    const key =
+        (e.key || "").toLowerCase();
+
+
+    if (key === "r") {
 
         if (
-            e.target.tagName ===
-                "INPUT" ||
-            e.target.tagName ===
-                "TEXTAREA"
+            socket &&
+            socket.connected &&
+            myPlayerId &&
+            players[myPlayerId] &&
+            !players[myPlayerId].spectating
         ) {
 
-            return;
-
-        }
-
-
-        if (
-            e.key &&
-            e.key.toLowerCase() ===
-                "r"
-        ) {
-
-            if (
-                socket &&
-                socket.connected &&
-                myPlayerId &&
-                players[myPlayerId] &&
-                !players[myPlayerId].spectating
-            ) {
-
-                socket.emit(
-                    "reload"
-                );
-
-            }
-
-
-            return;
+            socket.emit("reload");
 
         }
 
     }
-);
+
+});
+
 
 /*
- * =========================
+ * ============================================================
  * ENTER TO START GAME
- * =========================
+ * ============================================================
  */
 
-window.addEventListener(
-    "keydown",
-    (e) => {
+window.addEventListener("keydown", (e) => {
 
-        if (
-            e.target.tagName ===
-                "INPUT" ||
-            e.target.tagName ===
-                "TEXTAREA"
-        ) {
+    if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA"
+    ) {
 
-            return;
-
-        }
-
-        if (
-            e.key !==
-            "Enter"
-        ) {
-
-            return;
-
-        }
-
-        if (
-            !socket ||
-            !socket.connected
-        ) {
-
-            return;
-
-        }
-
-        if (
-            !myPlayerId ||
-            !players[myPlayerId]
-        ) {
-
-            return;
-
-        }
-
-        if (
-            currentHost !==
-            myPlayerId
-        ) {
-
-            return;
-
-        }
-
-        socket.emit(
-            "startGame"
-        );
+        return;
 
     }
-);
+
+
+    if (e.key !== "Enter") {
+        return;
+    }
+
+
+    if (
+        !socket ||
+        !socket.connected
+    ) {
+        return;
+    }
+
+
+    if (
+        !myPlayerId ||
+        !players[myPlayerId]
+    ) {
+        return;
+    }
+
+
+    if (
+        currentHost !== myPlayerId
+    ) {
+        return;
+    }
+
+
+    socket.emit("startGame");
+
+});
 
 
 /*
- * =========================
+ * ============================================================
  * MOVEMENT
- * =========================
+ * ============================================================
  */
 
 const keys = {};
 
+
 document.addEventListener("keydown", (e) => {
-    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
 
-   const key = (e.key || "").toLowerCase();
+    if (
+        ["INPUT", "TEXTAREA"].includes(
+            document.activeElement.tagName
+        )
+    ) {
 
-    if (key === "w" || e.key === "arrowup") {
+        return;
+
+    }
+
+
+    const key =
+        (e.key || "").toLowerCase();
+
+
+    /*
+     * WASD
+     */
+
+    if (key === "w") {
+
         keys.w = true;
         e.preventDefault();
+
     }
 
-    if (key === "a" || e.key === "arrowleft") {
+    if (key === "a") {
+
         keys.a = true;
         e.preventDefault();
+
     }
 
-    if (key === "s" || e.key === "arrowdown") {
+    if (key === "s") {
+
         keys.s = true;
         e.preventDefault();
+
     }
 
-    if (key === "d" || e.key === "arrowright") {
+    if (key === "d") {
+
         keys.d = true;
         e.preventDefault();
+
     }
+
+
+    /*
+     * Arrow keys
+     */
+
+    if (key === "arrowup") {
+
+        keys.w = true;
+        e.preventDefault();
+
+    }
+
+    if (key === "arrowleft") {
+
+        keys.a = true;
+        e.preventDefault();
+
+    }
+
+    if (key === "arrowdown") {
+
+        keys.s = true;
+        e.preventDefault();
+
+    }
+
+    if (key === "arrowright") {
+
+        keys.d = true;
+        e.preventDefault();
+
+    }
+
 });
+
 
 document.addEventListener("keyup", (e) => {
-    const key = (e.key || "").toLowerCase();
-    
-    if (key === "w" || e.key === "arrowup") keys.w = false;
-    if (key === "a" || e.key === "arrowleft") keys.a = false;
-    if (key === "s" || e.key === "arrowdown") keys.s = false;
-    if (key === "d" || e.key === "arrowright") keys.d = false;
+
+    const key =
+        (e.key || "").toLowerCase();
+
+
+    if (key === "w" || key === "arrowup") {
+
+        keys.w = false;
+
+    }
+
+
+    if (key === "a" || key === "arrowleft") {
+
+        keys.a = false;
+
+    }
+
+
+    if (key === "s" || key === "arrowdown") {
+
+        keys.s = false;
+
+    }
+
+
+    if (key === "d" || key === "arrowright") {
+
+        keys.d = false;
+
+    }
+
 });
 
+
+/*
+ * ============================================================
+ * MOVEMENT LOOP
+ * ============================================================
+ */
+
 let lastMoveTime = 0;
-const MOVE_INTERVAL = 16; // 60 movement updates per second
+
+const MOVE_INTERVAL = 16;
+
 
 function movementLoop(timestamp) {
 
@@ -1318,70 +1477,148 @@ function movementLoop(timestamp) {
         !players[myPlayerId].spectating
     ) {
 
-        if (timestamp - lastMoveTime >= MOVE_INTERVAL) {
+        if (
+            timestamp - lastMoveTime >=
+            MOVE_INTERVAL
+        ) {
 
             let x = 0;
             let y = 0;
 
-            if (keys.w) y -= 1;
-            if (keys.s) y += 1;
-            if (keys.a) x -= 1;
-            if (keys.d) x += 1;
 
-            if (x !== 0 || y !== 0) {
+            if (keys.w) {
+                y -= 1;
+            }
+
+            if (keys.s) {
+                y += 1;
+            }
+
+            if (keys.a) {
+                x -= 1;
+            }
+
+            if (keys.d) {
+                x += 1;
+            }
+
+
+            /*
+             * Normalize diagonal movement.
+             */
+
+            if (
+                x !== 0 ||
+                y !== 0
+            ) {
 
                 const length =
-                    Math.sqrt(x * x + y * y);
+                    Math.sqrt(
+                        x * x +
+                        y * y
+                    );
 
                 x /= length;
                 y /= length;
 
-                socket.emit("move", {
-                    x: x * speed,
-                    y: y * speed
-                });
+
+                socket.emit(
+                    "move",
+                    {
+                        x: x * speed,
+                        y: y * speed
+                    }
+                );
 
             }
 
-            lastMoveTime = timestamp;
+
+            lastMoveTime =
+                timestamp;
+
         }
+
     }
 
-    requestAnimationFrame(movementLoop);
+
+    requestAnimationFrame(
+        movementLoop
+    );
+
 }
 
-requestAnimationFrame(movementLoop);
 
-function showRoundCountdown(roundEndAt) {
-    if (!roundEndAt) return;
+requestAnimationFrame(
+    movementLoop
+);
 
-    roundCountdown.style.display = "block";
-
-    function updateRoundCountdown() {
-        if (currentGameState !== "roundEnd") {
-            roundCountdown.style.display = "none";
-            return;
-        }
-
-        const remaining = Math.max(
-            0,
-            Math.ceil((roundEndAt - Date.now()) / 1000)
-        );
-
-        roundCountdownNumber.textContent = remaining;
-
-        if (remaining > 0) {
-            setTimeout(updateRoundCountdown, 100);
-        }
-    }
-
-    updateRoundCountdown();
-}
 
 /*
- * =========================
+ * ============================================================
+ * ROUND COUNTDOWN
+ * ============================================================
+ */
+
+function showRoundCountdown(roundEndAt) {
+
+    if (!roundEndAt) {
+        return;
+    }
+
+
+    roundCountdown.style.display =
+        "block";
+
+
+    function updateRoundCountdown() {
+
+        if (
+            currentGameState !== "roundEnd"
+        ) {
+
+            roundCountdown.style.display =
+                "none";
+
+            return;
+
+        }
+
+
+        const remaining =
+            Math.max(
+                0,
+                Math.ceil(
+                    (roundEndAt - Date.now()) /
+                    1000
+                )
+            );
+
+
+        roundCountdownNumber.textContent =
+            remaining;
+
+
+        if (remaining > 0) {
+
+            setTimeout(
+                updateRoundCountdown,
+                100
+            );
+
+        }
+
+    }
+
+
+    updateRoundCountdown();
+
+}
+
+
+/*
+ * ============================================================
  * HUD
- * =========================
+ * ============================================================
  */
 
 function updateHUD() {
@@ -1416,9 +1653,7 @@ function updateHUD() {
      * SPECTATOR HUD
      */
 
-    if (
-        player.spectating
-    ) {
+    if (player.spectating) {
 
         healthText.innerText =
             "👻 SPECTATING";
@@ -1429,10 +1664,8 @@ function updateHUD() {
         roundText.innerText =
             "SPECTATOR";
 
-
         reloadText.style.display =
             "none";
-
 
         return;
 
@@ -1444,13 +1677,10 @@ function updateHUD() {
      */
 
     const health =
-        player.health ??
-        100;
-
+        player.health ?? 100;
 
     const ammo =
-        player.ammo ??
-        6;
+        player.ammo ?? 6;
 
 
     healthText.innerText =
@@ -1466,17 +1696,17 @@ function updateHUD() {
 
 
     roundText.innerText =
-    `Round: ${currentRound}/${totalRounds}`;
+        `Round: ${currentRound}/${totalRounds}`;
 
 
-    if (
-        player.reloading
-    ) {
+    if (player.reloading) {
 
         reloadText.style.display =
             "block";
 
-    } else {
+    }
+
+    else {
 
         reloadText.style.display =
             "none";
@@ -1487,9 +1717,9 @@ function updateHUD() {
 
 
 /*
- * =========================
+ * ============================================================
  * CONNECT BUTTON
- * =========================
+ * ============================================================
  */
 
 connectBtn.addEventListener(
@@ -1497,90 +1727,99 @@ connectBtn.addEventListener(
     connectToServer
 );
 
-/*
-* ==========================
-* COPY BUTTON
-* ==========================
-*/
-
-    copyBttn.addEventListener("click", () => {
-        navigator.clipboard.writeText(gameRoomCode.innerText);
-    });
-
 
 /*
- * =========================
- * ESCAPE KEY
- * =========================
+ * ============================================================
+ * COPY ROOM CODE
+ * ============================================================
  */
 
-window.addEventListener(
-    "keydown",
-    (e) => {
+copyBttn.addEventListener("click", () => {
 
-        /*
-         * Don't open pause menu
-         * while typing.
-         */
-
-        if (
-            e.target.tagName ===
-                "INPUT" ||
-            e.target.tagName ===
-                "TEXTAREA"
-        ) {
-
-            return;
-
-        }
+    const code =
+        gameRoomCode.innerText;
 
 
-        if (
-            e.key &&
-            e.key === "Escape"
-        ) {
-
-            /*
-             * Only allow pause menu
-             * when actually inside a room.
-             */
-
-            if (
-                !myPlayerId ||
-                !players[myPlayerId]
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                pauseMenu.style.display ===
-                "flex"
-            ) {
-
-                pauseMenu.style.display =
-                    "none";
-
-            } else {
-
-                pauseMenu.style.display =
-                    "flex";
-
-            }
-
-        }
-
+    if (
+        !code ||
+        code === "---"
+    ) {
+        return;
     }
-);
 
-}
+
+    navigator.clipboard.writeText(code);
+
+});
+
 
 /*
- * =========================
+ * ============================================================
+ * ESCAPE / PAUSE MENU
+ * ============================================================
+ */
+
+window.addEventListener("keydown", (e) => {
+
+    /*
+     * Don't open pause menu
+     * while typing.
+     */
+
+    if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA"
+    ) {
+
+        return;
+
+    }
+
+
+    if (e.key !== "Escape") {
+        return;
+    }
+
+
+    /*
+     * Only allow pause menu
+     * while inside a room.
+     */
+
+    if (
+        !myPlayerId ||
+        !players[myPlayerId]
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        pauseMenu.style.display ===
+        "flex"
+    ) {
+
+        pauseMenu.style.display =
+            "none";
+
+    }
+
+    else {
+
+        pauseMenu.style.display =
+            "flex";
+
+    }
+
+});
+
+
+/*
+ * ============================================================
  * DRAW GAME
- * =========================
+ * ============================================================
  */
 
 function drawGame() {
@@ -1594,7 +1833,9 @@ function drawGame() {
 
 
     /*
+     * ========================================================
      * BACKGROUND GRID
+     * ========================================================
      */
 
     ctx.strokeStyle =
@@ -1649,28 +1890,35 @@ function drawGame() {
 
     }
 
-       // Draw obstacles
-obstacles.forEach(obstacle => {
-    ctx.fillStyle = "#555";
-    ctx.fillRect(
-        obstacle.x,
-        obstacle.y,
-        obstacle.width,
-        obstacle.height
-    );
-});
 
+    /*
+     * ========================================================
+     * OBSTACLES
+     * ========================================================
+     */
+
+    obstacles.forEach((obstacle) => {
+
+        ctx.fillStyle =
+            "#555";
+
+        ctx.fillRect(
+            obstacle.x,
+            obstacle.y,
+            obstacle.width,
+            obstacle.height
+        );
+
+    });
 
 
     /*
-     * =========================
-     * DRAW PLAYERS
-     * =========================
+     * ========================================================
+     * PLAYERS
+     * ========================================================
      */
 
-    for (
-        let id in players
-    ) {
+    for (const id in players) {
 
         const player =
             players[id];
@@ -1680,17 +1928,14 @@ obstacles.forEach(obstacle => {
             continue;
         }
 
+
         /*
-         * Spectators disappear
-         * from the battlefield.
+         * Spectators don't appear
+         * on the battlefield.
          */
 
-        if (
-            player.spectating
-        ) {
-
+        if (player.spectating) {
             continue;
-
         }
 
 
@@ -1698,21 +1943,21 @@ obstacles.forEach(obstacle => {
          * DEAD / RELOADING ALPHA
          */
 
-        if (
-            player.dead
-        ) {
+        if (player.dead) {
 
             ctx.globalAlpha =
                 0.25;
 
-        } else if (
-            player.reloading
-        ) {
+        }
+
+        else if (player.reloading) {
 
             ctx.globalAlpha =
                 0.5;
 
-        } else {
+        }
+
+        else {
 
             ctx.globalAlpha =
                 1;
@@ -1731,7 +1976,6 @@ obstacles.forEach(obstacle => {
 
         ctx.beginPath();
 
-
         ctx.arc(
             player.x,
             player.y,
@@ -1739,7 +1983,6 @@ obstacles.forEach(obstacle => {
             0,
             Math.PI * 2
         );
-
 
         ctx.fill();
 
@@ -1749,9 +1992,7 @@ obstacles.forEach(obstacle => {
          */
 
         const angle =
-            player.angle ||
-            0;
-
+            player.angle || 0;
 
         const gunLength =
             28;
@@ -1766,12 +2007,10 @@ obstacles.forEach(obstacle => {
 
         ctx.beginPath();
 
-
         ctx.moveTo(
             player.x,
             player.y
         );
-
 
         ctx.lineTo(
             player.x +
@@ -1782,7 +2021,6 @@ obstacles.forEach(obstacle => {
                 Math.sin(angle) *
                 gunLength
         );
-
 
         ctx.stroke();
 
@@ -1796,13 +2034,11 @@ obstacles.forEach(obstacle => {
                 ? "white"
                 : "#777";
 
-
         ctx.lineWidth =
             2;
 
 
         ctx.beginPath();
-
 
         ctx.arc(
             player.x,
@@ -1812,7 +2048,6 @@ obstacles.forEach(obstacle => {
             Math.PI * 2
         );
 
-
         ctx.stroke();
 
 
@@ -1820,9 +2055,7 @@ obstacles.forEach(obstacle => {
          * DEAD PLAYER X
          */
 
-        if (
-            player.dead
-        ) {
+        if (player.dead) {
 
             ctx.strokeStyle =
                 "red";
@@ -1833,30 +2066,25 @@ obstacles.forEach(obstacle => {
 
             ctx.beginPath();
 
-
             ctx.moveTo(
                 player.x - 12,
                 player.y - 12
             );
-
 
             ctx.lineTo(
                 player.x + 12,
                 player.y + 12
             );
 
-
             ctx.moveTo(
                 player.x + 12,
                 player.y - 12
             );
 
-
             ctx.lineTo(
                 player.x - 12,
                 player.y + 12
             );
-
 
             ctx.stroke();
 
@@ -1870,18 +2098,14 @@ obstacles.forEach(obstacle => {
         ctx.globalAlpha =
             1;
 
-
         ctx.fillStyle =
             "white";
-
 
         ctx.font =
             "bold 14px Arial";
 
-
         ctx.textAlign =
             "center";
-
 
         ctx.textBaseline =
             "bottom";
@@ -1901,14 +2125,12 @@ obstacles.forEach(obstacle => {
 
 
     /*
-     * =========================
-     * DRAW BULLETS
-     * =========================
+     * ========================================================
+     * BULLETS
+     * ========================================================
      */
 
-    for (
-        const id in bullets
-    ) {
+    for (const id in bullets) {
 
         const bullet =
             bullets[id];
@@ -1922,13 +2144,11 @@ obstacles.forEach(obstacle => {
         ctx.globalAlpha =
             1;
 
-
         ctx.fillStyle =
             "white";
 
 
         ctx.beginPath();
-
 
         ctx.arc(
             bullet.x,
@@ -1937,7 +2157,6 @@ obstacles.forEach(obstacle => {
             0,
             Math.PI * 2
         );
-
 
         ctx.fill();
 
@@ -1949,128 +2168,261 @@ obstacles.forEach(obstacle => {
 
 }
 
+
+/*
+ * ============================================================
+ * GAME END SCREEN
+ * ============================================================
+ */
+
 function showGameEnd(data) {
-    gameEndScreen.style.display = "flex";
+
+    gameEndScreen.style.display =
+        "flex";
+
 
     let winner = null;
 
-    for (const id in players) {
-        const player = players[id];
 
-        if (!player.dead && !player.spectating) {
-            winner = player;
+    for (const id in players) {
+
+        const player =
+            players[id];
+
+
+        if (
+            !player.dead &&
+            !player.spectating
+        ) {
+
+            winner =
+                player;
+
             break;
+
         }
+
     }
 
-    gameWinner.textContent = winner
-        ? `🏆 Winner: ${winner.username}`
-        : "🏆 Winner: Draw!";
+
+    gameWinner.textContent =
+        winner
+            ? `🏆 Winner: ${winner.username}`
+            : "🏆 Winner: Draw!";
+
 
     let html = "";
 
+
     for (const id in players) {
-        const player = players[id];
+
+        const player =
+            players[id];
+
 
         html += `
-            <div style="margin:10px 0; padding:8px; background:#333; border-radius:6px;">
+            <div style="
+                margin:10px 0;
+                padding:8px;
+                background:#333;
+                border-radius:6px;
+            ">
                 <strong>${player.username}</strong><br>
                 Kills: ${player.kills || 0} |
                 Deaths: ${player.deaths || 0} |
                 Round Wins: ${player.roundWins || 0}
             </div>
         `;
+
     }
 
-    finalStats.innerHTML = html;
 
-    const endTime = data.gameEndAt || Date.now();
+    finalStats.innerHTML =
+        html;
+
+
+    const endTime =
+        data.gameEndAt ||
+        Date.now();
+
 
     function updateCountdown() {
-        const remaining = Math.max(
-            0,
-            Math.ceil((endTime - Date.now()) / 1000)
-        );
+
+        const remaining =
+            Math.max(
+                0,
+                Math.ceil(
+                    (endTime - Date.now()) /
+                    1000
+                )
+            );
+
 
         gameEndCountdown.textContent =
             `Returning to lobby in ${remaining}...`;
 
-        if (remaining > 0 && currentGameState === "gameEnd") {
-            setTimeout(updateCountdown, 250);
+
+        if (
+            remaining > 0 &&
+            currentGameState === "gameEnd"
+        ) {
+
+            setTimeout(
+                updateCountdown,
+                250
+            );
+
         }
+
     }
 
+
     updateCountdown();
+
 }
+
+
+/*
+ * ============================================================
+ * FPS COUNTER
+ * ============================================================
+ */
 
 let fps = 0;
 let fpsFrames = 0;
 let fpsLastTime = performance.now();
 
+
 function updateFPS(timestamp) {
 
     fpsFrames++;
 
-    if (timestamp - fpsLastTime >= 1000) {
 
-        fps = fpsFrames;
-        fpsFrames = 0;
-        fpsLastTime = timestamp;
+    if (
+        timestamp - fpsLastTime >=
+        1000
+    ) {
+
+        fps =
+            fpsFrames;
+
+        fpsFrames =
+            0;
+
+        fpsLastTime =
+            timestamp;
+
 
         const fpsDisplay =
             document.getElementById("fpsDisplay");
 
+
         if (fpsDisplay) {
-            fpsDisplay.textContent = fps;
+
+            fpsDisplay.textContent =
+                fps;
+
         }
 
     }
 
-    requestAnimationFrame(updateFPS);
+
+    requestAnimationFrame(
+        updateFPS
+    );
+
 }
 
-requestAnimationFrame(updateFPS);
+
+requestAnimationFrame(
+    updateFPS
+);
+
+
+/*
+ * ============================================================
+ * PING
+ * ============================================================
+ */
 
 setInterval(() => {
 
-    if (!socket || !socket.connected) {
+    if (
+        !socket ||
+        !socket.connected
+    ) {
+
         return;
+
     }
 
-    const start = performance.now();
 
-    socket.emit("pingCheck");
+    const start =
+        performance.now();
 
-    socket.once("pongCheck", () => {
 
-        const ping =
-            Math.round(
-                performance.now() - start
-            );
+    socket.emit(
+        "pingCheck"
+    );
 
-        const pingDisplay =
-            document.getElementById("pingDisplay");
 
-        if (pingDisplay) {
-            pingDisplay.textContent = ping;
+    socket.once(
+        "pongCheck",
+        () => {
+
+            const ping =
+                Math.round(
+                    performance.now() -
+                    start
+                );
+
+
+            const pingDisplay =
+                document.getElementById(
+                    "pingDisplay"
+                );
+
+
+            if (pingDisplay) {
+
+                pingDisplay.textContent =
+                    ping;
+
+            }
+
         }
-
-    });
+    );
 
 }, 1000);
 
-function renderLoop() {
-    drawGame();
-    requestAnimationFrame(renderLoop);
-}
-
-requestAnimationFrame(renderLoop);
 
 /*
- * =========================
+ * ============================================================
+ * RENDER LOOP
+ * ============================================================
+ */
+
+function renderLoop() {
+
+    drawGame();
+
+    requestAnimationFrame(
+        renderLoop
+    );
+
+}
+
+
+requestAnimationFrame(
+    renderLoop
+);
+
+
+/*
+ * ============================================================
  * START
- * =========================
+ * ============================================================
  */
 
 connectToServer();
-
+```
