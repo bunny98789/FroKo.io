@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FroKo.io Feedback</title>
+
+```
+<style>
+    body {
+        background-color: #0f172a;
+        color: #f8fafc;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .form-card {
+        background-color: #1e293b;
+        padding: 24px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+        border: 1px solid #334155;
+    }
+
+    h1 {
+        color: #60a5fa;
+        margin: 0 0 4px 0;
+        text-align: center;
+        font-size: 26px;
+    }
+
+    .version {
+        text-align: center;
+        color: #64748b;
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    p {
+        color: #94a3b8;
+        margin: 0 0 24px 0;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    label {
+        display: block;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        background-color: #334155;
+        border: 1px solid #475569;
+        border-radius: 8px;
+        padding: 10px;
+        color: white;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+        font-size: 14px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #94a3b8;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: #60a5fa;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    button {
+        width: 100%;
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.15s ease;
+    }
+
+    button:hover {
+        background-color: #3b82f6;
+    }
+
+    .footer {
+        text-align: center;
+        color: #64748b;
+        font-size: 11px;
+        margin-top: 16px;
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<div class="form-card">
+
+    <h1>FroKo.io</h1>
+
+    <div class="version">
+        Alpha 0.7.0
+    </div>
+
+    <p>Help us make FroKo.io better!</p>
+
+    <!-- Replace the URL below with your FroKo.io Formspree endpoint -->
+    <form action="https://formspree.io/f/xwlkrnwl" method="POST">
+
+        <label>Player Name</label>
+        <input
+            type="text"
+            name="username"
+            placeholder="e.g., Player123"
+            required
+        >
+
+        <label>Feedback Type</label>
+        <select name="type" required>
+            <option value="bug">🐛 Bug Report</option>
+            <option value="suggestion">💡 Feature Suggestion</option>
+            <option value="balance">⚖️ Balance Issue</option>
+            <option value="gameplay">🎮 Gameplay Feedback</option>
+            <option value="multiplayer">🌐 Multiplayer / Connection</option>
+            <option value="other">💬 Other</option>
+        </select>
+
+        <label>Your Message</label>
+        <textarea
+            name="message"
+            placeholder="Tell us what happened, what you think should change, or what you'd like to see!"
+            required
+        ></textarea>
+
+        <button type="submit">
+            Submit Feedback
+        </button>
+
+    </form>
+
+    <div class="footer">
+        FroKo.io is currently in alpha. Bugs are expected!
+    </div>
+
+</div>
+```
+
+</body>
+</html>
