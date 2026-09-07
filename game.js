@@ -796,24 +796,19 @@ function connectToServer() {
      * ========================================================
      */
 
-   socket.on("roomJoined", (data) => {
+ socket.on("roomJoined", (data) => {
+
     gameRoomCode.innerText = data.roomCode;
     panelRoomCode.innerText = data.roomCode;
     roomError.innerText = "";
 
-    // Hide the initial join/create room menu
-    roomMenu.style.display = "none";
-
-    // Show both the canvas and the player panel for the waiting lobby
-    canvas.style.display = "block";
-    playerPanel.style.display = "block";
-
-    // Set the state so your render loop updates the canvas display
     currentGameState = "lobby";
 
-    console.log("Joined room:", data.roomCode);
-});
+    showLobbyView();
 
+    console.log("Joined room:", data.roomCode);
+
+});
     /*
      * ========================================================
      * ROOM ERROR
