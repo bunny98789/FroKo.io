@@ -1470,10 +1470,10 @@ connectBtn.addEventListener(
 * ==========================
 */
 
-    copyBttn.addEventListener(
+    copyBttn.addEventListener(() => {
         "click",
         navigator.clipboard.writeText(roomCode);
-    );
+    });
 
 
 /*
