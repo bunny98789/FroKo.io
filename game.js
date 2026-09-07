@@ -1,4 +1,3 @@
-```js
 /*
  * ============================================================
  * FROKO.IO - GAME.JS
@@ -2425,4 +2424,3 @@ requestAnimationFrame(
  */
 
 connectToServer();
-```
