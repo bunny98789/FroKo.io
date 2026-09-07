@@ -500,6 +500,14 @@ function connectToServer() {
         "undefined"
     ) {
 
+    if (!location.online) {
+         statusText.innerText =
+            "Internet Down: Reconnect to play";
+
+        statusText.style.color =
+            "red";
+    }
+
         console.error(
             "Socket.io failed to load."
         );
