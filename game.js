@@ -1471,7 +1471,7 @@ connectBtn.addEventListener(
 */
 
     copyBttn.addEventListener("click", () => {
-        navigator.clipboard.writeText(roomCode);
+        navigator.clipboard.writeText(gameRoomCode.innerText);
     });
 
 
