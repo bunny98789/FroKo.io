@@ -1052,59 +1052,50 @@ function updateAim() {
  * =========================
  */
 
+let shooting = false;
+let shotLocked = false;
+
 canvas.addEventListener(
     "mousedown",
     (e) => {
 
-        if (
-            e.button !== 0
-        ) {
+        if (e.button !== 0) {
             return;
         }
 
-
-        /*
-         * Don't shoot while
-         * spectating.
-         */
+        // Prevent multiple activations from one click
+        if (shotLocked) {
+            return;
+        }
 
         if (
             myPlayerId &&
             players[myPlayerId] &&
             players[myPlayerId].spectating
         ) {
-
             return;
-
         }
 
-
-        shooting =
-            true;
-
+        shotLocked = true;
+        shooting = true;
 
         shoot();
-
     }
 );
-
 
 window.addEventListener(
     "mouseup",
     (e) => {
 
-        if (
-            e.button === 0
-        ) {
+        if (e.button === 0) {
 
-            shooting =
-                false;
+            shooting = false;
+            shotLocked = false;
 
         }
 
     }
 );
-
 
 function shoot() {
 
@@ -1115,7 +1106,6 @@ function shoot() {
         return;
     }
 
-
     if (
         !myPlayerId ||
         !players[myPlayerId]
@@ -1123,20 +1113,14 @@ function shoot() {
         return;
     }
 
-
     if (
         players[myPlayerId].spectating
     ) {
         return;
     }
 
-
-    socket.emit(
-        "shoot"
-    );
-
+    socket.emit("shoot");
 }
-
 
 /*
  * =========================
