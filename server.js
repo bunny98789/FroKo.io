@@ -67,6 +67,35 @@ function getRandomColor() {
 
 }
 
+// ========================================
+// TEAMS
+// ========================================
+
+const TEAMS = [
+    "red",
+    "blue"
+];
+
+function getRandomTeam(room) {
+
+    const redCount =
+        Object.values(room.players)
+            .filter(player => player.team === "red")
+            .length;
+
+    const blueCount =
+        Object.values(room.players)
+            .filter(player => player.team === "blue")
+            .length;
+
+    // Put new players on the smaller team
+    if (redCount <= blueCount) {
+        return "red";
+    }
+
+    return "blue";
+}
+
 
 // ========================================
 // ROOM CODE
@@ -261,6 +290,8 @@ function createPlayer(
         color:
             getRandomColor(),
 
+        team: null,
+
         username:
             username,
 
@@ -356,6 +387,9 @@ function createRoom() {
         gameState:
             "lobby",
 
+        gamemode:
+            "ffa",
+
         currentRound:
             0,
 
@@ -417,6 +451,9 @@ function sendGameState(roomCode) {
             currentRound:
                 room.currentRound,
 
+            gameMode:
+                room.gameMode,
+
             totalRounds:
                 room.settings.rounds,
 
@@ -463,6 +500,9 @@ function sendRoomState(roomCode) {
 
             currentRound:
                 room.currentRound,
+
+            gameMode:
+                room.gameMode,
 
             totalRounds:
                 room.settings.rounds,
@@ -822,6 +862,29 @@ function beginRound(
 
 }
 
+function getAliveTeams(room) {
+
+    const aliveTeams = new Set();
+
+    for (const playerId in room.players) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) continue;
+
+        if (player.dead) continue;
+
+        if (player.spectating) continue;
+
+        if (!player.team) continue;
+
+        aliveTeams.add(player.team);
+    }
+
+    return aliveTeams;
+}
+
 
 // ========================================
 // CHECK ROUND END
@@ -848,6 +911,45 @@ function checkRoundEnd(
         return;
 
     }
+
+    // ====================================
+// TEAM MODE
+// ====================================
+
+if (room.gameMode === "team") {
+
+    const aliveTeams =
+        getAliveTeams(room);
+
+    if (aliveTeams.size === 1) {
+
+        const winningTeam =
+            [...aliveTeams][0];
+
+        finishRound(
+            roomCode,
+            null,
+            winningTeam
+        );
+
+        return;
+
+    }
+
+    if (aliveTeams.size === 0) {
+
+        finishRound(
+            roomCode,
+            null,
+            null
+        );
+
+        return;
+
+    }
+
+    return;
+}
 
     const activePlayers =
         getActivePlayers(room);
@@ -908,7 +1010,8 @@ function checkRoundEnd(
 
 function finishRound(
     roomCode,
-    winner
+    winner,
+    winningTeam = null
 ) {
 
     const room =
@@ -991,6 +1094,36 @@ function finishRound(
         );
 
     }
+
+if (
+    winningTeam &&
+    room.gameMode === "team"
+) {
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player) continue;
+
+        if (
+            player.team === winningTeam
+        ) {
+
+            player.roundWins++;
+
+        }
+
+    }
+
+    console.log(
+        `${winningTeam.toUpperCase()} team won round ${room.currentRound}`
+    );
+
+}
 
     console.log(
         `Room ${roomCode}: Round ${room.currentRound} ended`
@@ -1829,6 +1962,8 @@ io.on(
                         socket,
                         username
                     );
+                
+                player.team = "red";
 
                 room.players[
                     socket.id
@@ -1974,6 +2109,10 @@ io.on(
                         username
                     );
 
+                if (room.gameMode === "team") {
+                    player.team = getRandomTeam(room);
+                }
+
                 // ====================================
                 // Mid-game join
                 // ====================================
@@ -2110,6 +2249,24 @@ io.on(
 
                 }
 
+                if (room.gameMode === "team") {
+
+    for (
+        const playerId in room.players
+    ) {
+
+        const player =
+            room.players[playerId];
+
+        if (!player.team) {
+            player.team =
+                getRandomTeam(room);
+        }
+
+    }
+
+}
+
                 console.log(
                     `${room.players[socket.id].username} started game in ${roomCode}`
                 );
@@ -2121,6 +2278,56 @@ io.on(
 
             }
         );
+
+        // ====================================
+// SWITCH TEAM
+// ====================================
+
+socket.on(
+    "switchTeam",
+    () => {
+
+        const roomCode =
+            socket.roomCode;
+
+        const room =
+            rooms[roomCode];
+
+        if (!room) return;
+
+        const player =
+            room.players[
+                socket.id
+            ];
+
+        if (!player) return;
+
+        // Only Team Mode
+        if (
+            room.gameMode !== "team"
+        ) {
+            return;
+        }
+
+        // Teams can only be changed
+        // while in the lobby
+        if (
+            room.gameState !== "lobby"
+        ) {
+            return;
+        }
+
+        player.team =
+            player.team === "red"
+                ? "blue"
+                : "red";
+
+        sendGameState(
+            roomCode
+        );
+
+    }
+);
 
 
         // ====================================
@@ -2823,6 +3030,15 @@ setInterval(
                     ) {
                         continue;
                     }
+
+                    // No friendly fire in Team Mode
+                    if (
+                        room.gameMode === "team" &&
+                        room.players[bullet.owner] &&
+                        room.players[bullet.owner].team === player.team
+                        ) {
+                        continue;
+                        }
 
                     if (player.dead) {
                         continue;
