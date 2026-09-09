@@ -1128,55 +1128,90 @@ function shoot() {
  * =========================
  */
 
-window.addEventListener(
-    "keydown",
-    (e) => {
+const keys = {};
 
-        /*
-         * Don't control the game
-         * while typing in inputs.
-         */
+document.addEventListener("keydown", (e) => {
 
-        if (
-            e.target.tagName ===
-                "INPUT" ||
-            e.target.tagName ===
-                "TEXTAREA"
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            e.key &&
-            e.key.toLowerCase() ===
-                "r"
-        ) {
-
-            if (
-                socket &&
-                socket.connected &&
-                myPlayerId &&
-                players[myPlayerId] &&
-                !players[myPlayerId].spectating
-            ) {
-
-                socket.emit(
-                    "reload"
-                );
-
-            }
-
-
-            return;
-
-        }
-
+    if (
+        ["INPUT", "TEXTAREA"].includes(
+            document.activeElement.tagName
+        )
+    ) {
+        return;
     }
-);
 
+    const key =
+        (e.key || "").toLowerCase();
+
+    if (
+        key === "w" ||
+        key === "arrowup"
+    ) {
+        keys.w = true;
+        e.preventDefault();
+    }
+
+    if (
+        key === "a" ||
+        key === "arrowleft"
+    ) {
+        keys.a = true;
+        e.preventDefault();
+    }
+
+    if (
+        key === "s" ||
+        key === "arrowdown"
+    ) {
+        keys.s = true;
+        e.preventDefault();
+    }
+
+    if (
+        key === "d" ||
+        key === "arrowright"
+    ) {
+        keys.d = true;
+        e.preventDefault();
+    }
+
+});
+
+
+document.addEventListener("keyup", (e) => {
+
+    const key =
+        (e.key || "").toLowerCase();
+
+    if (
+        key === "w" ||
+        key === "arrowup"
+    ) {
+        keys.w = false;
+    }
+
+    if (
+        key === "a" ||
+        key === "arrowleft"
+    ) {
+        keys.a = false;
+    }
+
+    if (
+        key === "s" ||
+        key === "arrowdown"
+    ) {
+        keys.s = false;
+    }
+
+    if (
+        key === "d" ||
+        key === "arrowright"
+    ) {
+        keys.d = false;
+    }
+
+});
 /*
  * =========================
  * ENTER TO START GAME
