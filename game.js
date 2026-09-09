@@ -31,7 +31,6 @@ const roundText =
 const reloadText =
     document.getElementById("reload");
 
-
 const usernameInput =
     document.getElementById("usernameInput");
 
@@ -64,7 +63,9 @@ const copyBttn =
 
 
 /*
+ * =========================
  * PAUSE MENU
+ * =========================
  */
 
 const pauseMenu =
@@ -86,10 +87,36 @@ const waitingForHost =
     document.getElementById("waitingForHost");
 
 
-const gameEndScreen = document.getElementById("gameEndScreen");
-const gameWinner = document.getElementById("gameWinner");
-const finalStats = document.getElementById("finalStats");
-const gameEndCountdown = document.getElementById("gameEndCountdown");
+/*
+ * =========================
+ * GAME END
+ * =========================
+ */
+
+const gameEndScreen =
+    document.getElementById("gameEndScreen");
+
+const gameWinner =
+    document.getElementById("gameWinner");
+
+const finalStats =
+    document.getElementById("finalStats");
+
+const gameEndCountdown =
+    document.getElementById("gameEndCountdown");
+
+
+/*
+ * =========================
+ * ROUND COUNTDOWN
+ * =========================
+ */
+
+const roundCountdown =
+    document.getElementById("roundCountdown");
+
+const roundCountdownNumber =
+    document.getElementById("roundCountdownNumber");
 
 
 /*
@@ -121,7 +148,17 @@ let myAngle = 0;
 
 const speed = 8;
 
+
+/*
+ * =========================
+ * INPUT VARIABLES
+ * =========================
+ */
+
+const keys = {};
+
 let shooting = false;
+let shotLocked = false;
 
 
 /*
@@ -141,10 +178,8 @@ createRoomButton.addEventListener(
             return;
         }
 
-
         const username =
             usernameInput.value.trim();
-
 
         if (!username) {
 
@@ -153,7 +188,6 @@ createRoomButton.addEventListener(
 
             return;
         }
-
 
         socket.emit(
             "createRoom",
@@ -175,14 +209,11 @@ joinRoomButton.addEventListener(
             return;
         }
 
-
         const username =
             usernameInput.value.trim();
 
-
         const roomCode =
             roomInput.value.trim();
-
 
         if (!username) {
 
@@ -192,7 +223,6 @@ joinRoomButton.addEventListener(
             return;
         }
 
-
         if (!roomCode) {
 
             roomError.innerText =
@@ -200,7 +230,6 @@ joinRoomButton.addEventListener(
 
             return;
         }
-
 
         socket.emit(
             "joinRoom",
@@ -223,6 +252,7 @@ joinRoomButton.addEventListener(
  * =========================
  */
 
+
 /*
  * CHANGE COLOR
  */
@@ -239,7 +269,6 @@ colorButton.addEventListener(
         ) {
             return;
         }
-
 
         socket.emit(
             "changeColor"
@@ -264,13 +293,13 @@ leaveRoomButton.addEventListener(
             return;
         }
 
-
         socket.emit(
             "leaveRoom"
         );
 
     }
 );
+
 
 /*
  * =========================
@@ -302,6 +331,7 @@ startGameButton.addEventListener(
 
     }
 );
+
 
 /*
  * =========================
@@ -349,6 +379,7 @@ function updatePlayerList() {
             entry.className =
                 "playerListEntry";
 
+
             /*
              * HOST CROWN
              */
@@ -370,6 +401,7 @@ function updatePlayerList() {
 
             }
 
+
             /*
              * COLOR DOT
              */
@@ -385,6 +417,7 @@ function updatePlayerList() {
             colorDot.style.backgroundColor =
                 player.color ||
                 "green";
+
 
             /*
              * NAME
@@ -411,6 +444,7 @@ function updatePlayerList() {
 
             }
 
+
             entry.appendChild(
                 crown
             );
@@ -432,6 +466,13 @@ function updatePlayerList() {
 
 }
 
+
+/*
+ * =========================
+ * LOBBY CONTROLS
+ * =========================
+ */
+
 function updateLobbyControls() {
 
     if (
@@ -449,12 +490,15 @@ function updateLobbyControls() {
 
     }
 
+
     /*
      * Only show lobby controls
      * while actually in the lobby.
      */
 
-    if (currentGameState !== "lobby") {
+    if (
+        currentGameState !== "lobby"
+    ) {
 
         startGameButton.style.display =
             "none";
@@ -465,6 +509,7 @@ function updateLobbyControls() {
         return;
 
     }
+
 
     if (
         currentHost === myPlayerId
@@ -487,53 +532,89 @@ function updateLobbyControls() {
     }
 
 }
+
+
 /*
  * =========================
- * CONNECTION
+ * CONNECTION STATUS
  * =========================
  */
 
-window.addEventListener("offline", () => {
-    statusText.innerText =
-        "Internet Down: Reconnect to play";
+window.addEventListener(
+    "offline",
+    () => {
 
-    statusText.style.color =
-        "red";
-});
-
-window.addEventListener("online", () => {
-    if (socket && socket.connected) {
         statusText.innerText =
-            "Connected as " + socket.id;
+            "Internet Down: Reconnect to play";
 
         statusText.style.color =
-            "lightgreen";
-    } else {
-        statusText.innerText =
-            "Reconnecting...";
+            "red";
 
-        statusText.style.color =
-            "yellow";
     }
-});
+);
+
+
+window.addEventListener(
+    "online",
+    () => {
+
+        if (
+            socket &&
+            socket.connected
+        ) {
+
+            statusText.innerText =
+                "Connected as " +
+                socket.id;
+
+            statusText.style.color =
+                "lightgreen";
+
+        } else {
+
+            statusText.innerText =
+                "Reconnecting...";
+
+            statusText.style.color =
+                "yellow";
+
+        }
+
+    }
+);
+
+
+/*
+ * =========================
+ * CONNECT TO SERVER
+ * =========================
+ */
 
 function connectToServer() {
 
-    if (!navigator.onLine) {
-    statusText.innerText = "Internet Down: Reconnect to play";
-    statusText.style.color = "red";
-    return;
-    }    
+    if (
+        !navigator.onLine
+    ) {
+
+        statusText.innerText =
+            "Internet Down: Reconnect to play";
+
+        statusText.style.color =
+            "red";
+
+        return;
+
+    }
 
 
     if (
         typeof io ===
         "undefined"
     ) {
+
         console.error(
             "Socket.io failed to load."
         );
-
 
         statusText.innerText =
             "ERROR: Socket.io library failed to load.";
@@ -542,6 +623,7 @@ function connectToServer() {
             "red";
 
         return;
+
     }
 
 
@@ -640,11 +722,8 @@ function connectToServer() {
             currentHost =
                 null;
 
-
             players = {};
-
             bullets = {};
-
 
             connectBtn.innerText =
                 "Connect to Server";
@@ -676,10 +755,10 @@ function connectToServer() {
             reloadText.style.display =
                 "none";
 
+
             updatePlayerList();
 
             updateLobbyControls();
-
 
             drawGame();
 
@@ -728,33 +807,36 @@ function connectToServer() {
      */
 
     socket.on(
-    "roomJoined",
-    (data) => {
+        "roomJoined",
+        (data) => {
 
-        gameRoomCode.innerText =
-            data.roomCode;
+            gameRoomCode.innerText =
+                data.roomCode;
 
-        panelRoomCode.innerText =
-            data.roomCode;
+            panelRoomCode.innerText =
+                data.roomCode;
 
-        roomError.innerText =
-            "";
+            roomError.innerText =
+                "";
 
-        /*
-         * Keep the room menu available
-         * so players can see the lobby.
-         */
 
-        roomMenu.style.display =
-            "block";
+            /*
+             * Keep the room menu available
+             * so players can see the lobby.
+             */
 
-        console.log(
-            "Joined room:",
-            data.roomCode
-        );
+            roomMenu.style.display =
+                "block";
 
-    }
-);
+
+            console.log(
+                "Joined room:",
+                data.roomCode
+            );
+
+        }
+    );
+
 
     /*
      * =========================
@@ -793,16 +875,19 @@ function connectToServer() {
              */
 
             players = {};
-
             bullets = {};
-
 
             myAngle = 0;
 
             shooting = false;
+            shotLocked = false;
 
             currentHost =
-            null;
+                null;
+
+            currentGameState =
+                "lobby";
+
 
             updatePlayerList();
 
@@ -831,7 +916,6 @@ function connectToServer() {
 
             gameRoomCode.innerText =
                 "---";
-
 
             roomDisplay.innerText =
                 "";
@@ -862,22 +946,45 @@ function connectToServer() {
 
     /*
      * =========================
-     * PLAYER / GAME STATE
+     * PLAYER STATE
      * =========================
      */
 
-   socket.on("updatePlayers", (newPlayers) => {
-       
-    players = newPlayers;
+    socket.on(
+        "updatePlayers",
+        (newPlayers) => {
 
-    // Only update the lobby UI while actually in the lobby
-    if (currentGameState === "lobby") {
-        updatePlayerList();
-        updateLobbyControls();
-    }
+            players =
+                newPlayers;
 
-    updateHUD();
-});
+
+            /*
+             * Only update the lobby UI
+             * while actually in the lobby.
+             */
+
+            if (
+                currentGameState === "lobby"
+            ) {
+
+                updatePlayerList();
+
+                updateLobbyControls();
+
+            }
+
+
+            updateHUD();
+
+        }
+    );
+
+
+    /*
+     * =========================
+     * BULLETS
+     * =========================
+     */
 
     socket.on(
         "updateBullets",
@@ -889,66 +996,123 @@ function connectToServer() {
         }
     );
 
+
     /*
- * GAME STATE
- */
+     * =========================
+     * GAME STATE
+     * =========================
+     */
 
-socket.on(
-    "gameState",
-    (data) => {
+    socket.on(
+        "gameState",
+        (data) => {
 
-        if (!data) {
-            return;
+            if (!data) {
+                return;
+            }
+
+
+            currentGameState =
+                data.state ||
+                "lobby";
+
+
+            /*
+             * ROUND END COUNTDOWN
+             */
+
+            if (
+                currentGameState ===
+                "roundEnd"
+            ) {
+
+                showRoundCountdown(
+                    data.roundEndAt
+                );
+
+            } else {
+
+                if (roundCountdown) {
+
+                    roundCountdown.style.display =
+                        "none";
+
+                }
+
+            }
+
+
+            currentHost =
+                data.host ||
+                null;
+
+
+            obstacles =
+                data.obstacles ||
+                [];
+
+
+            currentRound =
+                data.currentRound ||
+                0;
+
+
+            totalRounds =
+                data.totalRounds ||
+                5;
+
+
+            /*
+             * Hide the room lobby once
+             * the game has actually started.
+             */
+
+            if (
+                currentGameState !==
+                "lobby"
+            ) {
+
+                roomMenu.style.display =
+                    "none";
+
+            } else {
+
+                roomMenu.style.display =
+                    "block";
+
+            }
+
+
+            /*
+             * GAME END
+             */
+
+            if (
+                currentGameState ===
+                "gameEnd"
+            ) {
+
+                showGameEnd(
+                    data
+                );
+
+            } else {
+
+                gameEndScreen.style.display =
+                    "none";
+
+            }
+
+
+            updatePlayerList();
+
+            updateLobbyControls();
+
         }
+    );
 
-        currentGameState =
-            data.state || "lobby";
+}
 
-        if (currentGameState === "roundEnd") {
-            showRoundCountdown(data.roundEndAt);
-        } else {
-            roundCountdown.style.display = "none";
-        }
-
-        currentHost =
-            data.host || null;
-
-        obstacles = data.obstacles || [];
-
-        currentRound = data.currentRound || 0;
-        totalRounds = data.totalRounds || 5;
-
-        /*
-         * Hide the room lobby once
-         * the game has actually started.
-         */
-
-        if (
-            currentGameState !== "lobby"
-        ) {
-
-            roomMenu.style.display =
-                "none";
-
-        } else {
-
-            roomMenu.style.display =
-                "block";
-
-        }
-
-        if (currentGameState === "gameEnd") {
-            showGameEnd(data);
-        } else {
-            gameEndScreen.style.display = "none";
-        }
-
-        updatePlayerList();
-
-        updateLobbyControls();
-
-    }
-);
 
 /*
  * =========================
@@ -986,7 +1150,9 @@ function updateAim() {
         !myPlayerId ||
         !players[myPlayerId]
     ) {
+
         return;
+
     }
 
 
@@ -1001,7 +1167,9 @@ function updateAim() {
     if (
         player.spectating
     ) {
+
         return;
+
     }
 
 
@@ -1052,50 +1220,76 @@ function updateAim() {
  * =========================
  */
 
-let shooting = false;
-let shotLocked = false;
-
 canvas.addEventListener(
     "mousedown",
     (e) => {
 
-        if (e.button !== 0) {
+        if (
+            e.button !== 0
+        ) {
+
             return;
+
         }
 
-        // Prevent multiple activations from one click
-        if (shotLocked) {
+
+        /*
+         * Prevent multiple activations
+         * from one click.
+         */
+
+        if (
+            shotLocked
+        ) {
+
             return;
+
         }
+
 
         if (
             myPlayerId &&
             players[myPlayerId] &&
             players[myPlayerId].spectating
         ) {
+
             return;
+
         }
 
-        shotLocked = true;
-        shooting = true;
+
+        shotLocked =
+            true;
+
+        shooting =
+            true;
+
 
         shoot();
+
     }
 );
+
 
 window.addEventListener(
     "mouseup",
     (e) => {
 
-        if (e.button === 0) {
+        if (
+            e.button === 0
+        ) {
 
-            shooting = false;
-            shotLocked = false;
+            shooting =
+                false;
+
+            shotLocked =
+                false;
 
         }
 
     }
 );
+
 
 function shoot() {
 
@@ -1103,115 +1297,173 @@ function shoot() {
         !socket ||
         !socket.connected
     ) {
+
         return;
+
     }
+
 
     if (
         !myPlayerId ||
         !players[myPlayerId]
     ) {
+
         return;
+
     }
+
 
     if (
         players[myPlayerId].spectating
     ) {
+
         return;
+
     }
 
-    socket.emit("shoot");
+
+    socket.emit(
+        "shoot"
+    );
+
 }
+
 
 /*
  * =========================
- * RELOADING
+ * KEYBOARD INPUT
  * =========================
  */
 
-const keys = {};
+document.addEventListener(
+    "keydown",
+    (e) => {
 
-document.addEventListener("keydown", (e) => {
+        if (
+            ["INPUT", "TEXTAREA"].includes(
+                document.activeElement.tagName
+            )
+        ) {
 
-    if (
-        ["INPUT", "TEXTAREA"].includes(
-            document.activeElement.tagName
-        )
-    ) {
-        return;
+            return;
+
+        }
+
+
+        const key =
+            (e.key || "").toLowerCase();
+
+
+        if (
+            key === "w" ||
+            key === "arrowup"
+        ) {
+
+            keys.w =
+                true;
+
+            e.preventDefault();
+
+        }
+
+
+        if (
+            key === "a" ||
+            key === "arrowleft"
+        ) {
+
+            keys.a =
+                true;
+
+            e.preventDefault();
+
+        }
+
+
+        if (
+            key === "s" ||
+            key === "arrowdown"
+        ) {
+
+            keys.s =
+                true;
+
+            e.preventDefault();
+
+        }
+
+
+        if (
+            key === "d" ||
+            key === "arrowright"
+        ) {
+
+            keys.d =
+                true;
+
+            e.preventDefault();
+
+        }
+
     }
+);
 
-    const key =
-        (e.key || "").toLowerCase();
 
-    if (
-        key === "w" ||
-        key === "arrowup"
-    ) {
-        keys.w = true;
-        e.preventDefault();
+document.addEventListener(
+    "keyup",
+    (e) => {
+
+        const key =
+            (e.key || "").toLowerCase();
+
+
+        if (
+            key === "w" ||
+            key === "arrowup"
+        ) {
+
+            keys.w =
+                false;
+
+        }
+
+
+        if (
+            key === "a" ||
+            key === "arrowleft"
+        ) {
+
+            keys.a =
+                false;
+
+        }
+
+
+        if (
+            key === "s" ||
+            key === "arrowdown"
+        ) {
+
+            keys.s =
+                false;
+
+        }
+
+
+        if (
+            key === "d" ||
+            key === "arrowright"
+        ) {
+
+            keys.d =
+                false;
+
+        }
+
     }
-
-    if (
-        key === "a" ||
-        key === "arrowleft"
-    ) {
-        keys.a = true;
-        e.preventDefault();
-    }
-
-    if (
-        key === "s" ||
-        key === "arrowdown"
-    ) {
-        keys.s = true;
-        e.preventDefault();
-    }
-
-    if (
-        key === "d" ||
-        key === "arrowright"
-    ) {
-        keys.d = true;
-        e.preventDefault();
-    }
-
-});
+);
 
 
-document.addEventListener("keyup", (e) => {
-
-    const key =
-        (e.key || "").toLowerCase();
-
-    if (
-        key === "w" ||
-        key === "arrowup"
-    ) {
-        keys.w = false;
-    }
-
-    if (
-        key === "a" ||
-        key === "arrowleft"
-    ) {
-        keys.a = false;
-    }
-
-    if (
-        key === "s" ||
-        key === "arrowdown"
-    ) {
-        keys.s = false;
-    }
-
-    if (
-        key === "d" ||
-        key === "arrowright"
-    ) {
-        keys.d = false;
-    }
-
-});
 /*
  * =========================
  * ENTER TO START GAME
@@ -1233,6 +1485,7 @@ window.addEventListener(
 
         }
 
+
         if (
             e.key !==
             "Enter"
@@ -1241,6 +1494,7 @@ window.addEventListener(
             return;
 
         }
+
 
         if (
             !socket ||
@@ -1251,6 +1505,7 @@ window.addEventListener(
 
         }
 
+
         if (
             !myPlayerId ||
             !players[myPlayerId]
@@ -1260,6 +1515,7 @@ window.addEventListener(
 
         }
 
+
         if (
             currentHost !==
             myPlayerId
@@ -1268,6 +1524,17 @@ window.addEventListener(
             return;
 
         }
+
+
+        if (
+            currentGameState !==
+            "lobby"
+        ) {
+
+            return;
+
+        }
+
 
         socket.emit(
             "startGame"
@@ -1283,45 +1550,16 @@ window.addEventListener(
  * =========================
  */
 
-const keys = {};
-
-document.addEventListener("keydown", (e) => {
-    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
-
-   const key = (e.key || "").toLowerCase();
-
-    if (key === "w" || e.key === "arrowup") {
-        keys.w = true;
-        e.preventDefault();
-    }
-
-    if (key === "a" || e.key === "arrowleft") {
-        keys.a = true;
-        e.preventDefault();
-    }
-
-    if (key === "s" || e.key === "arrowdown") {
-        keys.s = true;
-        e.preventDefault();
-    }
-
-    if (key === "d" || e.key === "arrowright") {
-        keys.d = true;
-        e.preventDefault();
-    }
-});
-
-document.addEventListener("keyup", (e) => {
-    const key = (e.key || "").toLowerCase();
-    
-    if (key === "w" || e.key === "arrowup") keys.w = false;
-    if (key === "a" || e.key === "arrowleft") keys.a = false;
-    if (key === "s" || e.key === "arrowdown") keys.s = false;
-    if (key === "d" || e.key === "arrowright") keys.d = false;
-});
-
 let lastMoveTime = 0;
-const MOVE_INTERVAL = 16; // 60 movement updates per second
+
+const MOVE_INTERVAL =
+    16;
+
+
+/*
+ * Send movement at roughly
+ * 60 updates per second.
+ */
 
 function movementLoop(timestamp) {
 
@@ -1334,65 +1572,188 @@ function movementLoop(timestamp) {
         !players[myPlayerId].spectating
     ) {
 
-        if (timestamp - lastMoveTime >= MOVE_INTERVAL) {
+        if (
+            timestamp -
+            lastMoveTime >=
+            MOVE_INTERVAL
+        ) {
 
             let x = 0;
             let y = 0;
 
-            if (keys.w) y -= 1;
-            if (keys.s) y += 1;
-            if (keys.a) x -= 1;
-            if (keys.d) x += 1;
 
-            if (x !== 0 || y !== 0) {
+            if (
+                keys.w
+            ) {
 
-                const length =
-                    Math.sqrt(x * x + y * y);
-
-                x /= length;
-                y /= length;
-
-                socket.emit("move", {
-                    x: x * speed,
-                    y: y * speed
-                });
+                y -= 1;
 
             }
 
-            lastMoveTime = timestamp;
+
+            if (
+                keys.s
+            ) {
+
+                y += 1;
+
+            }
+
+
+            if (
+                keys.a
+            ) {
+
+                x -= 1;
+
+            }
+
+
+            if (
+                keys.d
+            ) {
+
+                x += 1;
+
+            }
+
+
+            /*
+             * Only send movement when
+             * a direction is actually held.
+             */
+
+            if (
+                x !== 0 ||
+                y !== 0
+            ) {
+
+                const length =
+                    Math.sqrt(
+                        x * x +
+                        y * y
+                    );
+
+
+                /*
+                 * Normalize diagonal movement
+                 * so it isn't faster.
+                 */
+
+                x /=
+                    length;
+
+                y /=
+                    length;
+
+
+                socket.emit(
+                    "move",
+                    {
+                        x:
+                            x * speed,
+
+                        y:
+                            y * speed
+                    }
+                );
+
+            }
+
+
+            lastMoveTime =
+                timestamp;
+
         }
+
     }
 
-    requestAnimationFrame(movementLoop);
+
+    requestAnimationFrame(
+        movementLoop
+    );
+
 }
 
-requestAnimationFrame(movementLoop);
+requestAnimationFrame(
+    movementLoop
+);
 
-function showRoundCountdown(roundEndAt) {
-    if (!roundEndAt) return;
 
-    roundCountdown.style.display = "block";
+/*
+ * =========================
+ * ROUND COUNTDOWN
+ * =========================
+ */
+
+function showRoundCountdown(
+    roundEndAt
+) {
+
+    if (
+        !roundEndAt ||
+        !roundCountdown ||
+        !roundCountdownNumber
+    ) {
+
+        return;
+
+    }
+
+
+    roundCountdown.style.display =
+        "block";
+
 
     function updateRoundCountdown() {
-        if (currentGameState !== "roundEnd") {
-            roundCountdown.style.display = "none";
+
+        if (
+            currentGameState !==
+            "roundEnd"
+        ) {
+
+            roundCountdown.style.display =
+                "none";
+
             return;
+
         }
 
-        const remaining = Math.max(
-            0,
-            Math.ceil((roundEndAt - Date.now()) / 1000)
-        );
 
-        roundCountdownNumber.textContent = remaining;
+        const remaining =
+            Math.max(
+                0,
+                Math.ceil(
+                    (
+                        roundEndAt -
+                        Date.now()
+                    ) / 1000
+                )
+            );
 
-        if (remaining > 0) {
-            setTimeout(updateRoundCountdown, 100);
+
+        roundCountdownNumber.textContent =
+            remaining;
+
+
+        if (
+            remaining > 0
+        ) {
+
+            setTimeout(
+                updateRoundCountdown,
+                100
+            );
+
         }
+
     }
 
+
     updateRoundCountdown();
+
 }
+
 
 /*
  * =========================
@@ -1482,7 +1843,7 @@ function updateHUD() {
 
 
     roundText.innerText =
-    `Round: ${currentRound}/${totalRounds}`;
+        `Round: ${currentRound}/${totalRounds}`;
 
 
     if (
@@ -1513,15 +1874,23 @@ connectBtn.addEventListener(
     connectToServer
 );
 
-/*
-* ==========================
-* COPY BUTTON
-* ==========================
-*/
 
-    copyBttn.addEventListener("click", () => {
-        navigator.clipboard.writeText(gameRoomCode.innerText);
-    });
+/*
+ * =========================
+ * COPY BUTTON
+ * =========================
+ */
+
+copyBttn.addEventListener(
+    "click",
+    () => {
+
+        navigator.clipboard.writeText(
+            gameRoomCode.innerText
+        );
+
+    }
+);
 
 
 /*
@@ -1552,46 +1921,48 @@ window.addEventListener(
 
 
         if (
-            e.key &&
-            e.key === "Escape"
+            e.key !==
+            "Escape"
         ) {
 
-            /*
-             * Only allow pause menu
-             * when actually inside a room.
-             */
+            return;
 
-            if (
-                !myPlayerId ||
-                !players[myPlayerId]
-            ) {
-
-                return;
-
-            }
+        }
 
 
-            if (
-                pauseMenu.style.display ===
-                "flex"
-            ) {
+        /*
+         * Only allow pause menu
+         * when actually inside a room.
+         */
 
-                pauseMenu.style.display =
-                    "none";
+        if (
+            !myPlayerId ||
+            !players[myPlayerId]
+        ) {
 
-            } else {
+            return;
 
-                pauseMenu.style.display =
-                    "flex";
+        }
 
-            }
+
+        if (
+            pauseMenu.style.display ===
+            "flex"
+        ) {
+
+            pauseMenu.style.display =
+                "none";
+
+        } else {
+
+            pauseMenu.style.display =
+                "flex";
 
         }
 
     }
 );
 
-}
 
 /*
  * =========================
@@ -1610,7 +1981,9 @@ function drawGame() {
 
 
     /*
+     * =========================
      * BACKGROUND GRID
+     * =========================
      */
 
     ctx.strokeStyle =
@@ -1665,17 +2038,28 @@ function drawGame() {
 
     }
 
-       // Draw obstacles
-obstacles.forEach(obstacle => {
-    ctx.fillStyle = "#555";
-    ctx.fillRect(
-        obstacle.x,
-        obstacle.y,
-        obstacle.width,
-        obstacle.height
-    );
-});
 
+    /*
+     * =========================
+     * DRAW OBSTACLES
+     * =========================
+     */
+
+    obstacles.forEach(
+        (obstacle) => {
+
+            ctx.fillStyle =
+                "#555";
+
+            ctx.fillRect(
+                obstacle.x,
+                obstacle.y,
+                obstacle.width,
+                obstacle.height
+            );
+
+        }
+    );
 
 
     /*
@@ -1695,6 +2079,7 @@ obstacles.forEach(obstacle => {
         if (!player) {
             continue;
         }
+
 
         /*
          * Spectators disappear
@@ -1965,28 +2350,63 @@ obstacles.forEach(obstacle => {
 
 }
 
+
+/*
+ * =========================
+ * GAME END
+ * =========================
+ */
+
 function showGameEnd(data) {
-    gameEndScreen.style.display = "flex";
 
-    let winner = null;
+    gameEndScreen.style.display =
+        "flex";
 
-    for (const id in players) {
-        const player = players[id];
 
-        if (!player.dead && !player.spectating) {
-            winner = player;
+    let winner =
+        null;
+
+
+    for (
+        const id in players
+    ) {
+
+        const player =
+            players[id];
+
+
+        if (
+            !player.dead &&
+            !player.spectating
+        ) {
+
+            winner =
+                player;
+
             break;
+
         }
+
     }
 
-    gameWinner.textContent = winner
-        ? `🏆 Winner: ${winner.username}`
-        : "🏆 Winner: Draw!";
 
-    let html = "";
+    gameWinner.textContent =
+        winner
+            ? `🏆 Winner: ${winner.username}`
+            : "🏆 Winner: Draw!";
 
-    for (const id in players) {
-        const player = players[id];
+
+    let html =
+        "";
+
+
+    for (
+        const id in players
+    ) {
+
+        const player =
+            players[id];
+
 
         html += `
             <div style="margin:10px 0; padding:8px; background:#333; border-radius:6px;">
@@ -1996,91 +2416,206 @@ function showGameEnd(data) {
                 Round Wins: ${player.roundWins || 0}
             </div>
         `;
+
     }
 
-    finalStats.innerHTML = html;
 
-    const endTime = data.gameEndAt || Date.now();
+    finalStats.innerHTML =
+        html;
+
+
+    const endTime =
+        data.gameEndAt ||
+        Date.now();
+
 
     function updateCountdown() {
-        const remaining = Math.max(
-            0,
-            Math.ceil((endTime - Date.now()) / 1000)
-        );
+
+        const remaining =
+            Math.max(
+                0,
+                Math.ceil(
+                    (
+                        endTime -
+                        Date.now()
+                    ) / 1000
+                )
+            );
+
 
         gameEndCountdown.textContent =
             `Returning to lobby in ${remaining}...`;
 
-        if (remaining > 0 && currentGameState === "gameEnd") {
-            setTimeout(updateCountdown, 250);
+
+        if (
+            remaining > 0 &&
+            currentGameState ===
+            "gameEnd"
+        ) {
+
+            setTimeout(
+                updateCountdown,
+                250
+            );
+
         }
+
     }
 
+
     updateCountdown();
+
 }
 
+
+/*
+ * =========================
+ * FPS
+ * =========================
+ */
+
 let fps = 0;
+
 let fpsFrames = 0;
-let fpsLastTime = performance.now();
+
+let fpsLastTime =
+    performance.now();
+
 
 function updateFPS(timestamp) {
 
     fpsFrames++;
 
-    if (timestamp - fpsLastTime >= 1000) {
 
-        fps = fpsFrames;
-        fpsFrames = 0;
-        fpsLastTime = timestamp;
+    if (
+        timestamp -
+        fpsLastTime >=
+        1000
+    ) {
+
+        fps =
+            fpsFrames;
+
+        fpsFrames =
+            0;
+
+        fpsLastTime =
+            timestamp;
+
 
         const fpsDisplay =
-            document.getElementById("fpsDisplay");
-
-        if (fpsDisplay) {
-            fpsDisplay.textContent = fps;
-        }
-
-    }
-
-    requestAnimationFrame(updateFPS);
-}
-
-requestAnimationFrame(updateFPS);
-
-setInterval(() => {
-
-    if (!socket || !socket.connected) {
-        return;
-    }
-
-    const start = performance.now();
-
-    socket.emit("pingCheck");
-
-    socket.once("pongCheck", () => {
-
-        const ping =
-            Math.round(
-                performance.now() - start
+            document.getElementById(
+                "fpsDisplay"
             );
 
-        const pingDisplay =
-            document.getElementById("pingDisplay");
 
-        if (pingDisplay) {
-            pingDisplay.textContent = ping;
+        if (
+            fpsDisplay
+        ) {
+
+            fpsDisplay.textContent =
+                fps;
+
         }
 
-    });
+    }
 
-}, 1000);
 
-function renderLoop() {
-    drawGame();
-    requestAnimationFrame(renderLoop);
+    requestAnimationFrame(
+        updateFPS
+    );
+
 }
 
-requestAnimationFrame(renderLoop);
+
+requestAnimationFrame(
+    updateFPS
+);
+
+
+/*
+ * =========================
+ * PING
+ * =========================
+ */
+
+setInterval(
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+
+            return;
+
+        }
+
+
+        const start =
+            performance.now();
+
+
+        socket.emit(
+            "pingCheck"
+        );
+
+
+        socket.once(
+            "pongCheck",
+            () => {
+
+                const ping =
+                    Math.round(
+                        performance.now() -
+                        start
+                    );
+
+
+                const pingDisplay =
+                    document.getElementById(
+                        "pingDisplay"
+                    );
+
+
+                if (
+                    pingDisplay
+                ) {
+
+                    pingDisplay.textContent =
+                        ping;
+
+                }
+
+            }
+        );
+
+    },
+    1000
+);
+
+
+/*
+ * =========================
+ * RENDER LOOP
+ * =========================
+ */
+
+function renderLoop() {
+
+    drawGame();
+
+    requestAnimationFrame(
+        renderLoop
+    );
+
+}
+
+
+requestAnimationFrame(
+    renderLoop
+);
+
 
 /*
  * =========================
