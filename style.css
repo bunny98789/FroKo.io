@@ -31,6 +31,19 @@ input {
     width: 280px;
 }
 
+/*
+    RADIO BUTTONS
+
+    Keep radio buttons from inheriting
+    the normal text-input width/padding.
+*/
+
+input[type="radio"] {
+    width: auto;
+    padding: 0;
+    margin: 0;
+}
+
 button {
     padding: 8px 15px;
     font-size: 16px;
@@ -241,7 +254,11 @@ button:hover {
 
 /* PLAYER LIST ENTRY */
 
-.player-entry {
+/*
+    These class names match the current game.js.
+*/
+
+.playerListEntry {
     display: flex;
 
     align-items: center;
@@ -259,11 +276,21 @@ button:hover {
     font-size: 15px;
 }
 
-.player-entry.you {
-    border: 1px solid #444;
+
+/* HOST CROWN */
+
+.playerHostCrown {
+    width: 18px;
+
+    flex-shrink: 0;
+
+    text-align: center;
 }
 
-.player-color {
+
+/* INDIVIDUAL PLAYER COLOR */
+
+.playerColorDot {
     width: 12px;
     height: 12px;
 
@@ -272,7 +299,10 @@ button:hover {
     flex-shrink: 0;
 }
 
-.player-name {
+
+/* PLAYER NAME */
+
+.playerName {
     flex: 1;
 
     overflow: hidden;
@@ -280,22 +310,6 @@ button:hover {
     text-overflow: ellipsis;
 
     white-space: nowrap;
-}
-
-.player-status {
-    font-size: 12px;
-
-    color: #888;
-}
-
-.emptyPlayerList {
-    text-align: center;
-
-    color: #777;
-
-    padding: 15px 5px;
-
-    font-size: 13px;
 }
 
 
@@ -335,6 +349,93 @@ button:hover {
     font-size: 13px;
 
     line-height: 1.4;
+}
+
+
+/* GAME MODE */
+
+#gameModeControls {
+    margin-top: 15px;
+
+    border-top: 1px solid #333;
+
+    padding-top: 15px;
+}
+
+#gameModeTitle {
+    text-align: center;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    color: #aaa;
+
+    margin-bottom: 10px;
+}
+
+#gameModeControls label {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 6px 8px;
+
+    margin-bottom: 5px;
+
+    border-radius: 6px;
+
+    background: #202020;
+
+    font-size: 14px;
+
+    cursor: pointer;
+}
+
+#gameModeControls label:hover {
+    background: #282828;
+}
+
+#gameModeControls input[type="radio"] {
+    cursor: pointer;
+}
+
+#teamDisplay {
+    margin-top: 10px;
+
+    padding: 8px;
+
+    border-radius: 6px;
+
+    background: #202020;
+
+    text-align: center;
+
+    color: #aaa;
+
+    font-size: 14px;
+
+    font-weight: bold;
+}
+
+#switchTeamButton {
+    width: 100%;
+
+    margin-top: 8px;
+
+    padding: 9px;
+
+    background: #444;
+
+    font-size: 14px;
+
+    font-weight: bold;
+}
+
+#switchTeamButton:hover {
+    background: #555;
 }
 
 
@@ -523,6 +624,9 @@ button:hover {
     background: #aa2222;
 }
 
+
+/* PERFORMANCE */
+
 #performanceMenu {
 
     background: rgba(0, 0, 0, 0.75);
@@ -540,47 +644,75 @@ button:hover {
     pointer-events: none;
 }
 
+
+/* GAME END */
+
 #gameEndScreen {
     position: fixed;
     inset: 0;
+
     background: rgba(0, 0, 0, 0.85);
+
     display: flex;
+
     align-items: center;
     justify-content: center;
+
     z-index: 9999;
+
     color: white;
+
     font-family: Arial, sans-serif;
 }
 
 #gameEndBox {
     background: #222;
+
     border: 2px solid white;
+
     border-radius: 12px;
+
     padding: 30px;
+
     min-width: 400px;
+
     max-width: 80vw;
+
     text-align: center;
 }
 
 #gameEndBox h1 {
     margin-top: 0;
+
     font-size: 42px;
 }
 
 #finalStats {
     margin-top: 20px;
+
     text-align: left;
 }
 
+
+/* ROUND COUNTDOWN */
+
 #roundCountdown {
     position: absolute;
+
     top: 70px;
     left: 50%;
+
     transform: translateX(-50%);
+
     color: white;
+
     font-size: 20px;
+
     font-weight: bold;
+
     text-shadow: 2px 2px 4px black;
+
     z-index: 1000;
+
     pointer-events: none;
 }
