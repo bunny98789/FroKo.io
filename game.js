@@ -2721,10 +2721,27 @@ function showGameEnd(data) {
     }
 
 
+   if (
+    currentGameMode === "team" &&
+    data.winningTeam
+) {
+
+    const teamName =
+        data.winningTeam === "red"
+            ? "Red"
+            : "Blue";
+
+    gameWinner.textContent =
+        `🏆 ${teamName} Team Wins!!`;
+
+} else {
+
     gameWinner.textContent =
         winner
             ? `🏆 Winner: ${winner.username}`
             : "🏆 Winner: Draw!";
+
+}
 
 
     let html =
