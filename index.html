@@ -123,19 +123,32 @@
         </div>
 
         <div id="hostControls">
-            <div id="gameModeControls">
+           <div id="gameModeControls">
 
     <div id="gameModeTitle">
         GAME MODE
     </div>
 
-    <button id="ffaModeButton">
+    <label>
+        <input
+            type="radio"
+            name="gameMode"
+            id="ffaModeButton"
+            value="ffa"
+            checked
+        >
         Free For All
-    </button>
+    </label>
 
-    <button id="teamModeButton">
+    <label>
+        <input
+            type="radio"
+            name="gameMode"
+            id="teamModeButton"
+            value="team"
+        >
         Team Mode
-    </button>
+    </label>
 
     <div id="teamDisplay">
         Your Team: ---
