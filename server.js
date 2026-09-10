@@ -2279,7 +2279,107 @@ io.on(
             }
         );
 
-        // ====================================
+/*
+ * =========================
+ * SET GAME MODE
+ * =========================
+ */
+
+socket.on("setGameMode", (mode) => {
+
+    const roomCode = socket.roomCode;
+    const room = rooms[roomCode];
+
+    if (!room) {
+        return;
+    }
+
+    /*
+     * Only the host can change
+     * the game mode.
+     */
+
+    if (room.host !== socket.id) {
+        return;
+    }
+
+    /*
+     * Only allow changes in lobby.
+     */
+
+    if (room.gameState !== "lobby") {
+        return;
+    }
+
+    /*
+     * Validate mode.
+     */
+
+    if (
+        mode !== "ffa" &&
+        mode !== "team"
+    ) {
+        return;
+    }
+
+    room.gameMode = mode;
+
+
+    /*
+     * FFA = no teams.
+     */
+
+    if (mode === "ffa") {
+
+        for (const playerId in room.players) {
+
+            room.players[playerId].team = null;
+
+        }
+
+    }
+
+
+    /*
+     * Team Mode = automatically
+     * balance players between teams.
+     */
+
+    if (mode === "team") {
+
+        let redCount = 0;
+        let blueCount = 0;
+
+        for (const playerId in room.players) {
+
+            const player =
+                room.players[playerId];
+
+            if (!player) {
+                continue;
+            }
+
+            if (redCount <= blueCount) {
+
+                player.team = "red";
+                redCount++;
+
+            } else {
+
+                player.team = "blue";
+                blueCount++;
+
+            }
+
+        }
+
+    }
+
+    sendGameState(roomCode);
+
+});
+        
+// ====================================
 // SWITCH TEAM
 // ====================================
 
