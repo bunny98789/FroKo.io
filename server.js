@@ -469,6 +469,12 @@ function sendGameState(roomCode) {
             gameEndAt:
                 room.gameEndAt,
 
+            winner:
+                room.winner,
+
+            winningTeam:
+                room.winningTeam,
+
             obstacles:
                 room.obstacles
 
