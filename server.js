@@ -1900,6 +1900,55 @@ io.on(
             socket.emit("pongCheck");
         });
 
+        socket.on("setGameMode", (mode) => {
+    const roomCode = socket.roomCode;
+    const room = rooms[roomCode];
+
+    if (!room) return;
+    if (room.host !== socket.id) return;
+    if (room.gameState !== "lobby") return;
+
+    if (mode !== "ffa" && mode !== "team") {
+        return;
+    }
+
+    room.gameMode = mode;
+
+    if (mode === "ffa") {
+
+        for (const playerId in room.players) {
+            room.players[playerId].team = null;
+        }
+
+    }
+
+    if (mode === "team") {
+
+        let redCount = 0;
+        let blueCount = 0;
+
+        for (const playerId in room.players) {
+
+            const player =
+                room.players[playerId];
+
+            if (!player) continue;
+
+            if (redCount <= blueCount) {
+                player.team = "red";
+                redCount++;
+            } else {
+                player.team = "blue";
+                blueCount++;
+            }
+
+        }
+
+    }
+
+    sendGameState(roomCode);
+});
+
 
         // ====================================
         // CREATE ROOM
