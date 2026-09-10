@@ -123,44 +123,6 @@ const gameEndCountdown =
 
 /*
  * =========================
- * ROUND COUNTDOWNS
- * =========================
- */
-
-if (
-    currentGameState === "countdown"
-) {
-
-    showRoundCountdown(
-        data.countdownEndsAt,
-        "ROUND STARTING",
-        true
-    );
-
-} else if (
-    currentGameState === "roundEnd"
-) {
-
-    showRoundCountdown(
-        data.roundEndAt,
-        "ROUND OVER",
-        false
-    );
-
-} else {
-
-    if (roundCountdown) {
-
-        roundCountdown.style.display =
-            "none";
-
-    }
-
-}
-
-
-/*
- * =========================
  * GAME VARIABLES
  * =========================
  */
@@ -1248,7 +1210,6 @@ function connectToServer() {
                 currentGameState === "lobby"
             ) {
 
-                updatePlayerList();
 
                 updateLobbyControls();
 
@@ -1305,32 +1266,6 @@ function connectToServer() {
                 data.gameMode ||
                 "ffa";
 
-
-            /*
-             * ROUND END COUNTDOWN
-             */
-
-            if (
-                currentGameState ===
-                "roundEnd"
-            ) {
-
-                showRoundCountdown(
-                    data.roundEndAt
-                );
-
-            } else {
-
-                if (roundCountdown) {
-
-                    roundCountdown.style.display =
-                        "none";
-
-                }
-
-            }
-
-
             currentHost =
                 data.host ||
                 null;
@@ -1349,6 +1284,8 @@ function connectToServer() {
             totalRounds =
                 data.totalRounds ||
                 5;
+
+            
 
 
             /*
@@ -1392,6 +1329,43 @@ function connectToServer() {
 
             }
 
+            /*
+ * =========================
+ * ROUND COUNTDOWNS
+ * =========================
+ */
+
+if (
+    currentGameState === "countdown"
+) {
+
+    showRoundCountdown(
+        data.countdownEndsAt,
+        "ROUND STARTING",
+        true
+    );
+
+} else if (
+    currentGameState === "roundEnd"
+) {
+
+    showRoundCountdown(
+        data.roundEndAt,
+        "ROUND OVER",
+        false
+    );
+
+} else {
+
+    if (roundCountdown) {
+
+        roundCountdown.style.display =
+            "none";
+
+    }
+
+}
+
 
             updatePlayerList();
             updateGameModeUI();
@@ -1403,6 +1377,8 @@ function connectToServer() {
     );
 
 }
+
+
 
 
 /*
