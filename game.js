@@ -631,21 +631,47 @@ function updatePlayerList() {
                 "green";
 
 
-            /*
-             * NAME
-             */
+ /*
+ * NAME
+ */
 
-            const name =
-                document.createElement(
-                    "span"
-                );
+const name =
+    document.createElement(
+        "span"
+    );
 
-            name.className =
-                "playerName";
+name.className =
+    "playerName";
 
-       name.innerText =
+name.innerText =
     player.username ||
     "Unknown";
+
+
+/*
+ * TEAM NAME COLOR
+ */
+
+if (
+    currentGameMode === "team" &&
+    player.team
+) {
+
+    if (player.team === "red") {
+
+        name.style.color =
+            "red";
+
+    } else if (
+        player.team === "blue"
+    ) {
+
+        name.style.color =
+            "blue";
+
+    }
+
+}
 
 
 if (
@@ -655,21 +681,7 @@ if (
     name.innerText +=
         " (You)";
 
-}
-
-
-if (
-    currentGameMode === "team" &&
-    player.team
-) {
-
-    name.innerText +=
-        player.team === "red"
-            ? " 🔴"
-            : " 🔵";
-
-}
-    
+}    
 
 
             entry.appendChild(
