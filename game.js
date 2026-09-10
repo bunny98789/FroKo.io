@@ -52,6 +52,9 @@ const roomError =
 const roomMenu =
     document.getElementById("roomMenu");
 
+const mainGameLayout =
+    document.getElementById("main-game-layout");
+
 const gameRoomCode =
     document.getElementById("gameRoomCode");
 
@@ -302,6 +305,35 @@ leaveRoomButton.addEventListener(
 
     }
 );
+
+/*
+ * =========================
+ * ROOM UI
+ * =========================
+ */
+
+function showRoomLobby() {
+
+    roomMenu.style.display =
+        "block";
+
+    mainGameLayout.style.display =
+        "none";
+
+}
+
+
+function showGameArea() {
+
+    roomMenu.style.display =
+        "none";
+
+    mainGameLayout.style.display =
+        "block";
+
+}
+
+showRoomLobby();
 
 
 /*
@@ -983,8 +1015,7 @@ function connectToServer() {
                 "none";
 
 
-            roomMenu.style.display =
-                "block";
+            showRoomLobby();
 
 
             gameRoomCode.innerText =
@@ -1059,14 +1090,12 @@ function connectToServer() {
                 "";
 
 
-            /*
-             * Keep the room menu available
-             * so players can see the lobby.
+             /*
+             * Hide the room lobby and
+             * show the room/game area.
              */
 
-            roomMenu.style.display =
-                "block";
-
+            showGameArea();
 
             console.log(
                 "Joined room:",
@@ -1145,8 +1174,7 @@ function connectToServer() {
              * Show lobby again.
              */
 
-            roomMenu.style.display =
-                "block";
+            showRoomLobby();
 
 
             /*
@@ -1284,26 +1312,12 @@ function connectToServer() {
             
 
 
-            /*
-             * Hide the room lobby once
-             * the game has actually started.
-             */
+                   /*
+                 * Once we receive a game state,
+                 * we are already inside a room.
+                  */
 
-            if (
-                currentGameState !==
-                "lobby"
-            ) {
-
-                roomMenu.style.display =
-                    "none";
-
-            } else {
-
-                roomMenu.style.display =
-                    "block";
-
-            }
-
+                showGameArea();
 
             /*
              * GAME END
