@@ -1221,16 +1221,34 @@ if (room.gameMode === "team") {
 
     }
 
+    let winningTeam =
+        null;
+
+    if (redWins > blueWins) {
+
+        winningTeam =
+            "red";
+
+    } else if (blueWins > redWins) {
+
+        winningTeam =
+            "blue";
+
+    }
+
     console.log(
         `Final team scores - RED: ${redWins}, BLUE: ${blueWins}`
     );
 
-    finishGame(roomCode);
+    finishGame(
+        roomCode,
+        null,
+        winningTeam
+    );
 
     return;
 
 }
-
 
 // ====================================
 // FINAL ROUND - FREE FOR ALL
@@ -1491,7 +1509,9 @@ player.y =
 // ========================================
 
 function finishGame(
-    roomCode
+    roomCode,
+    winner = null,
+    winningTeam = null
 ) {
 
     const room =
@@ -1509,6 +1529,12 @@ function finishGame(
     room.gameEndAt =
         Date.now() +
         GAME_END_TIME;
+
+    room.winner =
+    winner;
+
+room.winningTeam =
+    winningTeam;
 
     room.countdownEndsAt =
         null;
