@@ -495,22 +495,6 @@ function updateGameModeUI() {
     teamModeButton.disabled =
         !isHost;
 
-
-    /*
-     * Highlight selected mode.
-     */
-
-    ffaModeButton.style.fontWeight =
-        currentGameMode === "ffa"
-            ? "bold"
-            : "normal";
-
-    teamModeButton.style.fontWeight =
-        currentGameMode === "team"
-            ? "bold"
-            : "normal";
-
-
     /*
      * Team controls.
      */
