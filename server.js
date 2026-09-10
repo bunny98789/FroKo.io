@@ -1189,25 +1189,68 @@ function continueAfterRound(
 
     }
 
-    // ====================================
-    // FINAL ROUND
-    // ====================================
+// ====================================
+// FINAL ROUND
+// ====================================
 
-    const tiedPlayers =
-        getFinalTiedPlayers(room);
+if (room.gameMode === "team") {
 
-    if (
-        tiedPlayers.length > 1
-    ) {
+    let redWins = 0;
+    let blueWins = 0;
 
-        startSuddenDeath(
-            roomCode,
-            tiedPlayers
-        );
+    for (const playerId in room.players) {
 
-        return;
+        const player =
+            room.players[playerId];
+
+        if (!player) {
+            continue;
+        }
+
+        if (player.team === "red") {
+
+            redWins += player.roundWins;
+
+        } else if (
+            player.team === "blue"
+        ) {
+
+            blueWins += player.roundWins;
+
+        }
 
     }
+
+    console.log(
+        `Final team scores - RED: ${redWins}, BLUE: ${blueWins}`
+    );
+
+    finishGame(roomCode);
+
+    return;
+
+}
+
+
+// ====================================
+// FINAL ROUND - FREE FOR ALL
+// ====================================
+
+const tiedPlayers =
+    getFinalTiedPlayers(room);
+
+if (
+    tiedPlayers.length > 1
+) {
+
+    startSuddenDeath(
+        roomCode,
+        tiedPlayers
+    );
+
+    return;
+
+}
 
     // ====================================
     // GAME COMPLETE
