@@ -61,6 +61,21 @@ const panelRoomCode =
 const copyBttn =
     document.getElementById("copyBttn");
 
+const gameModeControls =
+    document.getElementById("gameModeControls");
+
+const ffaModeButton =
+    document.getElementById("ffaModeButton");
+
+const teamModeButton =
+    document.getElementById("teamModeButton");
+
+const teamDisplay =
+    document.getElementById("teamDisplay");
+
+const switchTeamButton =
+    document.getElementById("switchTeamButton");
+
 
 /*
  * =========================
@@ -357,6 +372,231 @@ startGameButton.addEventListener(
 
     }
 );
+
+/*
+ * =========================
+ * GAME MODE CONTROLS
+ * =========================
+ */
+
+ffaModeButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        if (
+            currentHost !==
+            myPlayerId
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !==
+            "lobby"
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "setGameMode",
+            "ffa"
+        );
+
+    }
+);
+
+
+teamModeButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        if (
+            currentHost !==
+            myPlayerId
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !==
+            "lobby"
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "setGameMode",
+            "team"
+        );
+
+    }
+);
+
+
+switchTeamButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        if (
+            currentGameMode !==
+            "team"
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !==
+            "lobby"
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "switchTeam"
+        );
+
+    }
+);
+
+
+/*
+ * =========================
+ * UPDATE GAME MODE UI
+ * =========================
+ */
+
+function updateGameModeUI() {
+
+    if (
+        !gameModeControls
+    ) {
+        return;
+    }
+
+
+    /*
+     * Hide everything outside
+     * the lobby.
+     */
+
+    if (
+        currentGameState !==
+        "lobby"
+    ) {
+
+        gameModeControls.style.display =
+            "none";
+
+        return;
+
+    }
+
+
+    gameModeControls.style.display =
+        "block";
+
+
+    /*
+     * Only host can change
+     * the game mode.
+     */
+
+    const isHost =
+        currentHost ===
+        myPlayerId;
+
+
+    ffaModeButton.disabled =
+        !isHost;
+
+    teamModeButton.disabled =
+        !isHost;
+
+
+    /*
+     * Highlight selected mode.
+     */
+
+    ffaModeButton.style.fontWeight =
+        currentGameMode === "ffa"
+            ? "bold"
+            : "normal";
+
+    teamModeButton.style.fontWeight =
+        currentGameMode === "team"
+            ? "bold"
+            : "normal";
+
+
+    /*
+     * Team controls.
+     */
+
+    if (
+        currentGameMode ===
+        "team"
+    ) {
+
+        teamDisplay.style.display =
+            "block";
+
+        switchTeamButton.style.display =
+            "block";
+
+
+        const myPlayer =
+            players[myPlayerId];
+
+
+        if (
+            myPlayer &&
+            myPlayer.team
+        ) {
+
+            teamDisplay.innerText =
+                myPlayer.team === "red"
+                    ? "Your Team: 🔴 RED"
+                    : "Your Team: 🔵 BLUE";
+
+        } else {
+
+            teamDisplay.innerText =
+                "Your Team: ---";
+
+        }
+
+    } else {
+
+        teamDisplay.style.display =
+            "none";
+
+        switchTeamButton.style.display =
+            "none";
+
+    }
+
+}
 
 
 /*
@@ -2741,7 +2981,5 @@ requestAnimationFrame(
  * START
  * =========================
  */
-
-createTeamUI();
 
 connectToServer();
