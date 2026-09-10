@@ -108,15 +108,40 @@ const gameEndCountdown =
 
 /*
  * =========================
- * ROUND COUNTDOWN
+ * ROUND COUNTDOWNS
  * =========================
  */
 
-const roundCountdown =
-    document.getElementById("roundCountdown");
+if (
+    currentGameState === "countdown"
+) {
 
-const roundCountdownNumber =
-    document.getElementById("roundCountdownNumber");
+    showRoundCountdown(
+        data.countdownEndsAt,
+        "ROUND STARTING",
+        true
+    );
+
+} else if (
+    currentGameState === "roundEnd"
+) {
+
+    showRoundCountdown(
+        data.roundEndAt,
+        "ROUND OVER",
+        false
+    );
+
+} else {
+
+    if (roundCountdown) {
+
+        roundCountdown.style.display =
+            "none";
+
+    }
+
+}
 
 
 /*
@@ -134,6 +159,7 @@ let obstacles = [];
 let myPlayerId = null;
 let currentHost = null;
 let currentGameState = "lobby";
+let currentGameMode = "ffa";
 
 let currentRound = 1;
 let totalRounds = 5;
@@ -431,18 +457,33 @@ function updatePlayerList() {
             name.className =
                 "playerName";
 
-            name.innerText =
-                player.username ||
-                "Unknown";
+       name.innerText =
+    player.username ||
+    "Unknown";
 
-            if (
-                id === myPlayerId
-            ) {
 
-                name.innerText +=
-                    " (You)";
+if (
+    id === myPlayerId
+) {
 
-            }
+    name.innerText +=
+        " (You)";
+
+}
+
+
+if (
+    currentGameMode === "team" &&
+    player.team
+) {
+
+    name.innerText +=
+        player.team === "red"
+            ? " 🔴"
+            : " 🔵";
+
+}
+    
 
 
             entry.appendChild(
@@ -976,6 +1017,10 @@ function connectToServer() {
 
             updateHUD();
 
+            updatePlayerList();
+
+            updateGameModeUI();
+
         }
     );
 
@@ -1015,6 +1060,10 @@ function connectToServer() {
             currentGameState =
                 data.state ||
                 "lobby";
+
+            currentGameMode =
+                data.gameMode ||
+                "ffa";
 
 
             /*
@@ -1105,8 +1154,10 @@ function connectToServer() {
 
 
             updatePlayerList();
-
+            updateGameModeUI();
             updateLobbyControls();
+
+            
 
         }
     );
@@ -1687,11 +1738,13 @@ requestAnimationFrame(
  */
 
 function showRoundCountdown(
-    roundEndAt
+    endAt,
+    title = "ROUND STARTING",
+    movementLocked = false
 ) {
 
     if (
-        !roundEndAt ||
+        !endAt ||
         !roundCountdown ||
         !roundCountdownNumber
     ) {
@@ -1705,9 +1758,76 @@ function showRoundCountdown(
         "block";
 
 
+    /*
+     * Find/create a title.
+     */
+
+    let countdownTitle =
+        document.getElementById(
+            "roundCountdownTitle"
+        );
+
+
+    if (!countdownTitle) {
+
+        countdownTitle =
+            document.createElement(
+                "div"
+            );
+
+        countdownTitle.id =
+            "roundCountdownTitle";
+
+        roundCountdown.insertBefore(
+            countdownTitle,
+            roundCountdownNumber
+        );
+
+    }
+
+
+    countdownTitle.textContent =
+        title;
+
+
+    /*
+     * Movement lock message.
+     */
+
+    let movementText =
+        document.getElementById(
+            "movementLockedText"
+        );
+
+
+    if (!movementText) {
+
+        movementText =
+            document.createElement(
+                "div"
+            );
+
+        movementText.id =
+            "movementLockedText";
+
+        roundCountdown.appendChild(
+            movementText
+        );
+
+    }
+
+
+    movementText.textContent =
+        movementLocked
+            ? "Movement locked"
+            : "";
+
+
     function updateRoundCountdown() {
 
         if (
+            currentGameState !==
+            "countdown" &&
             currentGameState !==
             "roundEnd"
         ) {
@@ -1725,7 +1845,7 @@ function showRoundCountdown(
                 0,
                 Math.ceil(
                     (
-                        roundEndAt -
+                        endAt -
                         Date.now()
                     ) / 1000
                 )
@@ -1753,7 +1873,6 @@ function showRoundCountdown(
     updateRoundCountdown();
 
 }
-
 
 /*
  * =========================
@@ -2622,5 +2741,7 @@ requestAnimationFrame(
  * START
  * =========================
  */
+
+createTeamUI();
 
 connectToServer();
