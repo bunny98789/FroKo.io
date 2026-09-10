@@ -1913,6 +1913,11 @@ io.on(
     }
 
     room.gameMode = mode;
+            console.log(
+                "GAME MODE CHANGED:",
+                 roomCode,
+                 mode
+            );
 
     if (mode === "ffa") {
 
