@@ -594,8 +594,6 @@ function resetPlayerForRound(
     player.ammo =
     getPlayerGun(player).ammo;
 
-    player.reloading =
-        false;
 
     player.reloading = false;
 
@@ -604,10 +602,8 @@ player.beamTargets = {};
 player.beamSlowed = false;
 player.beamSlowedUntil = null;
 
-player.dead = false;
 
-    player.dead =
-        false;
+    player.dead = false;
 
     player.currentRoundStart =
         Date.now();
@@ -1417,6 +1413,11 @@ function startSuddenDeath(
 
         player.reloading =
             false;
+
+        player.beamActive = false;
+player.beamTargets = {};
+player.beamSlowed = false;
+player.beamSlowedUntil = null;
 
         player.ammo =
     getPlayerGun(player).ammo;
@@ -2296,38 +2297,6 @@ function processFoFroBeam(
             checkRoundEnd(
                 roomCode
             );
-
-        }
-
-    }
-
-    // ====================================
-    // Remove slow after recovery time
-    // ====================================
-
-    for (
-        const targetId in room.players
-    ) {
-
-        const target =
-            room.players[targetId];
-
-        if (!target) {
-            continue;
-        }
-
-        if (
-            target.beamSlowed &&
-            target.beamSlowedUntil !== null &&
-            now >=
-                target.beamSlowedUntil
-        ) {
-
-            target.beamSlowed =
-                false;
-
-            target.beamSlowedUntil =
-                null;
 
         }
 
