@@ -1276,14 +1276,17 @@ if (
 
 }
 
-    // ====================================
-    // GAME COMPLETE
-    // ====================================
+// ====================================
+// GAME COMPLETE
+// ====================================
 
-    finishGame(
-        roomCode
-    );
+const finalWinner =
+    getFinalTiedPlayers(room)[0] || null;
 
+finishGame(
+    roomCode,
+    finalWinner
+);
 }
 
 
