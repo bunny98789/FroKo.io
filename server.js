@@ -294,8 +294,11 @@ function createPlayer(
         health:
             PLAYER_START_HEALTH,
 
-        ammo:
-            MAX_AMMO,
+        gun:
+    "Pistol",
+
+ammo:
+    GunData.Pistol.ammo,
 
         reloading:
             false,
@@ -1848,6 +1851,19 @@ function removePlayerFromRoom(
 
 }
 
+function getPlayerGun(player) {
+
+    if (
+        !player ||
+        !GunData[player.gun]
+    ) {
+        return GunData.Pistol;
+    }
+
+    return GunData[player.gun];
+
+}
+
 
 // ========================================
 // RELOAD
@@ -1883,7 +1899,10 @@ function startReload(
 
     if (player.reloading) return;
 
-    if (player.ammo >= MAX_AMMO) return;
+   const gun =
+    getPlayerGun(player);
+
+if (player.ammo >= gun.ammo) return;
 
     player.reloading =
         true;
@@ -1944,7 +1963,7 @@ function startReload(
         }
 
         currentPlayer.ammo =
-            MAX_AMMO;
+            gun.ammo;
 
         currentPlayer.reloading =
             false;
@@ -1953,7 +1972,7 @@ function startReload(
             roomCode
         );
 
-    }, RELOAD_TIME);
+    }, }, gun.reloadTime););
 
 }
 
@@ -2027,6 +2046,79 @@ io.on(
 
     sendGameState(roomCode);
 });
+
+        // ====================================
+// GUN COMMAND
+// ====================================
+
+socket.on(
+    "gunCommand",
+    (command) => {
+
+        const roomCode =
+            socket.roomCode;
+
+        const room =
+            rooms[roomCode];
+
+        if (!room) return;
+
+        const player =
+            room.players[socket.id];
+
+        if (!player) return;
+
+        if (
+            typeof command !==
+            "string"
+        ) {
+            return;
+        }
+
+        const gunCode =
+            command
+                .trim()
+                .toUpperCase();
+
+        if (
+            gunCode === "P"
+        ) {
+
+            player.gun =
+                "Pistol";
+
+        } else if (
+            gunCode === "JF"
+        ) {
+
+            player.gun =
+                "JackerRifle";
+
+        } else {
+
+            return;
+
+        }
+
+        const gun =
+            getPlayerGun(player);
+
+        player.ammo =
+            gun.ammo;
+
+        player.reloading =
+            false;
+
+        console.log(
+            `${player.username} equipped ${player.gun}`
+        );
+
+        sendGameState(
+            roomCode
+        );
+
+    }
+);
 
 
         // ====================================
@@ -2812,6 +2904,9 @@ socket.on(
 
                 if (player.ammo <= 0) return;
 
+                const gun =
+                    getPlayerGun(player);
+
                 player.ammo--;
 
                 const bulletId =
@@ -2825,62 +2920,63 @@ socket.on(
                 const startDistance =
                     25;
 
-                room.bullets[
-                    bulletId
-                ] = {
+               room.bullets[
+    bulletId
+] = {
 
-                    id:
-                        bulletId,
+    id:
+        bulletId,
 
-                    x:
-                        player.x +
-                        Math.cos(angle) *
-                        startDistance,
+    x:
+        player.x +
+        Math.cos(angle) *
+        startDistance,
 
-                    y:
-                        player.y +
-                        Math.sin(angle) *
-                        startDistance,
+    y:
+        player.y +
+        Math.sin(angle) *
+        startDistance,
 
-                    previousX:
-                        player.x +
-                        Math.cos(angle) *
-                        startDistance,
+    previousX:
+        player.x +
+        Math.cos(angle) *
+        startDistance,
 
-                    previousY:
-                        player.y +
-                        Math.sin(angle) *
-                        startDistance,
+    previousY:
+        player.y +
+        Math.sin(angle) *
+        startDistance,
 
-                    angle:
-                        angle,
+    angle:
+        angle,
 
-                    owner:
-                        socket.id,
+    owner:
+        socket.id,
 
-                    createdAt:
-                        Date.now()
+    createdAt:
+        Date.now(),
 
-                };
+    damage:
+        gun.damage,
 
-                if (
-                    player.ammo === 0
-                ) {
+    speed:
+        gun.bulletSpeed,
 
-                    startReload(
-                        roomCode,
-                        socket.id
-                    );
+    maxBounces:
+        gun.maxBounces || 0,
 
-                }
+    bounces:
+        0,
 
-                sendGameState(
-                    roomCode
-                );
+    bounceDamageReduction:
+        gun.bounceDamageReduction || 0,
 
-            }
-        );
+    length:
+        player.gun === "JackerRifle"
+            ? 22
+            : 10
 
+};
 
         // ====================================
         // RELOAD
@@ -3038,17 +3134,17 @@ setInterval(
                 bullet.previousY =
                     bullet.y;
 
-                bullet.x +=
-                    Math.cos(
-                        bullet.angle
-                    ) *
-                    BULLET_SPEED;
+              bullet.x +=
+    Math.cos(
+        bullet.angle
+    ) *
+    bullet.speed;
 
-                bullet.y +=
-                    Math.sin(
-                        bullet.angle
-                    ) *
-                    BULLET_SPEED;
+bullet.y +=
+    Math.sin(
+        bullet.angle
+    ) *
+    bullet.speed;
 
                 // ====================================
                 // Lifetime
@@ -3100,40 +3196,139 @@ setInterval(
                 // Obstacle collision
                 // ====================================
 
-                let hitObstacle =
-                    false;
+            let hitObstacle = false;
 
-                for (
-                    const obstacle of
-                    room.obstacles
-                ) {
+for (
+    const obstacle of room.obstacles
+) {
 
-                    if (
-                        bulletIntersectsRectangle(
-                            bullet,
-                            obstacle
-                        )
-                    ) {
+    if (
+        !bulletIntersectsRectangle(
+            bullet,
+            obstacle
+        )
+    ) {
 
-                        hitObstacle =
-                            true;
+        continue;
 
-                        break;
+    }
 
-                    }
+    /*
+     * Pistol-style bullets disappear
+     * when they hit an obstacle.
+     */
 
-                }
+    if (
+        bullet.maxBounces <=
+        bullet.bounces
+    ) {
 
-                if (hitObstacle) {
+        hitObstacle = true;
+        break;
 
-                    delete room.bullets[
-                        bulletId
-                    ];
+    }
 
-                    continue;
 
-                }
+    /*
+     * Determine which side of the
+     * obstacle was hit.
+     */
 
+    const hitVerticalSide =
+        bullet.previousX <
+            obstacle.x ||
+        bullet.previousX >
+            obstacle.x +
+            obstacle.width;
+
+    const hitHorizontalSide =
+        bullet.previousY <
+            obstacle.y ||
+        bullet.previousY >
+            obstacle.y +
+            obstacle.height;
+
+
+    /*
+     * Reflect the bullet.
+     *
+     * Vertical wall:
+     * reverse X direction.
+     *
+     * Horizontal wall:
+     * reverse Y direction.
+     */
+
+    if (
+        hitVerticalSide &&
+        !hitHorizontalSide
+    ) {
+
+        bullet.angle =
+            Math.PI -
+            bullet.angle;
+
+    } else if (
+        hitHorizontalSide &&
+        !hitVerticalSide
+    ) {
+
+        bullet.angle =
+            -bullet.angle;
+
+    } else {
+
+        /*
+         * Corner hit:
+         * reflect both directions.
+         */
+
+        bullet.angle =
+            bullet.angle +
+            Math.PI;
+
+    }
+
+
+    bullet.bounces++;
+
+    bullet.damage =
+        Math.max(
+            0,
+            bullet.damage -
+            bullet.bounceDamageReduction
+        );
+
+
+    /*
+     * Move the bullet slightly away
+     * from the obstacle so it doesn't
+     * immediately collide again.
+     */
+
+    bullet.x =
+        bullet.previousX +
+        Math.cos(bullet.angle) * 2;
+
+    bullet.y =
+        bullet.previousY +
+        Math.sin(bullet.angle) * 2;
+
+
+    break;
+
+}
+
+
+if (hitObstacle) {
+
+    delete room.bullets[
+        bulletId
+    ];
+
+    continue;
+
+}
             
                 // ====================================
                 // Player collision
@@ -3248,10 +3443,10 @@ setInterval(
                         // DAMAGE
                         // ================================
 
-                        player.health -=
-                            room.gameState === "suddenDeath"
-                                ? SUDDEN_DEATH_HEALTH
-                                : BULLET_DAMAGE;
+                      player.health -=
+                        room.gameState === "suddenDeath"
+                        ? SUDDEN_DEATH_HEALTH
+                        : bullet.damage;
 
                         // Immediately tell clients about damage
                         sendGameState(roomCode);
