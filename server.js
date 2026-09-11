@@ -302,6 +302,8 @@ reloading: false,
 
 beamActive: false,
 
+beamSlowed: false,
+
 beamTargets: {},
         
         dead:
