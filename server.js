@@ -2938,11 +2938,15 @@ socket.on(
 
             bounceDamageReduction:
                 gun.bounceDamageReduction || 0,
+            
+            gun: player.gun,
 
             length:
                 player.gun === "JackerRifle"
                     ? 22
                     : 10
+
+            
 
         };
 
