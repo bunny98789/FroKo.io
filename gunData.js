@@ -39,3 +39,7 @@ const GunData = {
 },
     
 };
+
+if (typeof module !== "undefined") {
+    module.exports = GunData;
+}
