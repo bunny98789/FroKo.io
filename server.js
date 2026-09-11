@@ -1972,7 +1972,7 @@ if (player.ammo >= gun.ammo) return;
             roomCode
         );
 
-    }, gun.reloadTime););
+    }, gun.reloadTime);
 
 }
 
