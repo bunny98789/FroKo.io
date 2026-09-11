@@ -2708,8 +2708,7 @@ function showGameEnd(data) {
         "flex";
 
 
-    let winner =
-        null;
+    let winner = data.winner || null;
 
 
     for (
