@@ -1552,59 +1552,44 @@ window.addEventListener(
     "mouseup",
     (e) => {
 
-        if (
-            e.button === 0
-        ) {
+        if (e.button === 0) {
 
-            shooting =
-                false;
+            shooting = false;
+            shotLocked = false;
 
-            shotLocked =
-                false;
+            if (
+                socket &&
+                socket.connected
+            ) {
+
+                socket.emit(
+                    "stopShooting"
+                );
+
+            }
 
         }
 
     }
 );
 
-
 function shoot() {
 
-    if (
-        !socket ||
-        !socket.connected
-    ) {
+    if (!socket || !socket.connected) return;
 
+    if (!myPlayerId || !players[myPlayerId]) {
         return;
-
     }
 
-
     if (
-        !myPlayerId ||
-        !players[myPlayerId]
+        players[myPlayerId].spectating ||
+        players[myPlayerId].dead
     ) {
-
         return;
-
     }
 
-
-    if (
-        players[myPlayerId].spectating
-    ) {
-
-        return;
-
-    }
-
-
-    socket.emit(
-        "shoot"
-    );
-
+    socket.emit("shoot");
 }
-
 
 /*
  * =========================
@@ -2448,6 +2433,105 @@ function drawGame() {
 
         }
     );
+
+    // ====================================
+// FOFROBEAM VISUAL
+// ====================================
+
+for (const playerId in players) {
+
+    const player =
+        players[playerId];
+
+    if (!player) continue;
+
+    if (
+        player.gun !== "FoFroBeam" ||
+        !player.beamActive
+    ) {
+        continue;
+    }
+
+    const angle =
+        player.angle || 0;
+
+    const startX =
+        player.x +
+        Math.cos(angle) * 25;
+
+    const startY =
+        player.y +
+        Math.sin(angle) * 25;
+
+    const beamLength = 600;
+
+    const endX =
+        startX +
+        Math.cos(angle) * beamLength;
+
+    const endY =
+        startY +
+        Math.sin(angle) * beamLength;
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        startX,
+        startY
+    );
+
+    ctx.lineTo(
+        endX,
+        endY
+    );
+
+    ctx.strokeStyle =
+        "#66FFFF";
+
+    ctx.lineWidth =
+        10;
+
+    ctx.globalAlpha =
+        0.35;
+
+    ctx.shadowColor =
+        "#66FFFF";
+
+    ctx.shadowBlur =
+        20;
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        startX,
+        startY
+    );
+
+    ctx.lineTo(
+        endX,
+        endY
+    );
+
+    ctx.strokeStyle =
+        "white";
+
+    ctx.lineWidth =
+        3;
+
+    ctx.globalAlpha =
+        0.9;
+
+    ctx.shadowBlur =
+        5;
+
+    ctx.stroke();
+
+    ctx.restore();
+}
 
 
     /*
