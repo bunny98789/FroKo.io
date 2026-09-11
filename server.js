@@ -3175,15 +3175,53 @@ bullet.y +=
 
                 }
 
-                // ====================================
-                // Obstacle collision
-                // ====================================
+                // Map edge collision
+if (bullet.maxBounces > bullet.bounces) {
+    let hitWall = false;
 
-            let hitObstacle = false;
+    if (bullet.x <= BULLET_RADIUS) {
+        bullet.x = BULLET_RADIUS;
+        bullet.angle = Math.PI - bullet.angle;
+        hitWall = true;
+    } else if (bullet.x >= 600 - BULLET_RADIUS) {
+        bullet.x = 600 - BULLET_RADIUS;
+        bullet.angle = Math.PI - bullet.angle;
+        hitWall = true;
+    }
 
-for (
-    const obstacle of room.obstacles
-) {
+    if (bullet.y <= BULLET_RADIUS) {
+        bullet.y = BULLET_RADIUS;
+        bullet.angle = -bullet.angle;
+        hitWall = true;
+    } else if (bullet.y >= 400 - BULLET_RADIUS) {
+        bullet.y = 400 - BULLET_RADIUS;
+        bullet.angle = -bullet.angle;
+        hitWall = true;
+    }
+
+    if (hitWall) {
+        bullet.bounces++;
+        bullet.damage = Math.max(
+            0,
+            bullet.damage - bullet.bounceDamageReduction
+        );
+    }
+} else {
+    // No bounces remaining — remove bullet if it reaches an edge
+    if (
+        bullet.x < -BULLET_RADIUS ||
+        bullet.x > 600 + BULLET_RADIUS ||
+        bullet.y < -BULLET_RADIUS ||
+        bullet.y > 400 + BULLET_RADIUS
+    ) {
+        delete room.bullets[bulletId];
+        continue;
+    }
+}
+
+// obstacle collision
+let hitObstacle = false;
+for (const obstacle of room.obstacles) {
 
     if (
         !bulletIntersectsRectangle(
