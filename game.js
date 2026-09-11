@@ -2659,9 +2659,12 @@ function drawGame() {
         ctx.globalAlpha =
             1;
 
-
+    if (currentGameMode == "ffa") {
         ctx.fillStyle =
             "white";
+    } else if (currentGameMode == "team") {
+        ctx.fillStyle = player.team;
+    }
 
 
         ctx.font =
@@ -2712,24 +2715,36 @@ function drawGame() {
             1;
 
 
-        ctx.fillStyle =
-            "white";
+        if (bullet.gun === "JackerRifle") {
+    // Orange glowing JackerRifle projectile
+    ctx.save();
 
+    ctx.translate(bullet.x, bullet.y);
+    ctx.rotate(bullet.angle);
 
-        ctx.beginPath();
+    ctx.shadowColor = "orange";
+    ctx.shadowBlur = 12;
 
+    ctx.fillStyle = "#ff8c00";
 
-        ctx.arc(
-            bullet.x,
-            bullet.y,
-            5,
-            0,
-            Math.PI * 2
-        );
+    ctx.beginPath();
+    ctx.roundRect(
+        -11,
+        -4,
+        22,
+        8,
+        4
+    );
+    ctx.fill();
 
-
-        ctx.fill();
-
+    ctx.restore();
+} else {
+    // Normal bullet
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+}
     }
 
 
