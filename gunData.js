@@ -26,18 +26,22 @@ const GunData = {
 
   FoFroBeam: {
     shopImg: "Assets/foFroBeam.svg",
-    damage: 10,
+
+    damage: 3,
     ammo: 100,
+
     reloadTime: 7500,
-    bulletSpeed: 12,
+
     price: 5000,
     priceType: "FroKoins",
 
-    chargeRate: 100,
-    maxCharge: 100,
-    projectileDamage: 50
-},
-    
+    damageInterval: 100,
+    ammoInterval: 100,
+
+    slowAfter: 2000,
+    slowRecoveryTime: 1000,
+    speedReduction: 2
+},    
 };
 
 if (typeof module !== "undefined") {
