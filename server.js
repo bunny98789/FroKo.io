@@ -5,6 +5,7 @@
 
 const http = require("http");
 const { Server } = require("socket.io");
+const GunData = require("./gunData.js");
 
 const server = http.createServer();
 
