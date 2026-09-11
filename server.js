@@ -301,10 +301,9 @@ ammo: GunData.Pistol.ammo,
 reloading: false,
 
 beamActive: false,
-
-beamSlowed: false,
-
 beamTargets: {},
+beamSlowed: false,
+beamSlowedUntil: null,
         
         dead:
             false,
@@ -597,6 +596,15 @@ function resetPlayerForRound(
 
     player.reloading =
         false;
+
+    player.reloading = false;
+
+player.beamActive = false;
+player.beamTargets = {};
+player.beamSlowed = false;
+player.beamSlowedUntil = null;
+
+player.dead = false;
 
     player.dead =
         false;
@@ -1648,7 +1656,7 @@ function resetToLobby(
 
     room.bullets =
         {};
-
+    
     // ====================================
     // Reset player combat state
     // ====================================
@@ -1673,6 +1681,12 @@ function resetToLobby(
         player.reloading =
             false;
 
+         player.beamActive = false;
+         player.beamTargets = {};
+         player.beamSlowed = false;
+         player.beamSlowedUntil = null;
+
+
         player.dead =
             true;
 
@@ -1684,6 +1698,8 @@ function resetToLobby(
 
         player.joinedDuringGame =
             false;
+
+        
 
     }
 
@@ -1873,7 +1889,8 @@ function getPlayerGun(player) {
 
 function stopBeam(roomCode, playerId) {
 
-    const room = rooms[roomCode];
+    const room =
+        rooms[roomCode];
 
     if (!room) return;
 
@@ -1887,7 +1904,6 @@ function stopBeam(roomCode, playerId) {
 
     sendGameState(roomCode);
 }
-
 
 // ========================================
 // CHECK IF BEAM HITS OBSTACLE
@@ -1948,6 +1964,10 @@ function beamHitsObstacle(
 // PROCESS FOFROBEAM
 // ========================================
 
+// ========================================
+// PROCESS FOFROBEAM
+// ========================================
+
 function processFoFroBeam(
     roomCode,
     playerId
@@ -1962,6 +1982,10 @@ function processFoFroBeam(
         room.players[playerId];
 
     if (!player) return;
+
+    // ====================================
+    // Validate shooter
+    // ====================================
 
     if (
         !player.beamActive ||
@@ -1980,6 +2004,10 @@ function processFoFroBeam(
     const gun =
         getPlayerGun(player);
 
+    // ====================================
+    // Ammo check
+    // ====================================
+
     if (player.ammo <= 0) {
 
         player.beamActive = false;
@@ -1995,7 +2023,7 @@ function processFoFroBeam(
     }
 
     // ====================================
-    // Beam range
+    // Beam position
     // ====================================
 
     const beamLength = 600;
@@ -2010,13 +2038,16 @@ function processFoFroBeam(
 
     const endX =
         startX +
-        Math.cos(player.angle) * beamLength;
+        Math.cos(player.angle) *
+        beamLength;
 
     const endY =
         startY +
-        Math.sin(player.angle) * beamLength;
+        Math.sin(player.angle) *
+        beamLength;
 
-    const now = Date.now();
+    const now =
+        Date.now();
 
     const currentlyHit = {};
 
@@ -2024,22 +2055,38 @@ function processFoFroBeam(
     // Check every player
     // ====================================
 
-    for (const targetId in room.players) {
+    for (
+        const targetId in room.players
+    ) {
 
-        if (targetId === playerId) {
+        // Don't hit yourself
+        if (
+            targetId === playerId
+        ) {
             continue;
         }
 
         const target =
             room.players[targetId];
 
-        if (!target) continue;
+        if (!target) {
+            continue;
+        }
 
-        if (target.dead) continue;
+        // Dead players can't be hit
+        if (target.dead) {
+            continue;
+        }
 
-        if (target.spectating) continue;
+        // Spectators can't be hit
+        if (target.spectating) {
+            continue;
+        }
 
+        // ====================================
         // Friendly fire
+        // ====================================
+
         if (
             room.gameMode === "team" &&
             target.team === player.team
@@ -2104,7 +2151,10 @@ function processFoFroBeam(
                 distanceY * distanceY
             );
 
-        // Beam width = player radius
+        // ====================================
+        // Beam width
+        // ====================================
+
         if (
             distance >
             PLAYER_RADIUS + 8
@@ -2128,7 +2178,8 @@ function processFoFroBeam(
             continue;
         }
 
-        currentlyHit[targetId] = true;
+        currentlyHit[targetId] =
+            true;
 
         // ====================================
         // Track continuous beam time
@@ -2139,9 +2190,16 @@ function processFoFroBeam(
         ) {
 
             player.beamTargets[targetId] = {
-                startedAt: now,
-                lastHit: now,
-                slowed: false
+
+                startedAt:
+                    now,
+
+                lastHit:
+                    now,
+
+                slowed:
+                    false
+
             };
 
         } else {
@@ -2155,18 +2213,35 @@ function processFoFroBeam(
             player.beamTargets[targetId];
 
         // ====================================
-        // Slow after 2 seconds
+        // Slow after 0.5 seconds
         // ====================================
 
         if (
             !targetInfo.slowed &&
-            now - targetInfo.startedAt >=
-            gun.slowAfter
+            now -
+                targetInfo.startedAt >=
+                gun.slowAfter
         ) {
 
-            targetInfo.slowed = true;
+            targetInfo.slowed =
+                true;
 
-            target.beamSlowed = true;
+            target.beamSlowed =
+                true;
+
+        }
+
+        // ====================================
+        // Refresh slow recovery timer
+        // ====================================
+
+        if (
+            targetInfo.slowed
+        ) {
+
+            target.beamSlowedUntil =
+                now +
+                gun.slowRecoveryTime;
 
         }
 
@@ -2179,21 +2254,40 @@ function processFoFroBeam(
                 ? SUDDEN_DEATH_HEALTH
                 : gun.damage;
 
+        // ====================================
+        // Death
+        // ====================================
+
         if (
             target.health <= 0
         ) {
 
-            target.health = 0;
-            target.dead = true;
-            target.reloading = false;
+            target.health =
+                0;
 
-            recordSurvivalTime(target);
+            target.dead =
+                true;
+
+            target.reloading =
+                false;
+
+            target.beamSlowed =
+                false;
+
+            target.beamSlowedUntil =
+                null;
+
+            recordSurvivalTime(
+                target
+            );
 
             target.deaths++;
 
             player.kills++;
 
-            delete player.beamTargets[targetId];
+            delete player.beamTargets[
+                targetId
+            ];
 
             console.log(
                 `${target.username} died to FoFroBeam`
@@ -2208,6 +2302,38 @@ function processFoFroBeam(
     }
 
     // ====================================
+    // Remove slow after recovery time
+    // ====================================
+
+    for (
+        const targetId in room.players
+    ) {
+
+        const target =
+            room.players[targetId];
+
+        if (!target) {
+            continue;
+        }
+
+        if (
+            target.beamSlowed &&
+            target.beamSlowedUntil !== null &&
+            now >=
+                target.beamSlowedUntil
+        ) {
+
+            target.beamSlowed =
+                false;
+
+            target.beamSlowedUntil =
+                null;
+
+        }
+
+    }
+
+    // ====================================
     // Remove targets no longer hit
     // ====================================
 
@@ -2216,31 +2342,14 @@ function processFoFroBeam(
     ) {
 
         if (
-            !currentlyHit[targetId]
+            currentlyHit[targetId]
         ) {
-
-            const target =
-                room.players[targetId];
-
-            const targetInfo =
-                player.beamTargets[targetId];
-
-            if (
-                target &&
-                targetInfo &&
-                now - targetInfo.lastHit >=
-                gun.slowRecoveryTime
-            ) {
-
-                target.beamSlowed = false;
-
-                delete player.beamTargets[
-                    targetId
-                ];
-
-            }
-
+            continue;
         }
+
+        delete player.beamTargets[
+            targetId
+        ];
 
     }
 
@@ -2250,12 +2359,18 @@ function processFoFroBeam(
 
     player.ammo--;
 
-    if (player.ammo <= 0) {
+    if (
+        player.ammo <= 0
+    ) {
 
-        player.ammo = 0;
+        player.ammo =
+            0;
 
-        player.beamActive = false;
-        player.beamTargets = {};
+        player.beamActive =
+            false;
+
+        player.beamTargets =
+            {};
 
         startReload(
             roomCode,
@@ -2264,10 +2379,11 @@ function processFoFroBeam(
 
     }
 
-    sendGameState(roomCode);
+    sendGameState(
+        roomCode
+    );
 
 }
-
 
 // ========================================
 // RELOAD
@@ -3102,24 +3218,31 @@ socket.on(
 
                 }
 
-                const moveX =
-                    Math.max(
-                        -20,
-                        Math.min(
-                            20,
-                            data.x
-                        )
-                    );
+              const movementSpeed =
+    player.beamSlowed
+        ? 6
+        : 8;
 
-                const moveY =
-                    Math.max(
-                        -20,
-                        Math.min(
-                            20,
-                            data.y
-                        )
-                    );
+const movementMultiplier =
+    movementSpeed / 8;
 
+const moveX =
+    Math.max(
+        -20,
+        Math.min(
+            20,
+            data.x * movementMultiplier
+        )
+    );
+
+const moveY =
+    Math.max(
+        -20,
+        Math.min(
+            20,
+            data.y * movementMultiplier
+        )
+    );
                 const newX =
                     Math.max(
                         20,
@@ -3282,7 +3405,7 @@ socket.on(
 
                 if (player.reloading) return;
 
-                // ====================================
+ // ====================================
 // FOFROBEAM
 // ====================================
 
@@ -3299,18 +3422,13 @@ if (player.gun === "FoFroBeam") {
 
     }
 
-    player.beamActive = true;
+   player.beamActive = true;
 
-    if (!player.beamTargets) {
-        player.beamTargets = {};
-    }
+if (!player.beamTargets) {
+    player.beamTargets = {};
+}
 
-    processFoFroBeam(
-        roomCode,
-        socket.id
-    );
-
-    return;
+return;
 }
 
                 if (player.ammo <= 0) return;
@@ -3439,14 +3557,9 @@ socket.on(
             return;
         }
 
-        player.beamActive =
-            false;
-
-        player.beamTargets =
-            {};
-
-        sendGameState(
-            roomCode
+        stopBeam(
+            roomCode,
+            socket.id
         );
 
     }
@@ -3561,9 +3674,9 @@ setInterval(() => {
 setInterval(
     () => {
 
-        for (
-            const roomCode in rooms
-        ) {
+        const now = Date.now();
+
+        for (const roomCode in rooms) {
 
             const room =
                 rooms[roomCode];
@@ -3575,9 +3688,35 @@ setInterval(
                 continue;
             }
 
-            for (
-                const playerId in room.players
-            ) {
+            // ====================================
+            // Remove expired FoFroBeam slows
+            // ====================================
+
+            for (const playerId in room.players) {
+
+                const player =
+                    room.players[playerId];
+
+                if (!player) continue;
+
+                if (
+                    player.beamSlowed &&
+                    player.beamSlowedUntil !== null &&
+                    now >= player.beamSlowedUntil
+                ) {
+
+                    player.beamSlowed = false;
+                    player.beamSlowedUntil = null;
+
+                }
+
+            }
+
+            // ====================================
+            // Process active FoFroBeams
+            // ====================================
+
+            for (const playerId in room.players) {
 
                 const player =
                     room.players[playerId];
@@ -3603,7 +3742,6 @@ setInterval(
     },
     100
 );
-
 // ========================================
 // BULLET LOOP
 // ========================================
