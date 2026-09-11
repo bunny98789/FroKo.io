@@ -294,15 +294,16 @@ function createPlayer(
         health:
             PLAYER_START_HEALTH,
 
-        gun:
-    "Pistol",
+     gun: "Pistol",
 
-ammo:
-    GunData.Pistol.ammo,
+ammo: GunData.Pistol.ammo,
 
-        reloading:
-            false,
+reloading: false,
 
+beamActive: false,
+
+beamTargets: {},
+        
         dead:
             false,
 
@@ -1864,6 +1865,407 @@ function getPlayerGun(player) {
 
 }
 
+// ========================================
+// FOFROBEAM
+// ========================================
+
+function stopBeam(roomCode, playerId) {
+
+    const room = rooms[roomCode];
+
+    if (!room) return;
+
+    const player =
+        room.players[playerId];
+
+    if (!player) return;
+
+    player.beamActive = false;
+    player.beamTargets = {};
+
+    sendGameState(roomCode);
+}
+
+
+// ========================================
+// CHECK IF BEAM HITS OBSTACLE
+// ========================================
+
+function beamHitsObstacle(
+    room,
+    startX,
+    startY,
+    endX,
+    endY
+) {
+
+    const steps = 50;
+
+    for (let i = 0; i <= steps; i++) {
+
+        const t = i / steps;
+
+        const x =
+            startX +
+            (endX - startX) * t;
+
+        const y =
+            startY +
+            (endY - startY) * t;
+
+        for (const obstacle of room.obstacles) {
+
+            if (
+                x >= obstacle.x &&
+                x <= obstacle.x + obstacle.width &&
+                y >= obstacle.y &&
+                y <= obstacle.y + obstacle.height
+            ) {
+                return true;
+            }
+
+        }
+
+        // Map edges
+        if (
+            x < 0 ||
+            x > 600 ||
+            y < 0 ||
+            y > 400
+        ) {
+            return true;
+        }
+
+    }
+
+    return false;
+}
+
+
+// ========================================
+// PROCESS FOFROBEAM
+// ========================================
+
+function processFoFroBeam(
+    roomCode,
+    playerId
+) {
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) return;
+
+    const player =
+        room.players[playerId];
+
+    if (!player) return;
+
+    if (
+        !player.beamActive ||
+        player.gun !== "FoFroBeam" ||
+        player.dead ||
+        player.spectating ||
+        player.reloading
+    ) {
+
+        player.beamActive = false;
+
+        return;
+
+    }
+
+    const gun =
+        getPlayerGun(player);
+
+    if (player.ammo <= 0) {
+
+        player.beamActive = false;
+        player.beamTargets = {};
+
+        startReload(
+            roomCode,
+            playerId
+        );
+
+        return;
+
+    }
+
+    // ====================================
+    // Beam range
+    // ====================================
+
+    const beamLength = 600;
+
+    const startX =
+        player.x +
+        Math.cos(player.angle) * 25;
+
+    const startY =
+        player.y +
+        Math.sin(player.angle) * 25;
+
+    const endX =
+        startX +
+        Math.cos(player.angle) * beamLength;
+
+    const endY =
+        startY +
+        Math.sin(player.angle) * beamLength;
+
+    const now = Date.now();
+
+    const currentlyHit = {};
+
+    // ====================================
+    // Check every player
+    // ====================================
+
+    for (const targetId in room.players) {
+
+        if (targetId === playerId) {
+            continue;
+        }
+
+        const target =
+            room.players[targetId];
+
+        if (!target) continue;
+
+        if (target.dead) continue;
+
+        if (target.spectating) continue;
+
+        // Friendly fire
+        if (
+            room.gameMode === "team" &&
+            target.team === player.team
+        ) {
+            continue;
+        }
+
+        // ====================================
+        // Point-to-line distance
+        // ====================================
+
+        const dx =
+            endX - startX;
+
+        const dy =
+            endY - startY;
+
+        const lengthSquared =
+            dx * dx +
+            dy * dy;
+
+        let t =
+            (
+                (
+                    target.x - startX
+                ) * dx +
+
+                (
+                    target.y - startY
+                ) * dy
+            ) /
+            lengthSquared;
+
+        t =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    t
+                )
+            );
+
+        const closestX =
+            startX +
+            t * dx;
+
+        const closestY =
+            startY +
+            t * dy;
+
+        const distanceX =
+            target.x -
+            closestX;
+
+        const distanceY =
+            target.y -
+            closestY;
+
+        const distance =
+            Math.sqrt(
+                distanceX * distanceX +
+                distanceY * distanceY
+            );
+
+        // Beam width = player radius
+        if (
+            distance >
+            PLAYER_RADIUS + 8
+        ) {
+            continue;
+        }
+
+        // ====================================
+        // Obstacle blocks beam
+        // ====================================
+
+        if (
+            beamHitsObstacle(
+                room,
+                startX,
+                startY,
+                target.x,
+                target.y
+            )
+        ) {
+            continue;
+        }
+
+        currentlyHit[targetId] = true;
+
+        // ====================================
+        // Track continuous beam time
+        // ====================================
+
+        if (
+            !player.beamTargets[targetId]
+        ) {
+
+            player.beamTargets[targetId] = {
+                startedAt: now,
+                lastHit: now,
+                slowed: false
+            };
+
+        } else {
+
+            player.beamTargets[targetId].lastHit =
+                now;
+
+        }
+
+        const targetInfo =
+            player.beamTargets[targetId];
+
+        // ====================================
+        // Slow after 2 seconds
+        // ====================================
+
+        if (
+            !targetInfo.slowed &&
+            now - targetInfo.startedAt >=
+            gun.slowAfter
+        ) {
+
+            targetInfo.slowed = true;
+
+            target.beamSlowed = true;
+
+        }
+
+        // ====================================
+        // Damage
+        // ====================================
+
+        target.health -=
+            room.gameState === "suddenDeath"
+                ? SUDDEN_DEATH_HEALTH
+                : gun.damage;
+
+        if (
+            target.health <= 0
+        ) {
+
+            target.health = 0;
+            target.dead = true;
+            target.reloading = false;
+
+            recordSurvivalTime(target);
+
+            target.deaths++;
+
+            player.kills++;
+
+            delete player.beamTargets[targetId];
+
+            console.log(
+                `${target.username} died to FoFroBeam`
+            );
+
+            checkRoundEnd(
+                roomCode
+            );
+
+        }
+
+    }
+
+    // ====================================
+    // Remove targets no longer hit
+    // ====================================
+
+    for (
+        const targetId in player.beamTargets
+    ) {
+
+        if (
+            !currentlyHit[targetId]
+        ) {
+
+            const target =
+                room.players[targetId];
+
+            const targetInfo =
+                player.beamTargets[targetId];
+
+            if (
+                target &&
+                targetInfo &&
+                now - targetInfo.lastHit >=
+                gun.slowRecoveryTime
+            ) {
+
+                target.beamSlowed = false;
+
+                delete player.beamTargets[
+                    targetId
+                ];
+
+            }
+
+        }
+
+    }
+
+    // ====================================
+    // Consume ammo
+    // ====================================
+
+    player.ammo--;
+
+    if (player.ammo <= 0) {
+
+        player.ammo = 0;
+
+        player.beamActive = false;
+        player.beamTargets = {};
+
+        startReload(
+            roomCode,
+            playerId
+        );
+
+    }
+
+    sendGameState(roomCode);
+
+}
+
 
 // ========================================
 // RELOAD
@@ -2067,26 +2469,34 @@ socket.on("command", (command) => {
 
     if (commandName !== "/gun") return;
 
-    if (gunCode === "P") {
+   if (gunCode === "P") {
 
-        player.gun = "Pistol";
+    player.gun = "Pistol";
 
-    } else if (gunCode === "JF") {
+} else if (gunCode === "JF") {
 
-        player.gun = "JackerRifle";
+    player.gun = "JackerRifle";
 
-    } else {
+} else if (gunCode === "FFB") {
+
+    player.gun = "FoFroBeam";
+
+} else {
 
         return;
 
     }
 
-    const gun = getPlayerGun(player);
+    
 
-    player.ammo = gun.ammo;
-    player.reloading = false;
+   const gun = getPlayerGun(player);
 
-    sendGameState(roomCode);
+player.ammo = gun.ammo;
+player.reloading = false;
+player.beamActive = false;
+player.beamTargets = {};
+
+sendGameState(roomCode);
 
 });
         // ====================================
@@ -2870,6 +3280,37 @@ socket.on(
 
                 if (player.reloading) return;
 
+                // ====================================
+// FOFROBEAM
+// ====================================
+
+if (player.gun === "FoFroBeam") {
+
+    if (player.ammo <= 0) {
+
+        startReload(
+            roomCode,
+            socket.id
+        );
+
+        return;
+
+    }
+
+    player.beamActive = true;
+
+    if (!player.beamTargets) {
+        player.beamTargets = {};
+    }
+
+    processFoFroBeam(
+        roomCode,
+        socket.id
+    );
+
+    return;
+}
+
                 if (player.ammo <= 0) return;
 
                 const gun =
@@ -2965,6 +3406,50 @@ socket.on(
 
     }
 );
+
+        // ========================================
+// STOP SHOOTING
+// ========================================
+
+socket.on(
+    "stopShooting",
+    () => {
+
+        const roomCode =
+            socket.roomCode;
+
+        const room =
+            rooms[roomCode];
+
+        if (!room) return;
+
+        const player =
+            room.players[
+                socket.id
+            ];
+
+        if (!player) return;
+
+        if (
+            player.gun !==
+            "FoFroBeam"
+        ) {
+            return;
+        }
+
+        player.beamActive =
+            false;
+
+        player.beamTargets =
+            {};
+
+        sendGameState(
+            roomCode
+        );
+
+    }
+);
+        
         // ====================================
         // RELOAD
         // ====================================
@@ -3066,6 +3551,56 @@ setInterval(() => {
     }
 
 }, 16);
+
+// ========================================
+// FOFROBEAM LOOP
+// ========================================
+
+setInterval(
+    () => {
+
+        for (
+            const roomCode in rooms
+        ) {
+
+            const room =
+                rooms[roomCode];
+
+            if (
+                room.gameState !== "playing" &&
+                room.gameState !== "suddenDeath"
+            ) {
+                continue;
+            }
+
+            for (
+                const playerId in room.players
+            ) {
+
+                const player =
+                    room.players[playerId];
+
+                if (!player) continue;
+
+                if (
+                    player.beamActive &&
+                    player.gun === "FoFroBeam"
+                ) {
+
+                    processFoFroBeam(
+                        roomCode,
+                        playerId
+                    );
+
+                }
+
+            }
+
+        }
+
+    },
+    100
+);
 
 // ========================================
 // BULLET LOOP
