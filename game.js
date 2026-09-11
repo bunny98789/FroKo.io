@@ -1740,6 +1740,49 @@ document.addEventListener(
     }
 );
 
+/*
+ * =========================
+ * COMMAND KEY
+ * =========================
+ */
+
+window.addEventListener(
+    "keydown",
+    (e) => {
+
+        if (
+            e.target.tagName === "INPUT" ||
+            e.target.tagName === "TEXTAREA"
+        ) {
+            return;
+        }
+
+        if (e.key !== "/") {
+            return;
+        }
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        const command =
+            prompt("Enter command:");
+
+        if (!command) {
+            return;
+        }
+
+        socket.emit(
+            "command",
+            command
+        );
+
+    }
+);
+
 
 /*
  * =========================
