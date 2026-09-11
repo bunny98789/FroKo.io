@@ -22,15 +22,10 @@ const rooms = {};
 // GAME SETTINGS
 // ========================================
 
-const BULLET_SPEED = 10;
 const BULLET_RADIUS = 5;
 const BULLET_LIFETIME = 3000;
 
 const PLAYER_RADIUS = 20;
-const BULLET_DAMAGE = 25;
-
-const MAX_AMMO = 6;
-const RELOAD_TIME = 2000;
 
 const TOTAL_ROUNDS = 5;
 
