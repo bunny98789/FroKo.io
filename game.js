@@ -2710,30 +2710,6 @@ function showGameEnd(data) {
 
     let winner = data.winner || null;
 
-
-    for (
-        const id in players
-    ) {
-
-        const player =
-            players[id];
-
-
-        if (
-            !player.dead &&
-            !player.spectating
-        ) {
-
-            winner =
-                player;
-
-            break;
-
-        }
-
-    }
-
-
    if (
     currentGameMode === "team" &&
     data.winningTeam
