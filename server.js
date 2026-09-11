@@ -590,7 +590,7 @@ function resetPlayerForRound(
         PLAYER_START_HEALTH;
 
     player.ammo =
-        MAX_AMMO;
+    getPlayerGun(player).ammo;
 
     player.reloading =
         false;
@@ -1408,7 +1408,7 @@ function startSuddenDeath(
             false;
 
         player.ammo =
-            MAX_AMMO;
+    getPlayerGun(player).ammo;
 
         if (
             tiedIds.has(playerId)
@@ -1665,7 +1665,7 @@ function resetToLobby(
             PLAYER_START_HEALTH;
 
         player.ammo =
-            MAX_AMMO;
+    getPlayerGun(player).ammo;
 
         player.reloading =
             false;
@@ -1972,7 +1972,7 @@ if (player.ammo >= gun.ammo) return;
             roomCode
         );
 
-    }, }, gun.reloadTime););
+    }, gun.reloadTime););
 
 }
 
@@ -2047,80 +2047,48 @@ io.on(
     sendGameState(roomCode);
 });
 
-        // ====================================
-// GUN COMMAND
-// ====================================
+socket.on("command", (command) => {
 
-socket.on(
-    "gunCommand",
-    (command) => {
+    const roomCode = socket.roomCode;
+    const room = rooms[roomCode];
 
-        const roomCode =
-            socket.roomCode;
+    if (!room) return;
 
-        const room =
-            rooms[roomCode];
+    const player = room.players[socket.id];
 
-        if (!room) return;
+    if (!player) return;
 
-        const player =
-            room.players[socket.id];
+    if (typeof command !== "string") return;
 
-        if (!player) return;
+    const parts = command.trim().split(/\s+/);
 
-        if (
-            typeof command !==
-            "string"
-        ) {
-            return;
-        }
+    const commandName = parts[0].toLowerCase();
+    const gunCode = (parts[1] || "").toUpperCase();
 
-        const gunCode =
-            command
-                .trim()
-                .toUpperCase();
+    if (commandName !== "/gun") return;
 
-        if (
-            gunCode === "P"
-        ) {
+    if (gunCode === "P") {
 
-            player.gun =
-                "Pistol";
+        player.gun = "Pistol";
 
-        } else if (
-            gunCode === "JF"
-        ) {
+    } else if (gunCode === "JF") {
 
-            player.gun =
-                "JackerRifle";
+        player.gun = "JackerRifle";
 
-        } else {
+    } else {
 
-            return;
-
-        }
-
-        const gun =
-            getPlayerGun(player);
-
-        player.ammo =
-            gun.ammo;
-
-        player.reloading =
-            false;
-
-        console.log(
-            `${player.username} equipped ${player.gun}`
-        );
-
-        sendGameState(
-            roomCode
-        );
+        return;
 
     }
-);
 
+    const gun = getPlayerGun(player);
 
+    player.ammo = gun.ammo;
+    player.reloading = false;
+
+    sendGameState(roomCode);
+
+});
         // ====================================
         // CREATE ROOM
         // ====================================
@@ -2920,64 +2888,79 @@ socket.on(
                 const startDistance =
                     25;
 
-               room.bullets[
-    bulletId
-] = {
+                      room.bullets[
+            bulletId
+        ] = {
 
-    id:
-        bulletId,
+            id:
+                bulletId,
 
-    x:
-        player.x +
-        Math.cos(angle) *
-        startDistance,
+            x:
+                player.x +
+                Math.cos(angle) *
+                startDistance,
 
-    y:
-        player.y +
-        Math.sin(angle) *
-        startDistance,
+            y:
+                player.y +
+                Math.sin(angle) *
+                startDistance,
 
-    previousX:
-        player.x +
-        Math.cos(angle) *
-        startDistance,
+            previousX:
+                player.x +
+                Math.cos(angle) *
+                startDistance,
 
-    previousY:
-        player.y +
-        Math.sin(angle) *
-        startDistance,
+            previousY:
+                player.y +
+                Math.sin(angle) *
+                startDistance,
 
-    angle:
-        angle,
+            angle:
+                angle,
 
-    owner:
-        socket.id,
+            owner:
+                socket.id,
 
-    createdAt:
-        Date.now(),
+            createdAt:
+                Date.now(),
 
-    damage:
-        gun.damage,
+            damage:
+                gun.damage,
 
-    speed:
-        gun.bulletSpeed,
+            speed:
+                gun.bulletSpeed,
 
-    maxBounces:
-        gun.maxBounces || 0,
+            maxBounces:
+                gun.maxBounces || 0,
 
-    bounces:
-        0,
+            bounces:
+                0,
 
-    bounceDamageReduction:
-        gun.bounceDamageReduction || 0,
+            bounceDamageReduction:
+                gun.bounceDamageReduction || 0,
 
-    length:
-        player.gun === "JackerRifle"
-            ? 22
-            : 10
+            length:
+                player.gun === "JackerRifle"
+                    ? 22
+                    : 10
 
-};
+        };
 
+        if (player.ammo === 0) {
+
+            startReload(
+                roomCode,
+                socket.id
+            );
+
+        }
+
+        sendGameState(
+            roomCode
+        );
+
+    }
+);
         // ====================================
         // RELOAD
         // ====================================
