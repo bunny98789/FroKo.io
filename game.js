@@ -181,6 +181,184 @@ let shotLocked = false;
  * =========================
  */
 
+const weaponList =
+    document.getElementById("weaponList");
+
+
+function createWeaponCards() {
+
+    if (!weaponList) {
+        return;
+    }
+
+    weaponList.innerHTML = "";
+
+    for (const gunName in GunData) {
+
+        const gun =
+            GunData[gunName];
+
+
+        /*
+         * CREATE CARD
+         */
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "weaponCard";
+
+
+        /*
+         * WEAPON NAME
+         */
+
+        const title =
+            document.createElement("h3");
+
+        title.innerText =
+            gunName;
+
+
+        /*
+         * WEAPON IMAGE
+         */
+
+        const image =
+            document.createElement("img");
+
+        image.src =
+            gun.shopImg;
+
+        image.alt =
+            gunName;
+
+
+        /*
+         * DESCRIPTION
+         */
+
+        const description =
+            document.createElement("div");
+
+        description.className =
+            "weaponDescription";
+
+        description.innerText =
+            gun.description ||
+            "No description available.";
+
+
+        /*
+         * STATS
+         */
+
+        const stats =
+            document.createElement("div");
+
+        stats.className =
+            "weaponStats";
+
+        stats.innerHTML = `
+            Damage: ${gun.damage}<br>
+            Ammo: ${gun.ammo}<br>
+            Reload: ${gun.reloadTime / 1000}s<br>
+            Fire Rate: ${gun.fireRate ?? "N/A"}ms<br>
+            Bullet Speed: ${gun.bulletSpeed ?? "N/A"}
+        `;
+
+
+        /*
+         * SELECT BUTTON
+         */
+
+        const selectButton =
+            document.createElement("button");
+
+        selectButton.className =
+            "weaponSelectButton";
+
+        selectButton.innerText =
+            "SELECT";
+
+
+        /*
+         * SELECT WEAPON
+         */
+
+        selectButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        if (
+            !myPlayerId ||
+            !players[myPlayerId]
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !== "lobby"
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "selectWeapon",
+            gunName
+        );
+
+    }
+);
+
+
+        /*
+         * BUILD CARD
+         */
+
+        card.appendChild(title);
+
+        card.appendChild(image);
+
+        card.appendChild(description);
+
+        card.appendChild(stats);
+
+        card.appendChild(selectButton);
+
+
+        /*
+         * ADD CARD TO LIST
+         */
+
+        weaponList.appendChild(card);
+
+    }
+
+}
+
+
+/*
+ * CREATE CARDS
+ */
+
+createWeaponCards();
+
+
+/*
+ * =========================
+ * WEAPON SELECTION
+ * =========================
+ */
+
 weaponSelectionButton.addEventListener(
     "click",
     () => {
