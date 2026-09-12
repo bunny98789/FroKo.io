@@ -266,7 +266,6 @@ function bulletIntersectsRectangle(
 function createPlayer(
     socket,
     username,
-    participatedThisRound,
 ) {
 
     return {
@@ -302,8 +301,8 @@ reloading: false,
 
 beamActive: false,
 beamTargets: {},
+beamLength: 600,
 beamSlowed: false,
-beamSlowedUntil: null,
         
         dead:
             false,
@@ -600,7 +599,7 @@ function resetPlayerForRound(
 player.beamActive = false;
 player.beamTargets = {};
 player.beamSlowed = false;
-player.beamSlowedUntil = null;
+
 
 
     player.dead = false;
@@ -1417,7 +1416,6 @@ function startSuddenDeath(
         player.beamActive = false;
 player.beamTargets = {};
 player.beamSlowed = false;
-player.beamSlowedUntil = null;
 
         player.ammo =
     getPlayerGun(player).ammo;
@@ -1685,7 +1683,6 @@ function resetToLobby(
          player.beamActive = false;
          player.beamTargets = {};
          player.beamSlowed = false;
-         player.beamSlowedUntil = null;
 
 
         player.dead =
@@ -1961,9 +1958,178 @@ function beamHitsObstacle(
 }
 
 
-// ========================================
-// PROCESS FOFROBEAM
-// ========================================
+function getBeamLength(
+    room,
+    startX,
+    startY,
+    angle,
+    maxLength = 600
+) {
+    const endX =
+        startX +
+        Math.cos(angle) *
+        maxLength;
+
+    const endY =
+        startY +
+        Math.sin(angle) *
+        maxLength;
+
+    let closestDistance =
+        maxLength;
+
+    for (const obstacle of room.obstacles) {
+
+        const minX =
+            obstacle.x;
+
+        const maxX =
+            obstacle.x +
+            obstacle.width;
+
+        const minY =
+            obstacle.y;
+
+        const maxY =
+            obstacle.y +
+            obstacle.height;
+
+        const dx =
+            Math.cos(angle);
+
+        const dy =
+            Math.sin(angle);
+
+        let tMin = 0;
+        let tMax = maxLength;
+
+
+        /*
+         * X axis
+         */
+
+        if (Math.abs(dx) < 0.000001) {
+
+            if (
+                startX < minX ||
+                startX > maxX
+            ) {
+                continue;
+            }
+
+        } else {
+
+            let tx1 =
+                (minX - startX) / dx;
+
+            let tx2 =
+                (maxX - startX) / dx;
+
+            if (tx1 > tx2) {
+
+                const temp =
+                    tx1;
+
+                tx1 =
+                    tx2;
+
+                tx2 =
+                    temp;
+
+            }
+
+            tMin =
+                Math.max(
+                    tMin,
+                    tx1
+                );
+
+            tMax =
+                Math.min(
+                    tMax,
+                    tx2
+                );
+
+        }
+
+
+        /*
+         * Y axis
+         */
+
+        if (Math.abs(dy) < 0.000001) {
+
+            if (
+                startY < minY ||
+                startY > maxY
+            ) {
+                continue;
+            }
+
+        } else {
+
+            let ty1 =
+                (minY - startY) / dy;
+
+            let ty2 =
+                (maxY - startY) / dy;
+
+            if (ty1 > ty2) {
+
+                const temp =
+                    ty1;
+
+                ty1 =
+                    ty2;
+
+                ty2 =
+                    temp;
+
+            }
+
+            tMin =
+                Math.max(
+                    tMin,
+                    ty1
+                );
+
+            tMax =
+                Math.min(
+                    tMax,
+                    ty2
+                );
+
+        }
+
+
+        /*
+         * We hit this obstacle.
+         */
+
+        if (
+            tMin <= tMax &&
+            tMax >= 0 &&
+            tMin <= maxLength
+        ) {
+
+            const hitDistance =
+                Math.max(
+                    0,
+                    tMin
+                );
+
+            closestDistance =
+                Math.min(
+                    closestDistance,
+                    hitDistance
+                );
+
+        }
+
+    }
+
+    return closestDistance;
+}
 
 // ========================================
 // PROCESS FOFROBEAM
@@ -2027,28 +2193,35 @@ function processFoFroBeam(
     // Beam position
     // ====================================
 
-    const beamLength = 600;
+ const startX =
+    player.x +
+    Math.cos(player.angle) * 25;
 
-    const startX =
-        player.x +
-        Math.cos(player.angle) * 25;
+const startY =
+    player.y +
+    Math.sin(player.angle) * 25;
 
-    const startY =
-        player.y +
-        Math.sin(player.angle) * 25;
+const beamLength =
+    getBeamLength(
+        room,
+        startX,
+        startY,
+        player.angle,
+        600
+    );
 
-    const endX =
-        startX +
-        Math.cos(player.angle) *
-        beamLength;
+player.beamLength =
+    beamLength;
 
-    const endY =
-        startY +
-        Math.sin(player.angle) *
-        beamLength;
+const endX =
+    startX +
+    Math.cos(player.angle) *
+    beamLength;
 
-    const now =
-        Date.now();
+const endY =
+    startY +
+    Math.sin(player.angle) *
+    beamLength;
 
     const currentlyHit = {};
 
@@ -2186,66 +2359,12 @@ function processFoFroBeam(
         // Track continuous beam time
         // ====================================
 
-        if (
-            !player.beamTargets[targetId]
-        ) {
+     player.beamTargets[targetId] = true;
 
-            player.beamTargets[targetId] = {
+     target.beamSlowed =
+         true;
 
-                startedAt:
-                    now,
-
-                lastHit:
-                    now,
-
-                slowed:
-                    false
-
-            };
-
-        } else {
-
-            player.beamTargets[targetId].lastHit =
-                now;
-
-        }
-
-        const targetInfo =
-            player.beamTargets[targetId];
-
-        // ====================================
-        // Slow after 0.5 seconds
-        // ====================================
-
-        if (
-            !targetInfo.slowed &&
-            now -
-                targetInfo.startedAt >=
-                gun.slowAfter
-        ) {
-
-            targetInfo.slowed =
-                true;
-
-            target.beamSlowed =
-                true;
-
-        }
-
-        // ====================================
-        // Refresh slow recovery timer
-        // ====================================
-
-        if (
-            targetInfo.slowed
-        ) {
-
-            target.beamSlowedUntil =
-                now +
-                gun.slowRecoveryTime;
-
-        }
-
+       
         // ====================================
         // Damage
         // ====================================
@@ -2306,21 +2425,22 @@ function processFoFroBeam(
     // Remove targets no longer hit
     // ====================================
 
-    for (
-        const targetId in player.beamTargets
-    ) {
+    for (const targetId in player.beamTargets) {
 
-        if (
-            currentlyHit[targetId]
-        ) {
-            continue;
-        }
-
-        delete player.beamTargets[
-            targetId
-        ];
-
+    if (currentlyHit[targetId]) {
+        continue;
     }
+
+    const target =
+        room.players[targetId];
+
+    if (target) {
+        target.beamSlowed =
+            false;
+    }
+
+    delete player.beamTargets[targetId];
+}
 
     // ====================================
     // Consume ammo
@@ -3655,30 +3775,6 @@ setInterval(
                 room.gameState !== "suddenDeath"
             ) {
                 continue;
-            }
-
-            // ====================================
-            // Remove expired FoFroBeam slows
-            // ====================================
-
-            for (const playerId in room.players) {
-
-                const player =
-                    room.players[playerId];
-
-                if (!player) continue;
-
-                if (
-                    player.beamSlowed &&
-                    player.beamSlowedUntil !== null &&
-                    now >= player.beamSlowedUntil
-                ) {
-
-                    player.beamSlowed = false;
-                    player.beamSlowedUntil = null;
-
-                }
-
             }
 
             // ====================================
