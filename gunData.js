@@ -156,16 +156,36 @@ function createWeaponCards() {
          */
 
         selectButton.addEventListener(
-            "click",
-            () => {
+    "click",
+    () => {
 
-                console.log(
-                    "Selected weapon:",
-                    gunName
-                );
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
 
-            }
+        if (
+            !myPlayerId ||
+            !players[myPlayerId]
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !== "lobby"
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "selectWeapon",
+            gunName
         );
+
+    }
+);
 
 
         /*
