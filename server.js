@@ -2703,6 +2703,89 @@ player.beamTargets = {};
 sendGameState(roomCode);
 
 });
+
+        /*
+ * =========================
+ * WEAPON SELECTION
+ * =========================
+ */
+
+socket.on("selectWeapon", (gunName) => {
+
+    const roomCode =
+        socket.roomCode;
+
+    const room =
+        rooms[roomCode];
+
+    if (!room) return;
+
+    const player =
+        room.players[socket.id];
+
+    if (!player) return;
+
+
+    /*
+     * Only allow weapon changes
+     * while in the lobby.
+     */
+
+    if (
+        room.gameState !== "lobby"
+    ) {
+        return;
+    }
+
+
+    /*
+     * Make sure the weapon exists.
+     */
+
+    if (
+        typeof gunName !== "string" ||
+        !GunData[gunName]
+    ) {
+        return;
+    }
+
+
+    /*
+     * Equip weapon.
+     */
+
+    player.gun =
+        gunName;
+
+
+    /*
+     * Reset weapon state.
+     */
+
+    const gun =
+        getPlayerGun(player);
+
+    player.ammo =
+        gun.ammo;
+
+    player.reloading =
+        false;
+
+    player.beamActive =
+        false;
+
+    player.beamTargets =
+        {};
+
+
+    /*
+     * Send updated player state.
+     */
+
+    sendGameState(roomCode);
+
+});
+        
         // ====================================
         // CREATE ROOM
         // ====================================
