@@ -2394,9 +2394,6 @@ const endY =
             target.beamSlowed =
                 false;
 
-            target.beamSlowedUntil =
-                null;
-
             recordSurvivalTime(
                 target
             );
