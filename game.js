@@ -104,6 +104,15 @@ const startGameButton =
 const waitingForHost =
     document.getElementById("waitingForHost");
 
+const weaponSelectionButton =
+    document.getElementById("weaponSelectionButton");
+
+const weaponSelectionMenu =
+    document.getElementById("weaponSelectionMenu");
+
+const closeWeaponSelectionButton =
+    document.getElementById("closeWeaponSelectionButton");
+
 
 /*
  * =========================
@@ -165,6 +174,46 @@ const keys = {};
 
 let shooting = false;
 let shotLocked = false;
+
+/*
+ * =========================
+ * WEAPON SELECTION
+ * =========================
+ */
+
+weaponSelectionButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !myPlayerId ||
+            !players[myPlayerId]
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !== "lobby"
+        ) {
+            return;
+        }
+
+        weaponSelectionMenu.style.display =
+            "flex";
+
+    }
+);
+
+
+closeWeaponSelectionButton.addEventListener(
+    "click",
+    () => {
+
+        weaponSelectionMenu.style.display =
+            "none";
+
+    }
+);
 
 
 /*
