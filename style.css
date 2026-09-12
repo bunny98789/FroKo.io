@@ -763,23 +763,23 @@ button:hover {
 
 #weaponList {
     display: flex;
-
-    flex-direction: column;
-
+    flex-direction: row;
     gap: 15px;
 
+    overflow-x: auto;
+    overflow-y: hidden;
+
     margin-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 .weaponCard {
+    flex: 0 0 220px;
+
     background: #202020;
-
     border: 2px solid #333;
-
     border-radius: 10px;
-
     padding: 15px;
-
     text-align: center;
 }
 
