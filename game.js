@@ -2198,9 +2198,16 @@ function updateHUD() {
         100;
 
 
-    const ammo =
-        player.ammo ??
-        6;
+   const ammo =
+    player.ammo ??
+    0;
+
+const gun =
+    GunData[player.gun] ||
+    GunData.Pistol;
+
+const maxAmmo =
+    gun.ammo;
 
 
     healthText.innerText =
@@ -2212,7 +2219,8 @@ function updateHUD() {
     ammoText.innerText =
         "🔫 " +
         ammo +
-        " / 6";
+        " / " +
+        maxAmmo;
 
 
     roundText.innerText =
@@ -2463,7 +2471,8 @@ for (const playerId in players) {
         player.y +
         Math.sin(angle) * 25;
 
-    const beamLength = 600;
+    const beamLength =
+    player.beamLength ?? 600;
 
     const endX =
         startX +
