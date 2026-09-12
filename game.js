@@ -280,7 +280,9 @@ function createWeaponCards() {
             "weaponSelectButton";
 
         selectButton.innerText =
-            "SELECT";
+    players[myPlayerId]?.gun === gunName
+        ? "SELECTED"
+        : "SELECT";
 
 
         /*
