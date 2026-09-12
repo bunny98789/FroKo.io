@@ -28,7 +28,7 @@ const GunData = {
     shopImg: "Assets/foFroBeam.svg",
 
     damage: 3,
-    ammo: 100,
+    ammo: 50,
 
     reloadTime: 7500,
 
