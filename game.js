@@ -318,8 +318,6 @@ function createWeaponCards() {
             gunName
         );
 
-        weaponSelectionMenu.style.display = "none";
-
     }
 );
 
