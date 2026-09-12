@@ -1,0 +1,29 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="200" height="85" viewBox="0 0 200 85">
+  <g stroke="#000000" stroke-width="2" stroke-miterlimit="10">
+    <!-- Adjusted Grip (Shifted up 10px, right 5px) -->
+    <rect x="37" y="52" width="16" height="22" rx="3" fill="#3b4252" />
+
+    <!-- Main Body / Stock (Dark Carbon) -->
+    <path fill="#1a1d24" d="M 10 35 L 45 30 L 75 30 L 70 55 L 45 55 L 30 65 L 10 50 Z" />
+    
+    <!-- Receiver & Scope Mount (Gunmetal Gray) -->
+    <path fill="#2e3440" d="M 75 25 L 135 25 L 140 45 L 70 55 L 75 35 Z" />
+    
+    <!-- Heavy Bounce Barrel (Steel) -->
+    <path fill="#4c566a" d="M 135 30 L 180 30 L 180 40 L 135 42 Z" />
+    
+    <!-- Energy Accelerator Core (Neon Ricochet Green & Light Blue) -->
+    <path fill="#a3be8c" d="M 85 32 L 125 32 L 125 38 L 85 38 Z" />
+    <path fill="#70d6ff" d="M 140 33 L 175 33 L 175 37 L 140 37 Z" />
+    
+    <!-- Muzzle Dampener / Tip -->
+    <path fill="#ebcb8b" d="M 180 28 L 192 28 L 192 42 L 180 42 Z" />
+    
+    <!-- Center Magazine / Main Power Grip -->
+    <path fill="#3b4252" d="M 90 50 L 110 50 L 102 70 L 85 68 Z" />
+    
+    <!-- Tactical Scope -->
+    <path fill="#d8dee9" d="M 80 18 L 120 18 L 125 25 L 75 25 Z" />
+    <circle cx="120" cy="21.5" r="3" fill="#a3be8c" />
+  </g>
+</svg>
