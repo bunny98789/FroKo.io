@@ -1609,6 +1609,7 @@ if (
 
 
             updatePlayerList();
+            createWeaponCards();
             updateGameModeUI();
             updateLobbyControls();
 
