@@ -239,6 +239,12 @@ window.addEventListener("frokoFirebaseReady", () => {
 
                 window.frokoAccountData = accountData;
 
+                document.getElementById("frokoinsAmount").innerText =
+                    newData.frokoins;
+
+                document.getElementById("kokashAmount").innerText =
+                    newData.kokash;
+
                 console.log(
                     "Loaded FroKo account:",
                 accountData
