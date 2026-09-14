@@ -1,0 +1,34 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="160" height="90" viewBox="0 0 160 90">
+  <g stroke="#000000" stroke-width="2" stroke-miterlimit="10">
+    <!-- Rear Grip (Dark Slate) -->
+    <path fill="#3b4252" d="M 40 45 L 60 45 L 50 80 L 30 78 Z" />
+
+    <!-- Grip Base Plate (Dark Carbon) -->
+    <path fill="#1a1d24" d="M 28 77 L 52 79 L 49 84 L 25 82 Z" />
+
+    <!-- Main Pneumatic Housing / Receiver (Dark Carbon) -->
+    <path fill="#1a1d24" d="M 30 28 L 95 28 L 95 48 L 35 48 Z" />
+
+    <!-- Upper Pressure Cylinder (Gunmetal Gray) -->
+    <path fill="#2e3440" d="M 25 15 L 105 15 L 110 28 L 25 28 Z" />
+
+    <!-- Pressure Gauge / Combo Meter (Thermal Accent Orange) -->
+    <circle cx="65" cy="21.5" r="4.5" fill="#1a1d24" />
+    <circle cx="65" cy="21.5" r="3" fill="#ff5722" />
+
+    <!-- Heavy Hydraulic Sleeve (Steel) -->
+    <path fill="#4c566a" d="M 105 18 L 135 18 L 135 38 L 105 38 Z" />
+
+    <!-- Steel Bolt Shaft (Retracted Core) -->
+    <rect x="135" y="24" width="15" height="8" fill="#d8dee9" />
+
+    <!-- Kinetic Piston Head (Reinforced Muzzle Tip) -->
+    <rect x="150" y="22" width="6" height="12" rx="1" fill="#ebcb8b" />
+
+    <!-- Multiplier Stacking Core (Neon Glow indicator for damage streak) -->
+    <rect x="38" y="32" width="45" height="4" fill="#70d6ff" />
+
+    <!-- Trigger Guard -->
+    <path fill="none" stroke="#000000" stroke-width="2" d="M 60 48 C 70 48 70 60 57 60" />
+  </g>
+</svg>
