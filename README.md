@@ -139,8 +139,8 @@ More weapons are planned for **0.8.0**.
 Planned weapons include:
 
 * 🔫 Pistol
-* 💥 JackerRifle
-* ⚡ FoFroBeam
+* 💥 JackerRifle - Added
+* ⚡ FoFroBeam - Added
 * 💨 Knockback Cannon
 
 Weapons will have different damage, ammo, reload times, fire rates, and special mechanics.
@@ -202,7 +202,7 @@ FroKo.io/
 
 ## 🚧 Development Status
 
-**Current Version: `v0.7.1-Alpha`**
+**Current Version: `v0.8.0-Alpha`**
 
 FroKo.io is currently in active development.
 
@@ -216,7 +216,7 @@ The current focus is improving the multiplayer foundation and adding Team Mode b
 | --------- | ------------------------------------------------ |
 | **0.7.x** | Multiplayer foundation, rounds, stats, Team Mode |
 | **0.8.0** | 🔫 Weapons                                       |
-| **0.9.0** | 🛒 Shop & Currencies                             |
+| **0.9.0** | 🛒 Shop & Currencies                             | - In development
 | **1.0.0** | ✨ Polish & Release                               |
 | **1.1.0** | 🧑‍🚀 Fighters                                   |
 | **1.2.0** | 🔫 More Weapons & Fighters                       |
