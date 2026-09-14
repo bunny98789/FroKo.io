@@ -11,7 +11,98 @@
 
 <body>
 
-<h1><b>F</b>roKo.io</h1>
+<h1>FroKo.io</h1>
+ <!-- ACCOUNT SCREEN -->
+
+<div id="accountScreen">
+
+    <div id="accountBox">
+
+        <h1>FroKo.io</h1>
+
+        <h2 id="accountTitle">LOGIN</h2>
+
+        <div id="loginForm">
+
+            <input
+                type="email"
+                id="loginEmail"
+                placeholder="Email"
+                autocomplete="email"
+            >
+
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Password"
+                autocomplete="current-password"
+            >
+
+            <button id="loginButton">
+                LOGIN
+            </button>
+
+            <p>
+                Don't have an account?
+                <button id="showSignupButton" class="accountLink">
+                    Sign Up
+                </button>
+            </p>
+
+        </div>
+
+
+        <div id="signupForm" style="display:none;">
+
+            <input
+                type="text"
+                id="signupUsername"
+                placeholder="Username"
+                maxlength="16"
+                autocomplete="username"
+            >
+
+            <input
+                type="email"
+                id="signupEmail"
+                placeholder="Email"
+                autocomplete="email"
+            >
+
+            <input
+                type="password"
+                id="signupPassword"
+                placeholder="Password"
+                autocomplete="new-password"
+            >
+
+            <input
+                type="password"
+                id="signupPasswordConfirm"
+                placeholder="Confirm Password"
+                autocomplete="new-password"
+            >
+
+            <button id="signupButton">
+                CREATE ACCOUNT
+            </button>
+
+            <p>
+                Already have an account?
+                <button id="showLoginButton" class="accountLink">
+                    Login
+                </button>
+            </p>
+
+        </div>
+
+        <p id="accountStatus"></p>
+
+    </div>
+
+</div>   
+
+    <div id="gameApp">
 <a href="form.html">Give us feedback!</a>
 
 <div id="connection-panel">
@@ -249,9 +340,11 @@
     </div>
 
 </div>
+    </div>
 
 
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script type="module" src="firebase.js"></script>
 <script src="gunData.js"></script>
 <script src="game.js"></script>
 
