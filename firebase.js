@@ -15,9 +15,9 @@ import {
     doc,
     getDoc,
     setDoc,
-    updateDoc
+    updateDoc,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
 
 // ================================
 // Firebase configuration
@@ -200,6 +200,29 @@ window.FroKoAccount = {
     });
 
     return data;
+},
+
+    onDataChanged(callback) {
+
+    const user = auth.currentUser;
+
+    if (!user) {
+        throw new Error("You are not logged in.");
+    }
+
+    const playerRef = doc(db, "players", user.uid);
+
+    return onSnapshot(playerRef, (snapshot) => {
+
+        if (!snapshot.exists()) {
+            console.error("Player data does not exist.");
+            return;
+        }
+
+        callback(snapshot.data());
+
+    });
+
 },
 
 };
