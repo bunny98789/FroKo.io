@@ -235,13 +235,13 @@ window.addEventListener("frokoFirebaseReady", () => {
 
             try {
 
-                const accountData =
-                    await FroKoAccount.getData();
+                const accountData = await FroKoAccount.getData();
 
+                window.frokoAccountData = accountData;
 
                 console.log(
                     "Loaded FroKo account:",
-                    accountData
+                accountData
                 );
 
 
@@ -532,11 +532,11 @@ function createWeaponCards() {
 
     weaponList.innerHTML = "";
 
+    const accountData = window.frokoAccountData;
+
     for (const gunName in GunData) {
 
-        const gun =
-            GunData[gunName];
-
+        const gun = GunData[gunName];
 
         /*
          * CREATE CARD
@@ -609,7 +609,21 @@ function createWeaponCards() {
 
 
         /*
-         * SELECT BUTTON
+         * OWNERSHIP
+         */
+
+        const ownedWeapons =
+            accountData?.ownedWeapons || [];
+
+        const isOwned =
+            ownedWeapons.includes(gunName);
+
+        const isEquipped =
+            players[myPlayerId]?.gun === gunName;
+
+
+        /*
+         * BUTTON
          */
 
         const selectButton =
@@ -618,47 +632,155 @@ function createWeaponCards() {
         selectButton.className =
             "weaponSelectButton";
 
-        selectButton.innerText =
-    players[myPlayerId]?.gun === gunName
-        ? "SELECTED"
-        : "SELECT";
+
+        /*
+         * FREE WEAPON
+         */
+
+        if (gun.price === 0 && !isOwned) {
+
+            selectButton.innerText =
+                "BUY — FREE";
+
+        }
 
 
         /*
-         * SELECT WEAPON
+         * NOT OWNED
+         */
+
+        else if (!isOwned) {
+
+            const currency =
+                gun.priceType === "FroKoins"
+                    ? "FK"
+                    : "KK";
+
+            selectButton.innerText =
+                `BUY — ${gun.price.toLocaleString()} ${currency}`;
+
+        }
+
+
+        /*
+         * EQUIPPED
+         */
+
+        else if (isEquipped) {
+
+            selectButton.innerText =
+                "SELECTED";
+
+            selectButton.classList.add(
+                "selected"
+            );
+
+        }
+
+
+        /*
+         * OWNED BUT NOT EQUIPPED
+         */
+
+        else {
+
+            selectButton.innerText =
+                "SELECT";
+
+        }
+
+
+        /*
+         * BUTTON CLICK
          */
 
         selectButton.addEventListener(
-    "click",
-    () => {
+            "click",
+            async () => {
 
-        if (
-            !socket ||
-            !socket.connected
-        ) {
-            return;
-        }
+                /*
+                 * NOT CONNECTED
+                 */
 
-        if (
-            !myPlayerId ||
-            !players[myPlayerId]
-        ) {
-            return;
-        }
+                if (
+                    !socket ||
+                    !socket.connected
+                ) {
+                    return;
+                }
 
-        if (
-            currentGameState !== "lobby"
-        ) {
-            return;
-        }
 
-        socket.emit(
-            "selectWeapon",
-            gunName
+                /*
+                 * NO PLAYER
+                 */
+
+                if (
+                    !myPlayerId ||
+                    !players[myPlayerId]
+                ) {
+                    return;
+                }
+
+
+                /*
+                 * ONLY IN LOBBY
+                 */
+
+                if (
+                    currentGameState !== "lobby"
+                ) {
+                    return;
+                }
+
+
+                /*
+                 * BUY
+                 */
+
+                if (!isOwned) {
+
+                    try {
+
+                        const newData =
+                            await FroKoAccount.purchaseWeapon(
+                                gunName,
+                                gun
+                            );
+
+                        window.frokoAccountData =
+                            newData;
+
+                        createWeaponCards();
+
+                    } catch (error) {
+
+                        console.error(
+                            "Purchase failed:",
+                            error
+                        );
+
+                        alert(
+                            error.message ||
+                            "Purchase failed."
+                        );
+
+                    }
+
+                    return;
+                }
+
+
+                /*
+                 * SELECT
+                 */
+
+                socket.emit(
+                    "selectWeapon",
+                    gunName
+                );
+
+            }
         );
-
-    }
-);
 
 
         /*
@@ -677,7 +799,7 @@ function createWeaponCards() {
 
 
         /*
-         * ADD CARD TO LIST
+         * ADD CARD
          */
 
         weaponList.appendChild(card);
