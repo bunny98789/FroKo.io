@@ -837,3 +837,122 @@ button:hover {
 #closeWeaponSelectionButton:hover {
     background: #555;
 }
+
+/* ============================= */
+/* ACCOUNT SCREEN */
+/* ============================= */
+
+#accountScreen {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #101010;
+
+    z-index: 10000;
+}
+
+#accountBox {
+    width: 400px;
+    max-width: 90vw;
+
+    padding: 30px;
+
+    background: #181818;
+
+    border: 2px solid #444;
+    border-radius: 14px;
+
+    box-shadow: 0 0 35px rgba(0, 0, 0, 0.8);
+
+    text-align: center;
+}
+
+#accountBox h1 {
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+#accountTitle {
+    margin-top: 0;
+    margin-bottom: 25px;
+
+    font-size: 22px;
+}
+
+#loginForm,
+#signupForm {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#loginForm input,
+#signupForm input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 11px;
+
+    background: #222;
+    color: white;
+
+    border: 1px solid #444;
+    border-radius: 6px;
+
+    font-size: 15px;
+}
+
+#loginForm input:focus,
+#signupForm input:focus {
+    outline: none;
+    border-color: #777;
+}
+
+#loginButton,
+#signupButton {
+    width: 100%;
+
+    padding: 11px;
+
+    background: #333;
+    color: white;
+
+    border: 1px solid #555;
+    border-radius: 6px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#loginButton:hover,
+#signupButton:hover {
+    background: #444;
+}
+
+.accountLink {
+    padding: 0;
+
+    background: none;
+    color: #aaa;
+
+    border: none;
+
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.accountLink:hover {
+    color: white;
+}
+
+#accountStatus {
+    min-height: 20px;
+    margin-bottom: 0;
+
+    color: #aaa;
+    font-size: 14px;
+}
