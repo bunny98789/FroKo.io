@@ -150,3 +150,5 @@ window.FroKoAccount = {
     }
 
 };
+
+window.dispatchEvent(new Event("frokoFirebaseReady"));
