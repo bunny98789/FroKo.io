@@ -51,21 +51,6 @@ window.addEventListener("frokoFirebaseReady", () => {
     gameApp.style.display = "none";
 
 
-    FroKoAccount.onDataChanged((accountData) => {
-
-    window.frokoAccountData = accountData;
-
-    document.getElementById("frokoinsAmount").innerText =
-        accountData.frokoins ?? 0;
-
-    document.getElementById("kokashAmount").innerText =
-        accountData.kokash ?? 0;
-
-    createWeaponCards();
-
-});
-
-
     // ================================
     // LOGIN / SIGNUP SWITCHING
     // ================================
