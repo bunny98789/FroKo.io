@@ -51,6 +51,21 @@ window.addEventListener("frokoFirebaseReady", () => {
     gameApp.style.display = "none";
 
 
+    FroKoAccount.onDataChanged((accountData) => {
+
+    window.frokoAccountData = accountData;
+
+    document.getElementById("frokoinsAmount").innerText =
+        accountData.frokoins ?? 0;
+
+    document.getElementById("kokashAmount").innerText =
+        accountData.kokash ?? 0;
+
+    createWeaponCards();
+
+});
+
+
     // ================================
     // LOGIN / SIGNUP SWITCHING
     // ================================
@@ -235,21 +250,11 @@ window.addEventListener("frokoFirebaseReady", () => {
 
             try {
 
-                const accountData = await FroKoAccount.getData();
-
-                window.frokoAccountData = accountData;
-
-                document.getElementById("frokoinsAmount").innerText =
-                    newData.frokoins;
+               document.getElementById("frokoinsAmount").innerText =
+                    accountData.frokoins;
 
                 document.getElementById("kokashAmount").innerText =
-                    newData.kokash;
-
-                console.log(
-                    "Loaded FroKo account:",
-                accountData
-                );
-
+                    accountData.kokash;
 
                 // Determine whether this was
                 // a login or account creation.
