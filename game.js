@@ -207,6 +207,13 @@ window.addEventListener("frokoFirebaseReady", () => {
                 accountStatus.innerText =
                     "Account created!";
 
+                accountStatus.innerText = "Account created!";
+
+                setTimeout(() => {
+                    accountScreen.style.display = "none";
+                    gameApp.style.display = "block";
+                }, 2000);
+
             } catch (error) {
 
                 console.error(error);
@@ -268,8 +275,14 @@ window.addEventListener("frokoFirebaseReady", () => {
             document.getElementById("kokashAmount").innerText =
                 accountData.kokash ?? 0;
 
-            // ...your existing success message and 2-second timeout...
+            // success message and 2-second timeout
+            accountStatus.innerText = "Login successful!";
 
+            setTimeout(() => {
+                accountScreen.style.display = "none";
+                gameApp.style.display = "block";
+            }, 2000);
+            
         } catch (error) {
 
             console.error(
