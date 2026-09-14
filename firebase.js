@@ -3,19 +3,19 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 
@@ -24,12 +24,12 @@ import {
 // ================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAUMZvQK2U9bz0DHVv3Y5qetdnDHlEkD48",
-  authDomain: "froko-ce1cb.firebaseapp.com",
-  projectId: "froko-ce1cb",
-  storageBucket: "froko-ce1cb.firebasestorage.app",
-  messagingSenderId: "513996767445",
-  appId: "1:513996767445:web:de9d0e01bfe33dee09225c"
+    apiKey: "AIzaSyAUMZvQK2U9bz0DHVv3Y5qetdnDHlEkD48",
+    authDomain: "froko-ce1cb.firebaseapp.com",
+    projectId: "froko-ce1cb",
+    storageBucket: "froko-ce1cb.firebasestorage.app",
+    messagingSenderId: "513996767445",
+    appId: "1:513996767445:web:de9d0e01bfe33dee09225c"
 };
 
 
@@ -49,97 +49,104 @@ const db = getFirestore(app);
 
 window.FroKoAccount = {
 
-  // Create an account
-  async signUp(email, password) {
-    const result = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    async signUp(email, password, username) {
 
-    const user = result.user;
+        const result = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
 
-    // Create the player's Firestore document
-    await setDoc(doc(db, "players", user.uid), {
-      username: "",
-      frokoins: 1000,
-      kokash: 50,
+        const user = result.user;
 
-      ownedWeapons: ["Pistol"],
-      equippedWeapon: "Pistol",
+        await setDoc(doc(db, "players", user.uid), {
 
-      ownedFighters: [],
-      equippedFighter: null,
+            username: username,
 
-      banned: false,
+            frokoins: 1000,
+            kokash: 50,
 
-      createdAt: new Date()
-    });
+            ownedWeapons: ["Pistol"],
+            equippedWeapon: "Pistol",
 
-    return user;
-  },
+            ownedFighters: [],
+            equippedFighter: null,
 
+            banned: false,
 
-  // Log in
-  async login(email, password) {
-    const result = await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+            createdAt: new Date()
+        });
 
-    return result.user;
-  },
+        return user;
+    },
 
 
-  // Log out
-  async logout() {
-    await signOut(auth);
-  },
+    async login(email, password) {
+
+        const result = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        return result.user;
+    },
 
 
-  // Get currently logged-in user
-  getUser() {
-    return auth.currentUser;
-  },
+    async logout() {
+
+        await signOut(auth);
+
+    },
 
 
-  // Get saved player data
-  async getData() {
-    const user = auth.currentUser;
+    getUser() {
 
-    if (!user) {
-      throw new Error("You are not logged in.");
+        return auth.currentUser;
+
+    },
+
+
+    async getData() {
+
+        const user = auth.currentUser;
+
+        if (!user) {
+            throw new Error("You are not logged in.");
+        }
+
+        const playerRef = doc(db, "players", user.uid);
+
+        const snapshot = await getDoc(playerRef);
+
+        if (!snapshot.exists()) {
+            throw new Error("Player data does not exist.");
+        }
+
+        return snapshot.data();
+
+    },
+
+
+    async saveData(data) {
+
+        const user = auth.currentUser;
+
+        if (!user) {
+            throw new Error("You are not logged in.");
+        }
+
+        const playerRef = doc(db, "players", user.uid);
+
+        await updateDoc(playerRef, data);
+
+    },
+
+
+    onAuthStateChanged(callback) {
+
+        return onAuthStateChanged(auth, callback);
+
     }
-
-    const playerRef = doc(db, "players", user.uid);
-    const snapshot = await getDoc(playerRef);
-
-    if (!snapshot.exists()) {
-      throw new Error("Player data does not exist.");
-    }
-
-    return snapshot.data();
-  },
-
-
-  // Save player data
-  async saveData(data) {
-    const user = auth.currentUser;
-
-    if (!user) {
-      throw new Error("You are not logged in.");
-    }
-
-    const playerRef = doc(db, "players", user.uid);
-
-    await updateDoc(playerRef, data);
-  },
-
-
-  // Listen for login/logout
-  onAuthStateChanged(callback) {
-    return onAuthStateChanged(auth, callback);
-  }
 
 };
