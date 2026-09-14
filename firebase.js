@@ -149,6 +149,59 @@ window.FroKoAccount = {
 
     }
 
+    async purchaseWeapon(gunName, gunData) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("You are not logged in.");
+
+    const playerRef = doc(db, "players", user.uid);
+    const snapshot = await getDoc(playerRef);
+
+    if (!snapshot.exists()) {
+        throw new Error("Player data does not exist.");
+    }
+
+    const data = snapshot.data();
+
+    // Already owned
+    if (data.ownedWeapons?.includes(gunName)) {
+        throw new Error("You already own this weapon.");
+    }
+
+    const price = gunData.price;
+    const priceType = gunData.priceType;
+
+    if (priceType === "FroKoins") {
+        if ((data.frokoins ?? 0) < price) {
+            throw new Error("Not enough FroKoins.");
+        }
+
+        data.frokoins -= price;
+
+    } else if (priceType === "KoKash") {
+        if ((data.kokash ?? 0) < price) {
+            throw new Error("Not enough KoKash.");
+        }
+
+        data.kokash -= price;
+
+    } else {
+        throw new Error("Invalid currency type.");
+    }
+
+    data.ownedWeapons = [
+        ...(data.ownedWeapons || []),
+        gunName
+    ];
+
+    await updateDoc(playerRef, {
+        frokoins: data.frokoins,
+        kokash: data.kokash,
+        ownedWeapons: data.ownedWeapons
+    });
+
+    return data;
+},
+
 };
 
 window.dispatchEvent(new Event("frokoFirebaseReady"));
