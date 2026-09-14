@@ -147,7 +147,7 @@ window.FroKoAccount = {
 
         return onAuthStateChanged(auth, callback);
 
-    }
+    },
 
     async purchaseWeapon(gunName, gunData) {
     const user = auth.currentUser;
