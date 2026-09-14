@@ -238,84 +238,78 @@ window.addEventListener("frokoFirebaseReady", () => {
     // FIREBASE AUTH STATE
     // ================================
 
-    FroKoAccount.onAuthStateChanged(async (user) => {
+   FroKoAccount.onAuthStateChanged(async (user) => {
 
-        if (user) {
+    if (user) {
+
+        console.log(
+            "Logged in:",
+            user.uid
+        );
+
+        try {
+
+            const accountData =
+                await FroKoAccount.getData();
+
+            window.frokoAccountData =
+                accountData;
 
             console.log(
-                "Logged in:",
-                user.uid
+                "Loaded FroKo account:",
+                accountData
             );
 
+            // Start listening for future changes
+            FroKoAccount.onDataChanged((accountData) => {
 
-            try {
+                window.frokoAccountData =
+                    accountData;
 
-               document.getElementById("frokoinsAmount").innerText =
-                    accountData.frokoins;
+                document.getElementById("frokoinsAmount").innerText =
+                    accountData.frokoins ?? 0;
 
                 document.getElementById("kokashAmount").innerText =
-                    accountData.kokash;
+                    accountData.kokash ?? 0;
 
-                // Determine whether this was
-                // a login or account creation.
-                if (
-                    accountTitle.innerText ===
-                    "CREATE ACCOUNT"
-                ) {
+                createWeaponCards();
 
-                    accountStatus.innerText =
-                        "Account created!";
+            });
 
-                } else {
+            // Update the UI immediately
+            document.getElementById("frokoinsAmount").innerText =
+                accountData.frokoins ?? 0;
 
-                    accountStatus.innerText =
-                        "Login successful!";
+            document.getElementById("kokashAmount").innerText =
+                accountData.kokash ?? 0;
 
-                }
+            // ...your existing success message and 2-second timeout...
 
+        } catch (error) {
 
-                // Wait 2 seconds before
-                // entering the lobby.
-                setTimeout(() => {
-
-                    accountScreen.style.display =
-                        "none";
-
-                    gameApp.style.display =
-                        "block";
-
-                }, 2000);
-
-
-            } catch (error) {
-
-                console.error(
-                    "Failed to load account data:",
-                    error
-                );
-
-                accountStatus.innerText =
-                    "Logged in, but failed to load account data.";
-
-            }
-
-
-        } else {
-
-            console.log(
-                "Not logged in."
+            console.error(
+                "Failed to load account data:",
+                error
             );
 
-            accountScreen.style.display =
-                "flex";
-
-            gameApp.style.display =
-                "none";
+            accountStatus.innerText =
+                "Logged in, but failed to load account data.";
 
         }
 
-    });
+    } else {
 
+        console.log("Not logged in.");
+
+        accountScreen.style.display =
+            "flex";
+
+        gameApp.style.display =
+            "none";
+
+    }
+
+});
 
     // ================================
     // FIREBASE ERROR MESSAGES
