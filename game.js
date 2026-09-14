@@ -67,9 +67,7 @@ document.getElementById("loginButton").addEventListener("click", async () => {
     const password = loginPassword.value;
 
     if (!email || !password) {
-
         accountStatus.innerText = "Please enter your email and password.";
-
         return;
     }
 
@@ -84,13 +82,11 @@ document.getElementById("loginButton").addEventListener("click", async () => {
     } catch (error) {
 
         console.error(error);
-
         accountStatus.innerText = getFirebaseErrorMessage(error);
 
     }
 
 });
-
 
 // ================================
 // SIGN UP
@@ -162,19 +158,29 @@ FroKoAccount.onAuthStateChanged(async (user) => {
 
         console.log("Logged in:", user.uid);
 
-        accountScreen.style.display = "none";
-        gameApp.style.display = "block";
-
-        // Get the player's saved Firebase data.
         try {
 
             const accountData = await FroKoAccount.getData();
 
             console.log("Loaded FroKo account:", accountData);
 
+            // Show success message
+            accountStatus.innerText = "Login successful!";
+
+            // Wait 2 seconds before entering the lobby
+            setTimeout(() => {
+
+                accountScreen.style.display = "none";
+                gameApp.style.display = "block";
+
+            }, 2000);
+
         } catch (error) {
 
             console.error("Failed to load account data:", error);
+
+            accountStatus.innerText =
+                "Logged in, but failed to load account data.";
 
         }
 
@@ -188,7 +194,6 @@ FroKoAccount.onAuthStateChanged(async (user) => {
     }
 
 });
-
 
 // ================================
 // FIREBASE ERROR MESSAGES
