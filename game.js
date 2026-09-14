@@ -3,231 +3,346 @@
  * ELEMENTS
  * =========================
  */
-
 // ================================
 // ACCOUNT UI
 // ================================
 
-const accountScreen = document.getElementById("accountScreen");
-const gameApp = document.getElementById("gameApp");
+window.addEventListener("frokoFirebaseReady", () => {
 
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
+    const accountScreen =
+        document.getElementById("accountScreen");
 
-const accountTitle = document.getElementById("accountTitle");
-const accountStatus = document.getElementById("accountStatus");
+    const gameApp =
+        document.getElementById("gameApp");
 
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
+    const loginForm =
+        document.getElementById("loginForm");
 
-const signupUsername = document.getElementById("signupUsername");
-const signupEmail = document.getElementById("signupEmail");
-const signupPassword = document.getElementById("signupPassword");
-const signupPasswordConfirm = document.getElementById("signupPasswordConfirm");
+    const signupForm =
+        document.getElementById("signupForm");
 
+    const accountTitle =
+        document.getElementById("accountTitle");
 
-// Start with the game hidden.
-// Firebase will decide whether the user can enter.
-gameApp.style.display = "none";
+    const accountStatus =
+        document.getElementById("accountStatus");
 
+    const loginEmail =
+        document.getElementById("loginEmail");
 
-// ================================
-// LOGIN / SIGNUP SWITCHING
-// ================================
+    const loginPassword =
+        document.getElementById("loginPassword");
 
-document.getElementById("showSignupButton").addEventListener("click", () => {
+    const signupUsername =
+        document.getElementById("signupUsername");
 
-    loginForm.style.display = "none";
-    signupForm.style.display = "flex";
+    const signupEmail =
+        document.getElementById("signupEmail");
 
-    accountTitle.innerText = "CREATE ACCOUNT";
-    accountStatus.innerText = "";
+    const signupPassword =
+        document.getElementById("signupPassword");
 
-});
+    const signupPasswordConfirm =
+        document.getElementById("signupPasswordConfirm");
 
 
-document.getElementById("showLoginButton").addEventListener("click", () => {
+    // Start with the game hidden.
+    // Firebase will decide whether the user can enter.
+    gameApp.style.display = "none";
 
-    signupForm.style.display = "none";
-    loginForm.style.display = "flex";
 
-    accountTitle.innerText = "LOGIN";
-    accountStatus.innerText = "";
+    // ================================
+    // LOGIN / SIGNUP SWITCHING
+    // ================================
 
-});
+    document
+        .getElementById("showSignupButton")
+        .addEventListener("click", () => {
 
+            loginForm.style.display = "none";
+            signupForm.style.display = "flex";
 
-// ================================
-// LOGIN
-// ================================
+            accountTitle.innerText =
+                "CREATE ACCOUNT";
 
-document.getElementById("loginButton").addEventListener("click", async () => {
+            accountStatus.innerText = "";
 
-    const email = loginEmail.value.trim();
-    const password = loginPassword.value;
+        });
 
-    if (!email || !password) {
-        accountStatus.innerText = "Please enter your email and password.";
-        return;
-    }
 
-    accountStatus.innerText = "Logging in...";
+    document
+        .getElementById("showLoginButton")
+        .addEventListener("click", () => {
 
-    try {
+            signupForm.style.display = "none";
+            loginForm.style.display = "flex";
 
-        await FroKoAccount.login(email, password);
+            accountTitle.innerText =
+                "LOGIN";
 
-        accountStatus.innerText = "Login successful!";
+            accountStatus.innerText = "";
 
-    } catch (error) {
+        });
 
-        console.error(error);
-        accountStatus.innerText = getFirebaseErrorMessage(error);
 
-    }
+    // ================================
+    // LOGIN
+    // ================================
 
-});
+    document
+        .getElementById("loginButton")
+        .addEventListener("click", async () => {
 
-// ================================
-// SIGN UP
-// ================================
+            const email =
+                loginEmail.value.trim();
 
-document.getElementById("signupButton").addEventListener("click", async () => {
+            const password =
+                loginPassword.value;
 
-    const username = signupUsername.value.trim();
-    const email = signupEmail.value.trim();
-    const password = signupPassword.value;
-    const passwordConfirm = signupPasswordConfirm.value;
 
+            if (!email || !password) {
 
-    if (!username || !email || !password || !passwordConfirm) {
+                accountStatus.innerText =
+                    "Please enter your email and password.";
 
-        accountStatus.innerText = "Please fill out every field.";
+                return;
 
-        return;
-    }
+            }
 
-
-    if (password !== passwordConfirm) {
-
-        accountStatus.innerText = "Passwords do not match.";
-
-        return;
-    }
-
-
-    if (username.length > 16) {
-
-        accountStatus.innerText = "Username must be 16 characters or less.";
-
-        return;
-    }
-
-
-    accountStatus.innerText = "Creating account...";
-
-
-    try {
-
-        await FroKoAccount.signUp(
-            email,
-            password,
-            username
-        );
-
-        accountStatus.innerText = "Account created!";
-
-    } catch (error) {
-
-        console.error(error);
-
-        accountStatus.innerText = getFirebaseErrorMessage(error);
-
-    }
-
-});
-
-
-// ================================
-// FIREBASE AUTH STATE
-// ================================
-
-FroKoAccount.onAuthStateChanged(async (user) => {
-
-    if (user) {
-
-        console.log("Logged in:", user.uid);
-
-        try {
-
-            const accountData = await FroKoAccount.getData();
-
-            console.log("Loaded FroKo account:", accountData);
-
-            // Show success message
-            accountStatus.innerText = "Login successful!";
-
-            // Wait 2 seconds before entering the lobby
-            setTimeout(() => {
-
-                accountScreen.style.display = "none";
-                gameApp.style.display = "block";
-
-            }, 2000);
-
-        } catch (error) {
-
-            console.error("Failed to load account data:", error);
 
             accountStatus.innerText =
-                "Logged in, but failed to load account data.";
+                "Logging in...";
+
+
+            try {
+
+                await FroKoAccount.login(
+                    email,
+                    password
+                );
+
+                accountStatus.innerText =
+                    "Login successful!";
+
+            } catch (error) {
+
+                console.error(error);
+
+                accountStatus.innerText =
+                    getFirebaseErrorMessage(error);
+
+            }
+
+        });
+
+
+    // ================================
+    // SIGN UP
+    // ================================
+
+    document
+        .getElementById("signupButton")
+        .addEventListener("click", async () => {
+
+            const username =
+                signupUsername.value.trim();
+
+            const email =
+                signupEmail.value.trim();
+
+            const password =
+                signupPassword.value;
+
+            const passwordConfirm =
+                signupPasswordConfirm.value;
+
+
+            if (
+                !username ||
+                !email ||
+                !password ||
+                !passwordConfirm
+            ) {
+
+                accountStatus.innerText =
+                    "Please fill out every field.";
+
+                return;
+
+            }
+
+
+            if (password !== passwordConfirm) {
+
+                accountStatus.innerText =
+                    "Passwords do not match.";
+
+                return;
+
+            }
+
+
+            if (username.length > 16) {
+
+                accountStatus.innerText =
+                    "Username must be 16 characters or less.";
+
+                return;
+
+            }
+
+
+            accountStatus.innerText =
+                "Creating account...";
+
+
+            try {
+
+                await FroKoAccount.signUp(
+                    email,
+                    password,
+                    username
+                );
+
+                accountStatus.innerText =
+                    "Account created!";
+
+            } catch (error) {
+
+                console.error(error);
+
+                accountStatus.innerText =
+                    getFirebaseErrorMessage(error);
+
+            }
+
+        });
+
+
+    // ================================
+    // FIREBASE AUTH STATE
+    // ================================
+
+    FroKoAccount.onAuthStateChanged(async (user) => {
+
+        if (user) {
+
+            console.log(
+                "Logged in:",
+                user.uid
+            );
+
+
+            try {
+
+                const accountData =
+                    await FroKoAccount.getData();
+
+
+                console.log(
+                    "Loaded FroKo account:",
+                    accountData
+                );
+
+
+                // Determine whether this was
+                // a login or account creation.
+                if (
+                    accountTitle.innerText ===
+                    "CREATE ACCOUNT"
+                ) {
+
+                    accountStatus.innerText =
+                        "Account created!";
+
+                } else {
+
+                    accountStatus.innerText =
+                        "Login successful!";
+
+                }
+
+
+                // Wait 2 seconds before
+                // entering the lobby.
+                setTimeout(() => {
+
+                    accountScreen.style.display =
+                        "none";
+
+                    gameApp.style.display =
+                        "block";
+
+                }, 2000);
+
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load account data:",
+                    error
+                );
+
+                accountStatus.innerText =
+                    "Logged in, but failed to load account data.";
+
+            }
+
+
+        } else {
+
+            console.log(
+                "Not logged in."
+            );
+
+            accountScreen.style.display =
+                "flex";
+
+            gameApp.style.display =
+                "none";
 
         }
 
-    } else {
+    });
 
-        console.log("Not logged in.");
 
-        accountScreen.style.display = "flex";
-        gameApp.style.display = "none";
+    // ================================
+    // FIREBASE ERROR MESSAGES
+    // ================================
+
+    function getFirebaseErrorMessage(error) {
+
+        switch (error.code) {
+
+            case "auth/invalid-email":
+                return "That email address is invalid.";
+
+            case "auth/user-not-found":
+                return "No account exists with that email.";
+
+            case "auth/wrong-password":
+                return "Incorrect password.";
+
+            case "auth/invalid-credential":
+                return "Incorrect email or password.";
+
+            case "auth/email-already-in-use":
+                return "An account already uses that email.";
+
+            case "auth/weak-password":
+                return "Password must be at least 6 characters.";
+
+            default:
+                return (
+                    error.message ||
+                    "Something went wrong."
+                );
+
+        }
 
     }
 
 });
-
-// ================================
-// FIREBASE ERROR MESSAGES
-// ================================
-
-function getFirebaseErrorMessage(error) {
-
-    switch (error.code) {
-
-        case "auth/invalid-email":
-            return "That email address is invalid.";
-
-        case "auth/user-not-found":
-            return "No account exists with that email.";
-
-        case "auth/wrong-password":
-            return "Incorrect password.";
-
-        case "auth/invalid-credential":
-            return "Incorrect email or password.";
-
-        case "auth/email-already-in-use":
-            return "An account already uses that email.";
-
-        case "auth/weak-password":
-            return "Password must be at least 6 characters.";
-
-        default:
-            return error.message || "Something went wrong.";
-
-    }
-
-}
-
 const canvas =
     document.getElementById("gameCanvas");
 
