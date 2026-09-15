@@ -2,6 +2,7 @@ const GunData = {
   Pistol:{
     shopImg: "Assets/pistol.svg",
     description: "A trusty sidearm with a short reload time for quick comebacks.",
+    maker: "FroKo Defense",
     damage: 25,
     ammo: 6,
     reloadTime: 2000, //in milliseconds
@@ -14,6 +15,7 @@ const GunData = {
  JackerRifle: {
     shopImg: "Assets/jackerRifle.svg",
     description: "Bullets bounce off walls and obstacles, useful for trickshots.",
+    maker: "Énergie FroKo Systems",
     damage: 75,
     ammo: 2,
     reloadTime: 3500,
@@ -29,7 +31,8 @@ const GunData = {
   FoFroBeam: {
     shopImg: "Assets/foFroBeam.svg",
     description: "Powerful beam that hits multiple enemies.",
-
+    maker: "Énergie FroKo Systems",
+    
     damage: 6,
     ammo: 25,
 
