@@ -603,6 +603,7 @@ function createWeaponCards() {
             "weaponStats";
 
         stats.innerHTML = `
+            manufacturer: ${gun.maker}<br>
             Damage: ${gun.damage}<br>
             Ammo: ${gun.ammo}<br>
             Reload: ${gun.reloadTime / 1000}s<br>
