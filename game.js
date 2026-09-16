@@ -346,6 +346,7 @@ window.addEventListener("frokoFirebaseReady", () => {
     }
 
 });
+
 const canvas =
     document.getElementById("gameCanvas");
 
@@ -454,6 +455,42 @@ const weaponSelectionMenu =
 
 const closeWeaponSelectionButton =
     document.getElementById("closeWeaponSelectionButton");
+
+/*
+ * =========================
+ * MAILBOX / PROMO CODE
+ * =========================
+ */
+
+const mailboxButton =
+    document.getElementById("mailboxButton");
+
+const mailboxMenu =
+    document.getElementById("mailboxMenu");
+
+const mailboxList =
+    document.getElementById("mailboxList");
+
+const closeMailboxButton =
+    document.getElementById("closeMailboxButton");
+
+const promoCodeButton =
+    document.getElementById("promoCodeButton");
+
+const promoCodeMenu =
+    document.getElementById("promoCodeMenu");
+
+const promoCodeInput =
+    document.getElementById("promoCodeInput");
+
+const redeemPromoCodeButton =
+    document.getElementById("redeemPromoCodeButton");
+
+const promoCodeStatus =
+    document.getElementById("promoCodeStatus");
+
+const closePromoCodeButton =
+    document.getElementById("closePromoCodeButton");
 
 
 /*
@@ -856,6 +893,314 @@ closeWeaponSelectionButton.addEventListener(
 
         weaponSelectionMenu.style.display =
             "none";
+
+    }
+);
+
+/*
+ * =========================
+ * MAILBOX
+ * =========================
+ */
+
+mailboxButton.addEventListener(
+    "click",
+    async () => {
+
+        if (!FroKoAccount.getUser()) {
+            return;
+        }
+
+        try {
+
+            await updateMailboxUI();
+
+            mailboxMenu.style.display =
+                "flex";
+
+        } catch (error) {
+
+            console.error(
+                "Failed to open mailbox:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Failed to load mailbox."
+            );
+
+        }
+
+    }
+);
+
+
+closeMailboxButton.addEventListener(
+    "click",
+    () => {
+
+        mailboxMenu.style.display =
+            "none";
+
+    }
+);
+
+
+async function updateMailboxUI() {
+
+    const messages =
+        await FroKoAccount.getMailbox();
+
+    mailboxList.innerHTML = "";
+
+    if (
+        !messages ||
+        messages.length === 0
+    ) {
+
+        mailboxList.innerHTML = `
+            <p class="emptyMailbox">
+                Your mailbox is empty.
+            </p>
+        `;
+
+        return;
+
+    }
+
+
+    messages.forEach(
+        (message) => {
+
+            const item =
+                document.createElement("div");
+
+            item.className =
+                "mailboxItem";
+
+
+            const title =
+                document.createElement("h3");
+
+            title.innerText =
+                message.title ||
+                "Message";
+
+
+            const text =
+                document.createElement("p");
+
+            text.innerText =
+                message.message ||
+                "";
+
+
+            const reward =
+                document.createElement("div");
+
+            reward.className =
+                "mailboxReward";
+
+
+            const rewards = [];
+
+            if (
+                message.frokoins
+            ) {
+
+                rewards.push(
+                    `${message.frokoins.toLocaleString()} FroKoins`
+                );
+
+            }
+
+            if (
+                message.kokash
+            ) {
+
+                rewards.push(
+                    `${message.kokash.toLocaleString()} KoKash`
+                );
+
+            }
+
+
+            reward.innerText =
+                rewards.length > 0
+                    ? `🎁 Reward: ${rewards.join(" + ")}`
+                    : "No reward";
+
+
+            const claimButton =
+                document.createElement("button");
+
+            claimButton.className =
+                "mailboxClaimButton";
+
+
+            if (message.claimed) {
+
+                claimButton.innerText =
+                    "CLAIMED";
+
+                claimButton.classList.add(
+                    "claimed"
+                );
+
+                claimButton.disabled =
+                    true;
+
+            } else {
+
+                claimButton.innerText =
+                    "CLAIM REWARD";
+
+
+                claimButton.addEventListener(
+                    "click",
+                    async () => {
+
+                        claimButton.disabled =
+                            true;
+
+                        claimButton.innerText =
+                            "CLAIMING...";
+
+                        try {
+
+                            await FroKoAccount.claimMailboxReward(
+                                message.id
+                            );
+
+                            await updateMailboxUI();
+
+                        } catch (error) {
+
+                            console.error(
+                                "Mailbox claim failed:",
+                                error
+                            );
+
+                            alert(
+                                error.message ||
+                                "Failed to claim reward."
+                            );
+
+                            claimButton.disabled =
+                                false;
+
+                            claimButton.innerText =
+                                "CLAIM REWARD";
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            item.appendChild(title);
+            item.appendChild(text);
+            item.appendChild(reward);
+            item.appendChild(claimButton);
+
+            mailboxList.appendChild(item);
+
+        }
+    );
+
+}
+
+/*
+ * =========================
+ * PROMO CODES
+ * =========================
+ */
+
+promoCodeButton.addEventListener(
+    "click",
+    () => {
+
+        if (!FroKoAccount.getUser()) {
+            return;
+        }
+
+        promoCodeInput.value = "";
+        promoCodeStatus.innerText = "";
+
+        promoCodeMenu.style.display =
+            "flex";
+
+        promoCodeInput.focus();
+
+    }
+);
+
+
+closePromoCodeButton.addEventListener(
+    "click",
+    () => {
+
+        promoCodeMenu.style.display =
+            "none";
+
+    }
+);
+
+
+redeemPromoCodeButton.addEventListener(
+    "click",
+    async () => {
+
+        const code =
+            promoCodeInput.value.trim();
+
+        if (!code) {
+
+            promoCodeStatus.innerText =
+                "Enter a promo code.";
+
+            return;
+
+        }
+
+
+        promoCodeStatus.innerText =
+            "Redeeming...";
+
+        redeemPromoCodeButton.disabled =
+            true;
+
+
+        try {
+
+            await FroKoAccount.redeemPromoCode(
+                code
+            );
+
+            promoCodeStatus.innerText =
+                "Promo code redeemed! 🎉";
+
+            promoCodeInput.value = "";
+
+        } catch (error) {
+
+            console.error(
+                "Promo code failed:",
+                error
+            );
+
+            promoCodeStatus.innerText =
+                error.message ||
+                "Invalid promo code.";
+
+        }
+
+
+        redeemPromoCodeButton.disabled =
+            false;
 
     }
 );
