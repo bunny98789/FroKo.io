@@ -16,7 +16,8 @@ import {
     getDoc,
     setDoc,
     updateDoc,
-    onSnapshot
+    onSnapshot,
+    arrayUnion
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 // ================================
@@ -526,6 +527,7 @@ window.FroKoAccount = {
             Number(playerData.kokash || 0)
             + kokashReward;
 
+        const weapons = promoData.weapons || [];
 
         // ================================
         // Save redemption
@@ -541,6 +543,7 @@ window.FroKoAccount = {
 
             frokoins: newFroKoins,
             kokash: newKoKash,
+            ownedWeapons: arrayUnion(...weapons),
             redeemedPromoCodes: updatedRedeemedCodes
 
         });
@@ -553,7 +556,8 @@ window.FroKoAccount = {
             code: cleanCode,
             reward: {
                 frokoins: frokoinsReward,
-                kokash: kokashReward
+                kokash: kokashReward,
+                weapons: weapons
             }
 
         };
