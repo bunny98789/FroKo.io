@@ -1114,12 +1114,15 @@ if (
 
                         try {
 
-                            await FroKoAccount.claimMailboxReward(
-                                message.id
-                            );
+                            const reward = await FroKoAccount.claimMailboxReward(message.id);
 
-                            await updateMailboxUI();
+                        showRewardPopup(
+                            reward.frokoins,
+                            reward.kokash
+                        );
 
+                        await updateMailboxUI();
+                            
                         } catch (error) {
 
                             console.error(
@@ -1221,13 +1224,14 @@ redeemPromoCodeButton.addEventListener(
 
         try {
 
-            await FroKoAccount.redeemPromoCode(
-                code
+           const reward = await FroKoAccount.redeemPromoCode(code);
+
+            showRewardPopup(
+                reward.frokoins,
+                reward.kokash
             );
 
-            promoCodeStatus.innerText =
-                "Promo code redeemed! 🎉";
-
+            promoCodeStatus.innerText = "Promo code redeemed! 🎉";
             promoCodeInput.value = "";
 
         } catch (error) {
