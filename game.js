@@ -897,6 +897,45 @@ closeWeaponSelectionButton.addEventListener(
     }
 );
 
+// ==============================
+// REWARD POPUP
+// ==============================
+
+function showRewardPopup(frokoins = 0, kokash = 0) {
+    const popup = document.getElementById("rewardPopup");
+    const rewards = document.getElementById("rewardPopupRewards");
+
+    rewards.innerHTML = "";
+
+    if (frokoins > 0) {
+        rewards.innerHTML += `
+            <div class="rewardCurrency">
+                <img src="Assets/froKoins.png" alt="FroKoins">
+                <span>+${frokoins.toLocaleString()}</span>
+            </div>
+        `;
+    }
+
+    if (kokash > 0) {
+        rewards.innerHTML += `
+            <div class="rewardCurrency">
+                <img src="Assets/koKash.png" alt="KoKash">
+                <span>+${kokash.toLocaleString()}</span>
+            </div>
+        `;
+    }
+
+    if (frokoins <= 0 && kokash <= 0) {
+        return;
+    }
+
+    popup.style.display = "flex";
+
+    setTimeout(() => {
+        popup.style.display = "none";
+    }, 2500);
+}
+
 /*
  * =========================
  * MAILBOX
