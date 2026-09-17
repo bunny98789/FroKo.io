@@ -365,6 +365,9 @@ window.FroKoAccount = {
 
         const newKoKash =
             Number(data.kokash || 0) + kokashReward;
+         
+        const weapons = message.weapons || [];
+
 
 
         // Mark message as claimed
@@ -373,14 +376,17 @@ window.FroKoAccount = {
             claimed: true
         };
 
-
-        await updateDoc(playerRef, {
-
+        const updateData = {
             frokoins: newFroKoins,
             kokash: newKoKash,
             mailbox: mailbox
+          };
 
-        });
+        if (weapons.length > 0) {
+            updateData.ownedWeapons = arrayUnion(...weapons)
+        }
+
+        await updateDoc(playerRef, updateData);
 
 
         return {
@@ -538,15 +544,17 @@ window.FroKoAccount = {
             cleanCode
         ];
 
-
-        await updateDoc(playerRef, {
-
+         const updateData = {
             frokoins: newFroKoins,
             kokash: newKoKash,
-            ownedWeapons: arrayUnion(...weapons),
             redeemedPromoCodes: updatedRedeemedCodes
+          };
 
-        });
+        if (weapons.length > 0) {
+            updateData.ownedWeapons = arrayUnion(...weapons)
+        }
+
+        await updateDoc(playerRef, updateData);
 
 
         return {
