@@ -393,6 +393,7 @@ window.FroKoAccount = {
 
             frokoins: newFroKoins,
             kokash: newKoKash,
+            weapons: weapons,
             message: mailbox[messageIndex]
 
         };
