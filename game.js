@@ -1005,26 +1005,32 @@ async function updateMailboxUI() {
 
             const rewards = [];
 
-            if (
-                message.frokoins
-            ) {
+if (message.frokoins) {
 
-                rewards.push(
-                    `${message.frokoins.toLocaleString()} FroKoins`
-                );
+    rewards.push(
+        `${message.frokoins.toLocaleString()} FroKoins`
+    );
 
-            }
+}
 
-            if (
-                message.kokash
-            ) {
+if (message.kokash) {
 
-                rewards.push(
-                    `${message.kokash.toLocaleString()} KoKash`
-                );
+    rewards.push(
+        `${message.kokash.toLocaleString()} KoKash`
+    );
 
-            }
+}
 
+if (
+    Array.isArray(message.weapons) &&
+    message.weapons.length > 0
+) {
+
+    rewards.push(
+        `🔫 ${message.weapons.join(", ")}`
+    );
+
+}
 
             reward.innerText =
                 rewards.length > 0
