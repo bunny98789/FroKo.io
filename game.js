@@ -910,7 +910,7 @@ function showRewardPopup(frokoins = 0, kokash = 0) {
     if (frokoins > 0) {
         rewards.innerHTML += `
             <div class="rewardCurrency">
-                <img src="Assets/froKoins.png" alt="FroKoins">
+                <img src="Assets/frokoins.png" alt="frokoins">
                 <span>+${frokoins.toLocaleString()}</span>
             </div>
         `;
@@ -919,7 +919,7 @@ function showRewardPopup(frokoins = 0, kokash = 0) {
     if (kokash > 0) {
         rewards.innerHTML += `
             <div class="rewardCurrency">
-                <img src="Assets/koKash.png" alt="KoKash">
+                <img src="Assets/kokash.png" alt="Kokash">
                 <span>+${kokash.toLocaleString()}</span>
             </div>
         `;
