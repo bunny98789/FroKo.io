@@ -45,6 +45,12 @@ window.addEventListener("frokoFirebaseReady", () => {
     const signupPasswordConfirm =
         document.getElementById("signupPasswordConfirm");
 
+    const forgotPasswordButton =
+    document.getElementById("forgotPasswordButton");
+
+const passwordResetStatus =
+    document.getElementById("passwordResetStatus");
+
 
     // Start with the game hidden.
     // Firebase will decide whether the user can enter.
@@ -146,6 +152,51 @@ window.addEventListener("frokoFirebaseReady", () => {
             }
 
         });
+
+    forgotPasswordButton.addEventListener(
+    "click",
+    async () => {
+
+        const email =
+            loginEmail.value.trim();
+
+        if (!email) {
+            passwordResetStatus.innerText =
+                "Enter your email address first.";
+            return;
+        }
+
+        forgotPasswordButton.disabled = true;
+
+        passwordResetStatus.innerText =
+            "Sending password reset email...";
+
+        try {
+
+            await FroKoAccount.resetPassword(
+                email
+            );
+
+            passwordResetStatus.innerText =
+                "Password reset email sent! Check your inbox.";
+
+        } catch (error) {
+
+            console.error(
+                "Password reset failed:",
+                error
+            );
+
+            passwordResetStatus.innerText =
+                getFirebaseErrorMessage(error);
+
+        } finally {
+
+            forgotPasswordButton.disabled = false;
+
+        }
+    }
+);
 
 
     // ================================
