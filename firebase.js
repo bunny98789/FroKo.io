@@ -7,7 +7,8 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
 import {
@@ -104,6 +105,19 @@ window.FroKoAccount = {
 
         return result.user;
     },
+
+    async resetPassword(email) {
+    const cleanEmail = String(email || "").trim();
+
+    if (!cleanEmail) {
+        throw new Error("Enter your email address first.");
+    }
+
+    await sendPasswordResetEmail(
+        auth,
+        cleanEmail
+    );
+},
 
 
     // ================================
