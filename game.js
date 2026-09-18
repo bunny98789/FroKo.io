@@ -116,13 +116,25 @@ window.addEventListener("frokoFirebaseReady", () => {
 
             try {
 
-                await FroKoAccount.login(
+                 await FroKoAccount.login(
                     email,
                     password
                 );
 
+                const accountData =
+                await FroKoAccount.getData();
+
+                if (!accountData.banned) {
+               
+
                 accountStatus.innerText =
                     "Login successful!";
+
+                } else {
+                     accountStatus.innerHTML =
+                    `<strong>🚫 ACCOUNT BANNED!</strong><br>
+                    You have been administratively discharged from the war.`;
+                }
 
             } catch (error) {
 
