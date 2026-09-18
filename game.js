@@ -259,6 +259,17 @@ window.addEventListener("frokoFirebaseReady", () => {
             window.frokoAccountData =
                 accountData;
 
+            if (accountData.banned === true) {
+
+            accountStatus.innerHTML =
+                `<strong>🚫 ACCOUNT BANNED!</strong><br>
+                You have been administratively discharged from the war.`;
+
+                await FroKoAccount.logout();
+
+            return;
+            }
+
             console.log(
                 "Loaded FroKo account:",
                 accountData
