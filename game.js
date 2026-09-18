@@ -926,15 +926,16 @@ function showRewardPopup(frokoins = 0, kokash = 0, weapons=[]) {
     }
 
    if (weapons.length > 0) {
-    const weapon = weapons[0];
-    const weaponImage = GunData[weapon]?.shopImg;
+    weapons.forEach(weapon => {
+        const weaponImage = GunData[weapon]?.shopImg;
 
-    rewards.innerHTML += `
-        <div class="rewardWeapon">
-            <span>+</span>
-            <img src="${weaponImage}" alt="${weapon}">
-        </div>
-    `;
+        rewards.innerHTML += `
+            <div class="rewardWeapon">
+                <span>+</span>
+                <img src="${weaponImage}" alt="${weapon}">
+            </div>
+        `;
+    });
 }
 
     if (frokoins <= 0 && kokash <= 0 && weapons.length === 0) {
@@ -1130,7 +1131,8 @@ if (
 
                         showRewardPopup(
                             reward.frokoins,
-                            reward.kokash
+                            reward.kokash,
+                            reward.weapons,
                         );
 
                         await updateMailboxUI();
@@ -1240,7 +1242,8 @@ redeemPromoCodeButton.addEventListener(
 
             showRewardPopup(
                 reward.frokoins,
-                reward.kokash
+                reward.kokash,
+                reward.weapons
             );
 
             promoCodeStatus.innerText = "Promo code redeemed! 🎉";
