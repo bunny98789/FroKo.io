@@ -901,7 +901,7 @@ closeWeaponSelectionButton.addEventListener(
 // REWARD POPUP
 // ==============================
 
-function showRewardPopup(frokoins = 0, kokash = 0) {
+function showRewardPopup(frokoins = 0, kokash = 0, weapons=[]) {
     const popup = document.getElementById("rewardPopup");
     const rewards = document.getElementById("rewardPopupRewards");
 
@@ -925,7 +925,19 @@ function showRewardPopup(frokoins = 0, kokash = 0) {
         `;
     }
 
-    if (frokoins <= 0 && kokash <= 0) {
+   if (weapons.length > 0) {
+    const weapon = weapons[0];
+    const weaponImage = GunData[weapon]?.shopImg;
+
+    rewards.innerHTML += `
+        <div class="rewardWeapon">
+            <span>+</span>
+            <img src="${weaponImage}" alt="${weapon}">
+        </div>
+    `;
+}
+
+    if (frokoins <= 0 && kokash <= 0 && weapons.length === 0) {
         return;
     }
 
