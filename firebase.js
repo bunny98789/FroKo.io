@@ -390,13 +390,11 @@ window.FroKoAccount = {
 
 
         return {
-
-            frokoins: newFroKoins,
-            kokash: newKoKash,
-            weapons: weapons,
-            message: mailbox[messageIndex]
-
-        };
+    frokoins: frokoinsReward,
+    kokash: kokashReward,
+    weapons: weapons,
+    message: mailbox[messageIndex]
+};
 
     },
 
@@ -559,18 +557,11 @@ window.FroKoAccount = {
 
 
         return {
-
-            frokoins: newFroKoins,
-            kokash: newKoKash,
-            code: cleanCode,
-            reward: {
-                frokoins: frokoinsReward,
-                kokash: kokashReward,
-                weapons: weapons
-            }
-
-        };
-
+    frokoins: frokoinsReward,
+    kokash: kokashReward,
+    weapons: weapons,
+    code: cleanCode
+};
     },
 
 
