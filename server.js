@@ -2691,10 +2691,10 @@ io.on(
 
         // This is ONLY for testing the secure request.
         // The client did NOT provide this balance.
-        const actualFroKoins =
+        let actualFroKoins =
             Number(playerData.frokoins || 0);
 
-        const actualKoKash =
+        let actualKoKash =
             Number(playerData.kokash || 0);
 
         console.log(
@@ -2707,6 +2707,57 @@ io.on(
             "Actual KK:",
             actualKoKash
         );
+
+        const item = GunData[cleanItemId];
+
+        if (playerData.ownedWeapons?.includes(cleanItemId)) {
+    return callback?.({
+        success: false,
+        error: "Item already owned."
+    });
+}
+
+       if (!item) {
+    return callback?.({
+        success: false,
+        error: "Item does not exist."
+    });
+}
+
+        if (item.priceType === "FroKoins") {
+            if (item.price > actualFroKoins) {
+                return callback?.({
+                    success: false,
+                    error: "Not enough FroKoins"
+                });
+        } else {  
+            actualFroKoins -= item.price;
+            playerData.frokoins = actualFroKoins;
+            await playerRef.update({
+                ownedWeapons: FieldValue.arrayUnion(cleanItemId),
+                frokoins: actualFroKoins
+            });
+            
+        }
+    }
+
+         if (item.priceType === "KoKash") {
+            if (item.price > actualKoKash) {
+                return callback?.({
+                    success: false,
+                    error: "Not enough KoKash"
+                });
+        } else {  
+            actualKoKash -= item.price;
+            playerData.kokash = actualKoKash;
+            await playerRef.update({
+                ownedWeapons: FieldValue.arrayUnion(cleanItemId),
+                kokash: actualKoKash
+            });
+            
+        }
+    }
+        
 
         return callback?.({
             success: true
