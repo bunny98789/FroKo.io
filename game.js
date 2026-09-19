@@ -948,39 +948,35 @@ function createWeaponCards() {
                  * BUY
                  */
 
-                if (!isOwned) {
+              if (!isOwned) {
+    if (!socket || !socket.connected) {
+        return;
+    }
 
-                    try {
+    socket.emit(
+        "purchaseItem",
+        {
+            gunName: gunName
+        },
+        (response) => {
+            if (!response?.success) {
+                alert(
+                    response?.error ||
+                    "Purchase failed."
+                );
+                return;
+            }
 
-                        const newData =
-                            await FroKoAccount.purchaseWeapon(
-                                gunName,
-                                gun
-                            );
+            console.log(
+                "Purchase request successful."
+            );
 
-                        window.frokoAccountData =
-                            newData;
+            createWeaponCards();
+        }
+    );
 
-                        createWeaponCards();
-
-                    } catch (error) {
-
-                        console.error(
-                            "Purchase failed:",
-                            error
-                        );
-
-                        alert(
-                            error.message ||
-                            "Purchase failed."
-                        );
-
-                    }
-
-                    return;
-                }
-
-
+    return;
+}
                 /*
                  * SELECT
                  */
