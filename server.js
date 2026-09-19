@@ -2596,10 +2596,6 @@ if (player.ammo >= gun.ammo) return;
 }
 
 
-// ========================================
-// SOCKET CONNECTION
-// ========================================
-
 io.on(
     "connection",
     (socket) => {
@@ -2608,10 +2604,55 @@ io.on(
             `Player connected: ${socket.id}`
         );
 
+        socket.firebaseUid = null;
+
+        socket.on("authenticate", async ({ idToken }, callback) => {
+
+            try {
+
+                if (!idToken) {
+                    throw new Error("Missing Firebase ID token.");
+                }
+
+                const decodedToken =
+                    await adminAuth.verifyIdToken(idToken);
+
+                socket.firebaseUid = decodedToken.uid;
+
+                console.log(
+                    `Firebase authenticated: ${socket.id} → ${socket.firebaseUid}`
+                );
+
+                if (callback) {
+                    callback({
+                        success: true
+                    });
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Firebase authentication failed:",
+                    error.message
+                );
+
+                socket.firebaseUid = null;
+
+                if (callback) {
+                    callback({
+                        success: false,
+                        error: "Authentication failed."
+                    });
+                }
+
+            }
+
+        });
+
         socket.on("pingCheck", () => {
             socket.emit("pongCheck");
         });
-
+        
         socket.on("setGameMode", (mode) => {
     const roomCode = socket.roomCode;
     const room = rooms[roomCode];
