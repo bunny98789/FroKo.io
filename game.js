@@ -948,7 +948,7 @@ function createWeaponCards() {
                  * BUY
                  */
 
-              if (!isOwned) {
+           if (!isOwned) {
     if (!socket || !socket.connected) {
         return;
     }
@@ -956,7 +956,7 @@ function createWeaponCards() {
     socket.emit(
         "purchaseItem",
         {
-            gunName: gunName
+            itemId: gunName
         },
         (response) => {
             if (!response?.success) {
@@ -976,8 +976,7 @@ function createWeaponCards() {
     );
 
     return;
-}
-                /*
+}                /*
                  * SELECT
                  */
 
