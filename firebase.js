@@ -141,6 +141,22 @@ window.FroKoAccount = {
 
     },
 
+    // ================================
+    // GET FIREBASE ID TOKEN
+    // ================================
+
+    async getIdToken() {
+
+        const user = auth.currentUser;
+
+        if (!user) {
+            throw new Error("You are not logged in.");
+        }
+
+        return await user.getIdToken();
+
+    },
+
 
     // ================================
     // GET PLAYER DATA
