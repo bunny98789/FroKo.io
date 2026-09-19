@@ -2639,7 +2639,7 @@ io.on(
                 socket.firebaseUid = null;
 
                 if (callback) {
-                    callback({
+                    callback?.({
                         success: false,
                         error: "Authentication failed."
                     });
@@ -2652,6 +2652,78 @@ io.on(
         socket.on("pingCheck", () => {
             socket.emit("pongCheck");
         });
+
+        socket.on("purchaseItem", async ({ itemId }, callback) => {
+    try {
+        // Make sure Firebase authentication happened first.
+        if (!socket.firebaseUid) {
+            return callback?.({
+                success: false,
+                error: "You are not authenticated."
+            });
+        }
+
+        // Make sure the client actually sent an item ID.
+        if (typeof itemId !== "string" || !itemId.trim()) {
+            return callback?.({
+                success: false,
+                error: "Invalid item."
+            });
+        }
+
+        const cleanItemId = itemId.trim();
+
+        // Get the REAL account from Firestore.
+        const playerRef = adminDb
+            .collection("players")
+            .doc(socket.firebaseUid);
+
+        const snapshot = await playerRef.get();
+
+        if (!snapshot.exists) {
+            return callback?.({
+                success: false,
+                error: "Player account not found."
+            });
+        }
+
+        const playerData = snapshot.data();
+
+        // This is ONLY for testing the secure request.
+        // The client did NOT provide this balance.
+        const actualFroKoins =
+            Number(playerData.frokoins || 0);
+
+        const actualKoKash =
+            Number(playerData.kokash || 0);
+
+        console.log(
+            "Purchase request:",
+            socket.firebaseUid,
+            "Item:",
+            cleanItemId,
+            "Actual FK:",
+            actualFroKoins,
+            "Actual KK:",
+            actualKoKash
+        );
+
+        return callback?.({
+            success: true
+        });
+
+    } catch (error) {
+        console.error(
+            "Purchase request error:",
+            error
+        );
+
+        return callback?.({
+            success: false,
+            error: "Purchase request failed."
+        });
+    }
+});
         
         socket.on("setGameMode", (mode) => {
     const roomCode = socket.roomCode;
