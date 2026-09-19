@@ -293,7 +293,7 @@ const passwordResetStatus =
     // FIREBASE AUTH STATE
     // ================================
 
-   FroKoAccount.onAuthStateChanged(async (user) => {
+FroKoAccount.onAuthStateChanged(async (user) => {
 
     if (user) {
 
@@ -304,59 +304,154 @@ const passwordResetStatus =
 
         try {
 
+            // =========================
+            // LOAD ACCOUNT DATA
+            // =========================
+
             const accountData =
                 await FroKoAccount.getData();
 
             window.frokoAccountData =
                 accountData;
 
+
+            // =========================
+            // CHECK IF BANNED
+            // =========================
+
             if (accountData.banned === true) {
 
-            accountStatus.innerHTML =
-                `<strong>🚫 ACCOUNT BANNED!</strong><br>
-                You have been administratively discharged from the war.`;
+                accountStatus.innerHTML =
+                    `<strong>🚫 ACCOUNT BANNED!</strong><br>
+                    You have been administratively discharged from the war.`;
 
                 await FroKoAccount.logout();
 
-            return;
+                return;
             }
+
 
             console.log(
                 "Loaded FroKo account:",
                 accountData
             );
 
-            // Start listening for future changes
+
+            // =========================
+            // AUTHENTICATE WITH GAME SERVER
+            // =========================
+
+            if (socket && socket.connected) {
+
+                try {
+
+                    const idToken =
+                        await FroKoAccount.getIdToken();
+
+                    socket.emit(
+                        "authenticate",
+                        {
+                            idToken: idToken
+                        },
+                        (response) => {
+
+                            if (response?.success) {
+
+                                console.log(
+                                    "Server authentication successful!"
+                                );
+
+                            } else {
+
+                                console.error(
+                                    "Server authentication failed:",
+                                    response?.error
+                                );
+
+                            }
+
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Could not authenticate with server:",
+                        error
+                    );
+
+                }
+
+            } else {
+
+                console.log(
+                    "Game server is not connected yet."
+                );
+
+            }
+
+
+            // =========================
+            // START LISTENING FOR DATA CHANGES
+            // =========================
+
             FroKoAccount.onDataChanged((accountData) => {
 
                 window.frokoAccountData =
                     accountData;
 
-                document.getElementById("frokoinsAmount").innerText =
+                document.getElementById(
+                    "frokoinsAmount"
+                ).innerText =
                     accountData.frokoins ?? 0;
 
-                document.getElementById("kokashAmount").innerText =
+                document.getElementById(
+                    "kokashAmount"
+                ).innerText =
                     accountData.kokash ?? 0;
 
                 createWeaponCards();
 
             });
 
-            // Update the UI immediately
-            document.getElementById("frokoinsAmount").innerText =
+
+            // =========================
+            // UPDATE UI IMMEDIATELY
+            // =========================
+
+            document.getElementById(
+                "frokoinsAmount"
+            ).innerText =
                 accountData.frokoins ?? 0;
 
-            document.getElementById("kokashAmount").innerText =
+            document.getElementById(
+                "kokashAmount"
+            ).innerText =
                 accountData.kokash ?? 0;
 
-            // success message and 2-second timeout
-            accountStatus.innerText = "Login successful!";
+
+            // =========================
+            // SUCCESS MESSAGE
+            // =========================
+
+            accountStatus.innerText =
+                "Login successful!";
+
+
+            // =========================
+            // SHOW GAME AFTER 2 SECONDS
+            // =========================
 
             setTimeout(() => {
-                accountScreen.style.display = "none";
-                gameApp.style.display = "block";
+
+                accountScreen.style.display =
+                    "none";
+
+                gameApp.style.display =
+                    "block";
+
             }, 2000);
-            
+
         } catch (error) {
 
             console.error(
@@ -371,7 +466,9 @@ const passwordResetStatus =
 
     } else {
 
-        console.log("Not logged in.");
+        console.log(
+            "Not logged in."
+        );
 
         accountScreen.style.display =
             "flex";
@@ -382,7 +479,6 @@ const passwordResetStatus =
     }
 
 });
-
     // ================================
     // FIREBASE ERROR MESSAGES
     // ================================
@@ -2144,49 +2240,6 @@ socket.on(
         statusText.style.color =
             "lightgreen";
 
-
-        // =========================
-        // FIREBASE AUTHENTICATION
-        // =========================
-
-        try {
-
-            const idToken =
-                await FroKoAccount.getIdToken();
-
-            socket.emit(
-                "authenticate",
-                {
-                    idToken: idToken
-                },
-                (response) => {
-
-                    if (response?.success) {
-
-                        console.log(
-                            "Server authentication successful!"
-                        );
-
-                    } else {
-
-                        console.error(
-                            "Server authentication failed:",
-                            response?.error
-                        );
-
-                    }
-
-                }
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Could not authenticate with server:",
-                error
-            );
-
-        }
 
     }
 );
