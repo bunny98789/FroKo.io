@@ -2110,43 +2110,86 @@ function connectToServer() {
         io(url);
 
 
-    /*
-     * =========================
-     * CONNECTED
-     * =========================
-     */
+  /*
+ * =========================
+ * CONNECTED
+ * =========================
+ */
 
-    socket.on(
-        "connect",
-        () => {
+socket.on(
+    "connect",
+    async () => {
 
-            console.log(
-                "Connected!",
-                socket.id
+        console.log(
+            "Connected!",
+            socket.id
+        );
+
+
+        myPlayerId =
+            socket.id;
+
+
+        connectBtn.innerText =
+            "Connected!";
+
+        connectBtn.style.backgroundColor =
+            "green";
+
+
+        statusText.innerText =
+            "Connected as " +
+            socket.id;
+
+        statusText.style.color =
+            "lightgreen";
+
+
+        // =========================
+        // FIREBASE AUTHENTICATION
+        // =========================
+
+        try {
+
+            const idToken =
+                await FroKoAccount.getIdToken();
+
+            socket.emit(
+                "authenticate",
+                {
+                    idToken: idToken
+                },
+                (response) => {
+
+                    if (response?.success) {
+
+                        console.log(
+                            "Server authentication successful!"
+                        );
+
+                    } else {
+
+                        console.error(
+                            "Server authentication failed:",
+                            response?.error
+                        );
+
+                    }
+
+                }
             );
 
+        } catch (error) {
 
-            myPlayerId =
-                socket.id;
-
-
-            connectBtn.innerText =
-                "Connected!";
-
-            connectBtn.style.backgroundColor =
-                "green";
-
-
-            statusText.innerText =
-                "Connected as " +
-                socket.id;
-
-            statusText.style.color =
-                "lightgreen";
+            console.error(
+                "Could not authenticate with server:",
+                error
+            );
 
         }
-    );
 
+    }
+);
 
     /*
      * =========================
