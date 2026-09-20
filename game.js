@@ -1280,50 +1280,80 @@ if (
                     "CLAIM REWARD";
 
 
-                claimButton.addEventListener(
-                    "click",
-                    async () => {
+               claimButton.addEventListener(
+    "click",
+    () => {
 
-                        claimButton.disabled =
-                            true;
+        claimButton.disabled =
+            true;
 
-                        claimButton.innerText =
-                            "CLAIMING...";
+        claimButton.innerText =
+            "CLAIMING...";
 
-                        try {
+        if (
+            !socket ||
+            !socket.connected
+        ) {
 
-                            const reward = await FroKoAccount.claimMailboxReward(message.id);
+            alert(
+                "Not connected to the server."
+            );
 
-                        showRewardPopup(
-                            reward.frokoins,
-                            reward.kokash,
-                            reward.weapons,
-                        );
+            claimButton.disabled =
+                false;
 
-                        await updateMailboxUI();
-                            
-                        } catch (error) {
+            claimButton.innerText =
+                "CLAIM REWARD";
 
-                            console.error(
-                                "Mailbox claim failed:",
-                                error
-                            );
+            return;
 
-                            alert(
-                                error.message ||
-                                "Failed to claim reward."
-                            );
+        }
 
-                            claimButton.disabled =
-                                false;
+        socket.emit(
+            "claimMailboxReward",
+            {
+                messageId:
+                    message.id
+            },
+            async (response) => {
 
-                            claimButton.innerText =
-                                "CLAIM REWARD";
+                if (
+                    !response?.success
+                ) {
 
-                        }
+                    console.error(
+                        "Mailbox claim failed:",
+                        response?.error
+                    );
 
-                    }
+                    alert(
+                        response?.error ||
+                        "Failed to claim reward."
+                    );
+
+                    claimButton.disabled =
+                        false;
+
+                    claimButton.innerText =
+                        "CLAIM REWARD";
+
+                    return;
+
+                }
+
+                showRewardPopup(
+                    response.frokoins || 0,
+                    response.kokash || 0,
+                    []
                 );
+
+                await updateMailboxUI();
+
+            }
+        );
+
+    }
+);
 
             }
 
