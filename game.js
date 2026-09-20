@@ -1433,7 +1433,29 @@ redeemPromoCodeButton.addEventListener(
 
         try {
 
-           const reward = await FroKoAccount.redeemPromoCode(code);
+            if (!socket || !socket.connected) {
+                throw new Error("Not connected to the server.");
+            }
+            
+          const reward = await new Promise((resolve, reject) => {
+    socket.emit(
+        "redeemPromoCode",
+        { code },
+        (response) => {
+            if (!response?.success) {
+                reject(
+                    new Error(
+                        response?.error ||
+                        "Failed to redeem promo code."
+                    )
+                );
+                return;
+            }
+
+            resolve(response);
+        }
+    );
+});
 
             showRewardPopup(
                 reward.frokoins,
