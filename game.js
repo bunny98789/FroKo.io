@@ -1344,7 +1344,7 @@ if (
                 showRewardPopup(
                     response.frokoins || 0,
                     response.kokash || 0,
-                    []
+                    response.weapons || []
                 );
 
                 await updateMailboxUI();
