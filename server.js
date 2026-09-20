@@ -2655,319 +2655,308 @@ io.on(
 
     socket.on("claimMailboxReward", async ({ messageId }, callback) => {
     try {
-
         if (!socket.firebaseUid) {
-            return callback?.({
-                success: false,
-                error: "You are not authenticated."
-            });
+            return callback?.({ success: false, error: "You are not authenticated." });
         }
 
-        if (
-            typeof messageId !== "string" ||
-            !messageId.trim()
-        ) {
-            return callback?.({
-                success: false,
-                error: "Invalid mailbox message."
-            });
+        if (typeof messageId !== "string" || !messageId.trim()) {
+            return callback?.({ success: false, error: "Invalid mailbox message." });
         }
 
-        const cleanMessageId =
-            messageId.trim();
-
-        const playerRef =
-            adminDb
-                .collection("players")
-                .doc(socket.firebaseUid);
+        const cleanMessageId = messageId.trim();
+        const playerRef = adminDb.collection("players").doc(socket.firebaseUid);
 
         let claimedFroKoins = 0;
         let claimedKoKash = 0;
+        let claimedWeapons = [];
 
-        await adminDb.runTransaction(
-            async (transaction) => {
+        await adminDb.runTransaction(async (transaction) => {
+            const playerSnapshot = await transaction.get(playerRef);
 
-                const playerSnapshot =
-                    await transaction.get(
-                        playerRef
-                    );
-
-                if (!playerSnapshot.exists) {
-                    throw new Error(
-                        "Player account not found."
-                    );
-                }
-
-                const playerData =
-                    playerSnapshot.data();
-
-                const mailbox =
-                    Array.isArray(
-                        playerData.mailbox
-                    )
-                        ? playerData.mailbox
-                        : [];
-
-                const message =
-                    mailbox.find(
-                        (item) =>
-                            item &&
-                            item.id ===
-                                cleanMessageId
-                    );
-
-                if (!message) {
-                    throw new Error(
-                        "Mailbox message not found."
-                    );
-                }
-
-                if (message.claimed) {
-                    throw new Error(
-                        "Reward already claimed."
-                    );
-                }
-
-                const frokoinsReward =
-                    Number(
-                        message.frokoins || 0
-                    );
-
-                const kokashReward =
-                    Number(
-                        message.kokash || 0
-                    );
-
-                if (
-                    !Number.isFinite(
-                        frokoinsReward
-                    ) ||
-                    frokoinsReward < 0 ||
-                    !Number.isFinite(
-                        kokashReward
-                    ) ||
-                    kokashReward < 0
-                ) {
-                    throw new Error(
-                        "Invalid mailbox reward."
-                    );
-                }
-
-                const currentFroKoins =
-                    Number(
-                        playerData.frokoins || 0
-                    );
-
-                const currentKoKash =
-                    Number(
-                        playerData.kokash || 0
-                    );
-
-                if (
-                    !Number.isFinite(
-                        currentFroKoins
-                    ) ||
-                    !Number.isFinite(
-                        currentKoKash
-                    )
-                ) {
-                    throw new Error(
-                        "Invalid account balance."
-                    );
-                }
-
-                const updatedMailbox =
-                    mailbox.map(
-                        (item) => {
-
-                            if (
-                                !item ||
-                                item.id !==
-                                    cleanMessageId
-                            ) {
-                                return item;
-                            }
-
-                            return {
-                                ...item,
-                                claimed: true
-                            };
-
-                        }
-                    );
-
-                transaction.update(
-                    playerRef,
-                    {
-                        mailbox:
-                            updatedMailbox,
-
-                        frokoins:
-                            currentFroKoins +
-                            frokoinsReward,
-
-                        kokash:
-                            currentKoKash +
-                            kokashReward
-                    }
-                );
-
-                claimedFroKoins =
-                    frokoinsReward;
-
-                claimedKoKash =
-                    kokashReward;
-
+            if (!playerSnapshot.exists) {
+                throw new Error("Player account not found.");
             }
-        );
+
+            const playerData = playerSnapshot.data();
+
+            const mailbox = Array.isArray(playerData.mailbox) ? playerData.mailbox : [];
+            const message = mailbox.find((item) => item && item.id === cleanMessageId);
+
+            if (!message) {
+                throw new Error("Mailbox message not found.");
+            }
+
+            if (message.claimed) {
+                throw new Error("Reward already claimed.");
+            }
+
+            const frokoinsReward = Number(message.frokoins || 0);
+            const kokashReward = Number(message.kokash || 0);
+            const weaponsReward = Array.isArray(message.weapons) ? message.weapons : [];
+
+            if (
+                !Number.isFinite(frokoinsReward) || frokoinsReward < 0 ||
+                !Number.isFinite(kokashReward) || kokashReward < 0
+            ) {
+                throw new Error("Invalid mailbox reward.");
+            }
+
+            const currentFroKoins = Number(playerData.frokoins || 0);
+            const currentKoKash = Number(playerData.kokash || 0);
+
+            if (!Number.isFinite(currentFroKoins) || !Number.isFinite(currentKoKash)) {
+                throw new Error("Invalid account balance.");
+            }
+
+            // Merge weapons, avoiding duplicates
+            const currentOwnedWeapons = Array.isArray(playerData.ownedWeapons)
+                ? playerData.ownedWeapons
+                : [];
+
+            const newOwnedWeapons = Array.from(
+                new Set([...currentOwnedWeapons, ...weaponsReward])
+            );
+
+            const updatedMailbox = mailbox.map((item) => {
+                if (!item || item.id !== cleanMessageId) {
+                    return item;
+                }
+                return { ...item, claimed: true };
+            });
+
+            transaction.update(playerRef, {
+                mailbox: updatedMailbox,
+                frokoins: currentFroKoins + frokoinsReward,
+                kokash: currentKoKash + kokashReward,
+                ownedWeapons: newOwnedWeapons
+            });
+
+            claimedFroKoins = frokoinsReward;
+            claimedKoKash = kokashReward;
+            claimedWeapons = weaponsReward;
+        });
 
         return callback?.({
             success: true,
-            frokoins:
-                claimedFroKoins,
-            kokash:
-                claimedKoKash
+            frokoins: claimedFroKoins,
+            kokash: claimedKoKash,
+            weapons: claimedWeapons
         });
 
     } catch (error) {
-
-        console.error(
-            "Mailbox claim error:",
-            error
-        );
-
+        console.error("Mailbox claim error:", error);
         return callback?.({
             success: false,
-            error:
-                error.message ||
-                "Failed to claim mailbox reward."
+            error: error.message || "Failed to claim mailbox reward."
         });
-
     }
 });
-        socket.on("purchaseItem", async ({ itemId }, callback) => {
+    
+    socket.on("redeemPromoCode", async ({ code }, callback) => {
     try {
-        // Make sure Firebase authentication happened first.
+
         if (!socket.firebaseUid) {
-            return callback?.({
-                success: false,
-                error: "You are not authenticated."
-            });
+            return callback?.({ success: false, error: "You are not authenticated." });
         }
 
-        // Make sure the client actually sent an item ID.
-        if (typeof itemId !== "string" || !itemId.trim()) {
-            return callback?.({
-                success: false,
-                error: "Invalid item."
+        const cleanCode = String(code || "").trim().toUpperCase();
+
+        if (!cleanCode) {
+            return callback?.({ success: false, error: "Enter a promo code." });
+        }
+
+        const playerRef = adminDb.collection("players").doc(socket.firebaseUid);
+        const promoRef = adminDb.collection("promoCodes").doc(cleanCode);
+
+        let claimedFroKoins = 0;
+        let claimedKoKash = 0;
+        let claimedWeapons = [];          // ← was missing
+
+        await adminDb.runTransaction(async (transaction) => {
+
+            const playerSnapshot = await transaction.get(playerRef);
+            if (!playerSnapshot.exists) {
+                throw new Error("Player data does not exist.");
+            }
+            const playerData = playerSnapshot.data();
+
+            const promoSnapshot = await transaction.get(promoRef);
+            if (!promoSnapshot.exists) {
+                throw new Error("Invalid or expired promo code.");
+            }
+            const promoData = promoSnapshot.data();
+
+            if (promoData.enabled === false) {
+                throw new Error("Invalid or expired promo code.");
+            }
+
+            if (promoData.expiresAt) {
+                const expiration = promoData.expiresAt.toDate
+                    ? promoData.expiresAt.toDate()
+                    : new Date(promoData.expiresAt);
+
+                if (Number.isNaN(expiration.getTime()) || new Date() > expiration) {
+                    throw new Error("This promo code has expired.");
+                }
+            }
+
+            const redeemedCodes = Array.isArray(playerData.redeemedPromoCodes)
+                ? playerData.redeemedPromoCodes
+                : [];
+
+            if (redeemedCodes.includes(cleanCode)) {
+                throw new Error("You have already redeemed this promo code.");
+            }
+
+            const frokoinsReward = Number(promoData.frokoins || 0);
+            const kokashReward = Number(promoData.kokash || 0);
+            const weaponsReward = Array.isArray(promoData.weapons) ? promoData.weapons : [];
+
+            if (
+                !Number.isFinite(frokoinsReward) || frokoinsReward < 0 ||
+                !Number.isFinite(kokashReward) || kokashReward < 0
+            ) {
+                throw new Error("Invalid promo code reward.");
+            }
+
+            const currentFroKoins = Number(playerData.frokoins || 0);
+            const currentKoKash = Number(playerData.kokash || 0);
+
+            if (!Number.isFinite(currentFroKoins) || !Number.isFinite(currentKoKash)) {
+                throw new Error("Invalid account balance.");
+            }
+
+            const currentOwnedWeapons = Array.isArray(playerData.ownedWeapons)
+                ? playerData.ownedWeapons
+                : [];
+
+            const newOwnedWeapons = Array.from(
+                new Set([...currentOwnedWeapons, ...weaponsReward])
+            );
+
+            transaction.update(playerRef, {
+                frokoins: currentFroKoins + frokoinsReward,
+                kokash: currentKoKash + kokashReward,
+                ownedWeapons: newOwnedWeapons,
+                redeemedPromoCodes: [...redeemedCodes, cleanCode]
             });
+
+            claimedFroKoins = frokoinsReward;
+            claimedKoKash = kokashReward;
+            claimedWeapons = weaponsReward;
+        });
+
+        return callback?.({
+            success: true,
+            frokoins: claimedFroKoins,
+            kokash: claimedKoKash,
+            weapons: claimedWeapons,
+            code: cleanCode
+        });
+
+    } catch (error) {
+        console.error("Promo code error:", error);
+        return callback?.({
+            success: false,
+            error: error.message || "Failed to redeem promo code."
+        });
+    }
+});
+        
+        // PURCHASE ITEMS
+       socket.on("purchaseItem", async ({ itemId }, callback) => {
+    try {
+        if (!socket.firebaseUid) {
+            return callback?.({ success: false, error: "You are not authenticated." });
+        }
+
+        if (typeof itemId !== "string" || !itemId.trim()) {
+            return callback?.({ success: false, error: "Invalid item." });
         }
 
         const cleanItemId = itemId.trim();
-
-        // Get the REAL account from Firestore.
-        const playerRef = adminDb
-            .collection("players")
-            .doc(socket.firebaseUid);
-
-        const snapshot = await playerRef.get();
-
-        if (!snapshot.exists) {
-            return callback?.({
-                success: false,
-                error: "Player account not found."
-            });
-        }
-
-        const playerData = snapshot.data();
-
-        // This is ONLY for testing the secure request.
-        // The client did NOT provide this balance.
-        let actualFroKoins =
-            Number(playerData.frokoins || 0);
-
-        let actualKoKash =
-            Number(playerData.kokash || 0);
-
-        console.log(
-            "Purchase request:",
-            socket.firebaseUid,
-            "Item:",
-            cleanItemId,
-            "Actual FK:",
-            actualFroKoins,
-            "Actual KK:",
-            actualKoKash
-        );
-
         const item = GunData[cleanItemId];
 
-        if (playerData.ownedWeapons?.includes(cleanItemId)) {
-    return callback?.({
-        success: false,
-        error: "Item already owned."
-    });
-}
-
-       if (!item) {
-    return callback?.({
-        success: false,
-        error: "Item does not exist."
-    });
-}
-
-        if (item.priceType === "FroKoins") {
-            if (item.price > actualFroKoins) {
-                return callback?.({
-                    success: false,
-                    error: "Not enough FroKoins"
-                });
-        } else {  
-            actualFroKoins -= item.price;
-            playerData.frokoins = actualFroKoins;
-            await playerRef.update({
-                ownedWeapons: FieldValue.arrayUnion(cleanItemId),
-                frokoins: actualFroKoins
-            });
-            
+        if (!item) {
+            return callback?.({ success: false, error: "Item does not exist." });
         }
-    }
 
-         if (item.priceType === "KoKash") {
-            if (item.price > actualKoKash) {
-                return callback?.({
-                    success: false,
-                    error: "Not enough KoKash"
+        const playerRef = adminDb.collection("players").doc(socket.firebaseUid);
+
+        let newFroKoins = 0;
+        let newKoKash = 0;
+
+        await adminDb.runTransaction(async (transaction) => {
+            const snapshot = await transaction.get(playerRef);
+
+            if (!snapshot.exists) {
+                throw new Error("Player account not found.");
+            }
+
+            const playerData = snapshot.data();
+
+            const ownedWeapons = Array.isArray(playerData.ownedWeapons)
+                ? playerData.ownedWeapons
+                : [];
+
+            if (ownedWeapons.includes(cleanItemId)) {
+                throw new Error("Item already owned.");
+            }
+
+            const currentFroKoins = Number(playerData.frokoins || 0);
+            const currentKoKash = Number(playerData.kokash || 0);
+
+            if (!Number.isFinite(currentFroKoins) || !Number.isFinite(currentKoKash)) {
+                throw new Error("Invalid account balance.");
+            }
+
+            if (item.priceType === "FroKoins") {
+
+                if (item.price > currentFroKoins) {
+                    throw new Error("Not enough FroKoins.");
+                }
+
+                newFroKoins = currentFroKoins - item.price;
+                newKoKash = currentKoKash;
+
+                transaction.update(playerRef, {
+                    ownedWeapons: FieldValue.arrayUnion(cleanItemId),
+                    frokoins: newFroKoins
                 });
-        } else {  
-            actualKoKash -= item.price;
-            playerData.kokash = actualKoKash;
-            await playerRef.update({
-                ownedWeapons: FieldValue.arrayUnion(cleanItemId),
-                kokash: actualKoKash
-            });
-            
-        }
-    }
-        
+
+            } else if (item.priceType === "KoKash") {
+
+                if (item.price > currentKoKash) {
+                    throw new Error("Not enough KoKash.");
+                }
+
+                newKoKash = currentKoKash - item.price;
+                newFroKoins = currentFroKoins;
+
+                transaction.update(playerRef, {
+                    ownedWeapons: FieldValue.arrayUnion(cleanItemId),
+                    kokash: newKoKash
+                });
+
+            } else {
+                throw new Error("Item has an invalid price type.");
+            }
+        });
 
         return callback?.({
-            success: true
+            success: true,
+            frokoins: newFroKoins,
+            kokash: newKoKash
         });
 
     } catch (error) {
-        console.error(
-            "Purchase request error:",
-            error
-        );
-
+        console.error("Purchase request error:", error);
         return callback?.({
             success: false,
-            error: "Purchase request failed."
+            error: error.message || "Purchase request failed."
         });
     }
-});
-        
+});        
         socket.on("setGameMode", (mode) => {
     const roomCode = socket.roomCode;
     const room = rooms[roomCode];
