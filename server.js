@@ -2653,6 +2653,149 @@ io.on(
             socket.emit("pongCheck");
         });
 
+        socket.on("claimMailboxReward", async ({ messageId }, callback) => {
+    try {
+        if (!socket.firebaseUid) {
+            return callback?.({
+                success: false,
+                error: "You are not authenticated."
+            });
+        }
+
+        if (
+            typeof messageId !== "string" ||
+            !messageId.trim()
+        ) {
+            return callback?.({
+                success: false,
+                error: "Invalid mailbox message."
+            });
+        }
+
+        const cleanMessageId =
+            messageId.trim();
+
+        const playerRef =
+            adminDb
+                .collection("players")
+                .doc(socket.firebaseUid);
+
+        const playerSnapshot =
+            await playerRef.get();
+
+        if (!playerSnapshot.exists) {
+            return callback?.({
+                success: false,
+                error: "Player account not found."
+            });
+        }
+
+        const playerData =
+            playerSnapshot.data();
+
+        const mailbox =
+            Array.isArray(playerData.mailbox)
+                ? playerData.mailbox
+                : [];
+
+        const message =
+            mailbox.find(
+                (item) =>
+                    item &&
+                    item.id === cleanMessageId
+            );
+
+        if (!message) {
+            return callback?.({
+                success: false,
+                error: "Mailbox message not found."
+            });
+        }
+
+        if (message.claimed) {
+            return callback?.({
+                success: false,
+                error: "Reward already claimed."
+            });
+        }
+
+        const reward =
+            message.reward || {};
+
+        const frokoinsReward =
+            Number(reward.frokoins || 0);
+
+        const kokashReward =
+            Number(reward.kokash || 0);
+
+        const ownedWeapon =
+            typeof reward.weapon === "string"
+                ? reward.weapon
+                : null;
+
+        const updatedMailbox =
+            mailbox.map((item) => {
+
+                if (
+                    !item ||
+                    item.id !== cleanMessageId
+                ) {
+                    return item;
+                }
+
+                return {
+                    ...item,
+                    claimed: true
+                };
+
+            });
+
+        const updates = {
+            mailbox: updatedMailbox
+        };
+
+        if (frokoinsReward > 0) {
+            updates.frokoins =
+                Number(playerData.frokoins || 0) +
+                frokoinsReward;
+        }
+
+        if (kokashReward > 0) {
+            updates.kokash =
+                Number(playerData.kokash || 0) +
+                kokashReward;
+        }
+
+        if (ownedWeapon) {
+            updates.ownedWeapons =
+                FieldValue.arrayUnion(
+                    ownedWeapon
+                );
+        }
+
+        await playerRef.update(
+            updates
+        );
+
+        return callback?.({
+            success: true
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Mailbox claim error:",
+            error
+        );
+
+        return callback?.({
+            success: false,
+            error: "Failed to claim mailbox reward."
+        });
+
+    }
+});
+
         socket.on("purchaseItem", async ({ itemId }, callback) => {
     try {
         // Make sure Firebase authentication happened first.
