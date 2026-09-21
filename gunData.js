@@ -43,7 +43,24 @@ const GunData = {
 
     damageInterval: 100,
     ammoInterval: 100,
-},    
+},   
+
+  MachineGun: {
+    shopImg: "Assets/mg.svg",
+    description: "Powerful beam that hits multiple enemies.",
+    maker: "KernWerk Industries",
+    
+    damage: 2,
+    ammo: 100,
+
+    reloadTime: 10000,
+
+    price: 450,
+    priceType: "KoKash",
+
+    damageInterval: 10,
+    ammoInterval: 10,
+  },
 };
 
 if (typeof module !== "undefined") {
