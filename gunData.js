@@ -67,13 +67,13 @@ const GunData = {
     description: "Fires a black hole that pulls in players and bullets before exploding.",
     maker: "KernWerk Industries",
 
-    damage: 20,
+    damage: 10,
     ammo: 1,
 
-    reloadTime: 7500,
+    reloadTime: 8500,
     fireRate: 1000,
 
-    bulletSpeed: 8,
+    bulletSpeed: 7,
 
     price: 750,
     priceType: "KoKash",
