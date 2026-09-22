@@ -78,12 +78,12 @@ const GunData = {
     price: 750,
     priceType: "KoKash",
 
-    vortexRadius: 100,
+    vortexRadius: 35,
     vortexDuration: 2000,
     vortexDamage: 5,
     vortexDamageInterval: 100,
 
-    explosionRadius: 140,
+    explosionRadius: 50,
     explosionDamage: 20,
     explosionForce: 12
 },
