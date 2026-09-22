@@ -4180,6 +4180,8 @@ if (player.ammo === 0) {
 sendGameState(
     roomCode
 );
+    }
+        );
 
         // ========================================
 // STOP SHOOTING
