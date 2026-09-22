@@ -61,6 +61,32 @@ const GunData = {
     bulletSpeed: 10,
     fireRate: 100
   },
+
+  VortexCannon: {
+    shopImg: "Assets/vortexCannon.png",
+    description: "Fires a black hole that pulls in players and bullets before exploding.",
+    maker: "KernWerk Industries",
+
+    damage: 20,
+    ammo: 1,
+
+    reloadTime: 6000,
+    fireRate: 1000,
+
+    bulletSpeed: 4,
+
+    price: 750,
+    priceType: "KoKash",
+
+    vortexRadius: 100,
+    vortexDuration: 2000,
+    vortexDamage: 5,
+    vortexDamageInterval: 100,
+
+    explosionRadius: 140,
+    explosionDamage: 20,
+    explosionForce: 12
+},
 };
 
 if (typeof module !== "undefined") {
