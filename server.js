@@ -4951,6 +4951,8 @@ setInterval(
 
                     if (player.spectating) continue;
 
+                    if (playerId === vortex.owner) continue;
+
                     const dx =
                         vortex.x -
                         player.x;
@@ -5111,6 +5113,8 @@ setInterval(
 
                         if (player.spectating) continue;
 
+                        if (playerId === vortex.owner) continue;
+
                         const dx =
                             vortex.x -
                             player.x;
@@ -5210,6 +5214,8 @@ setInterval(
                         if (player.dead) continue;
 
                         if (player.spectating) continue;
+
+                        if (playerId === vortex.owner) continue;
 
                         const dx =
                             player.x -
