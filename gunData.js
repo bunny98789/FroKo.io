@@ -73,14 +73,14 @@ const GunData = {
     reloadTime: 8500,
     fireRate: 1000,
 
-    bulletSpeed: 4,
+    bulletSpeed: 6,
 
     price: 750,
     priceType: "KoKash",
 
     vortexRadius: 35,
     vortexPullRadius: 75,
-    vortexDuration: 2000,
+    vortexDuration: 3500,
     vortexDamage: 5,
     vortexDamageInterval: 100,
 
