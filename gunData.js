@@ -58,8 +58,7 @@ const GunData = {
     price: 450,
     priceType: "KoKash",
 
-    damageInterval: 10,
-    ammoInterval: 10,
+    fireRate: 10
   },
 };
 
