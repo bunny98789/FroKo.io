@@ -4984,7 +4984,7 @@ setInterval(
                             distance /
                             vortex.pullRadius
                         ) *
-                        20.0;
+                        10.0;
 
                     player.x +=
                         (
@@ -5060,13 +5060,13 @@ setInterval(
                     }
 
                     const strength =
-                        12.0 +
+                        8.0 +
                         (
                             1 -
                             distance /
                             vortex.pullRadius
                         ) *
-                        25.0;
+                        15.0;
 
                     bullet.x +=
                         (
