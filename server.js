@@ -5420,11 +5420,6 @@ setInterval(
                     room.vortices
                 );
 
-                io.to(roomCode).emit(
-                    "updatePlayers",
-                    room.players
-                );
-
             }
 
         }
