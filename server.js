@@ -312,6 +312,8 @@ ammo: GunData.Pistol.ammo,
 
 reloading: false,
 
+nextShotAt: 0,
+
 beamActive: false,
 beamTargets: {},
 beamLength: 600,
@@ -2183,6 +2185,15 @@ function processFoFroBeam(
 
     const gun =
         getPlayerGun(player);
+
+    const now = Date.now();
+
+if (now < player.nextShotAt) {
+    return;
+}
+
+player.nextShotAt =
+    now + gun.fireRate;
 
     // ====================================
     // Ammo check
