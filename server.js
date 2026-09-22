@@ -4092,6 +4092,8 @@ if (player.gun === "VortexCannon") {
 
     }
 
+    sendGameState(roomCode);
+
     return;
 }
 
@@ -4756,9 +4758,6 @@ if (hitObstacle) {
                         room.gameState === "suddenDeath"
                         ? SUDDEN_DEATH_HEALTH
                         : bullet.damage;
-
-                        // Immediately tell clients about damage
-                        sendGameState(roomCode);
 
                         // ================================
                         // DEATH
