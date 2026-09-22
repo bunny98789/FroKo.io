@@ -3809,6 +3809,115 @@ function drawGame() {
         }
     );
 
+    // ========================================
+// DRAW VORTICES
+// ========================================
+
+for (const id in vortices) {
+
+    const vortex =
+        vortices[id];
+
+    if (!vortex) continue;
+
+    const radius =
+        vortex.radius || 100;
+
+    const rotation =
+        vortex.rotation || 0;
+
+    ctx.save();
+
+    ctx.translate(
+        vortex.x,
+        vortex.y
+    );
+
+    // Outer gravitational glow
+    ctx.shadowColor =
+        "black";
+
+    ctx.shadowBlur =
+        25;
+
+    // Black hole
+    ctx.fillStyle =
+        "black";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // Rotating rings
+    ctx.shadowBlur =
+        12;
+
+    ctx.strokeStyle =
+        "#777";
+
+    ctx.lineWidth =
+        3;
+
+    for (
+        let ring = 0;
+        ring < 3;
+        ring++
+    ) {
+
+        ctx.save();
+
+        ctx.rotate(
+            rotation +
+            ring *
+            (Math.PI / 3)
+        );
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+            0,
+            0,
+            radius * 0.9,
+            radius * 0.25,
+            0,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+
+    }
+
+    // Dark center
+    ctx.fillStyle =
+        "#050505";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        radius * 0.65,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
     // ====================================
 // FOFROBEAM VISUAL
 // ====================================
