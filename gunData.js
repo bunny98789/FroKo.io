@@ -70,7 +70,7 @@ const GunData = {
     damage: 20,
     ammo: 1,
 
-    reloadTime: 10000,
+    reloadTime: 8500,
     fireRate: 1000,
 
     bulletSpeed: 4,
