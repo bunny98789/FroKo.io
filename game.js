@@ -692,6 +692,7 @@ let socket = null;
 
 let players = {};
 let bullets = {};
+let vertices = {};
 let obstacles = [];
 
 let myPlayerId = null;
@@ -2315,6 +2316,7 @@ socket.on(
 
             players = {};
             bullets = {};
+            vortices = {};
 
             connectBtn.innerText =
                 "Connect to Server";
@@ -2585,6 +2587,22 @@ socket.on(
 
         }
     );
+
+    /*
+ * =========================
+ * VORTICES
+ * =========================
+ */
+
+socket.on(
+    "updateVortices",
+    (newVortices) => {
+
+        vortices =
+            newVortices;
+
+    }
+);
 
 
     /*
@@ -3889,6 +3907,130 @@ for (const playerId in players) {
     ctx.stroke();
 
     ctx.restore();
+}
+
+    /*
+ * =========================
+ * DRAW VORTICES
+ * =========================
+ */
+
+for (const id in vortices) {
+
+    const vortex =
+        vortices[id];
+
+    if (!vortex) {
+        continue;
+    }
+
+    const rotation =
+        vortex.rotation || 0;
+
+    const radius =
+        vortex.radius || 50;
+
+    ctx.save();
+
+    ctx.translate(
+        vortex.x,
+        vortex.y
+    );
+
+    /*
+     * Outer glow
+     */
+
+    ctx.shadowColor =
+        "black";
+
+    ctx.shadowBlur =
+        25;
+
+    /*
+     * Black hole
+     */
+
+    ctx.fillStyle =
+        "black";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    /*
+     * Rotating vortex rings
+     */
+
+    ctx.shadowBlur =
+        10;
+
+    ctx.strokeStyle =
+        "#777";
+
+    ctx.lineWidth =
+        3;
+
+    for (
+        let ring = 0;
+        ring < 3;
+        ring++
+    ) {
+
+        ctx.save();
+
+        ctx.rotate(
+            rotation +
+            ring * (Math.PI / 3)
+        );
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+            0,
+            0,
+            radius * 0.9,
+            radius * 0.25,
+            0,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+
+    }
+
+    /*
+     * Center
+     */
+
+    ctx.fillStyle =
+        "#050505";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        radius * 0.65,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
 }
 
 
