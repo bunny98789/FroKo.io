@@ -4063,6 +4063,9 @@ if (player.gun === "VortexCannon") {
         radius:
             gun.vortexRadius || 100,
 
+        pullRadius:
+            gun.vortexPullRadius || 75,
+
         duration:
             gun.vortexDuration || 2000,
 
@@ -4964,7 +4967,7 @@ setInterval(
 
                     if (
                         distance >
-                        vortex.radius
+                        vortex.pullRadius
                     ) {
                         continue;
                     }
@@ -4979,7 +4982,7 @@ setInterval(
                         (
                             1 -
                             distance /
-                            vortex.radius
+                            vortex.pullRadius
                         ) *
                         1.5;
 
@@ -5017,7 +5020,7 @@ setInterval(
                         );
 
                 }
-/*
+
                 // ====================================
                 // PULL BULLETS
                 // ====================================
@@ -5047,7 +5050,7 @@ setInterval(
 
                     if (
                         distance >
-                        vortex.radius
+                        vortex.pullRadius
                     ) {
                         continue;
                     }
@@ -5061,7 +5064,7 @@ setInterval(
                         (
                             1 -
                             distance /
-                            vortex.radius
+                            vortex.pullRadius
                         ) *
                         2.0;
 
@@ -5079,7 +5082,7 @@ setInterval(
                         ) *
                         strength;
 
-                } */
+                }
 
                 // ====================================
                 // VORTEX DAMAGE
