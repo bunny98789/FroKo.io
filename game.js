@@ -2811,6 +2811,38 @@ function updateAim() {
 
 }
 
+let shootTimer = null;
+
+function startShooting() {
+
+    if (shootTimer) return;
+
+    shooting = true;
+
+    // Fire immediately
+    shoot();
+
+    // Keep requesting shots while held
+    shootTimer = setInterval(() => {
+
+        if (!shooting) return;
+
+        shoot();
+
+    }, 25);
+}
+
+function stopShooting() {
+
+    shooting = false;
+
+    if (shootTimer) {
+
+        clearInterval(shootTimer);
+        shootTimer = null;
+
+    }
+}
 
 /*
  * =========================
@@ -2859,11 +2891,7 @@ canvas.addEventListener(
         shotLocked =
             true;
 
-        shooting =
-            true;
-
-
-        shoot();
+        startShooting();
 
     }
 );
@@ -2875,7 +2903,7 @@ window.addEventListener(
 
         if (e.button === 0) {
 
-            shooting = false;
+            stopShooting();
             shotLocked = false;
 
             if (
