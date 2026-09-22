@@ -611,6 +611,8 @@ function resetPlayerForRound(
 
     player.reloading = false;
 
+    player.nextShotAt = 0;
+
 player.beamActive = false;
 player.beamTargets = {};
 player.beamSlowed = false;
@@ -2186,14 +2188,6 @@ function processFoFroBeam(
     const gun =
         getPlayerGun(player);
 
-    const now = Date.now();
-
-if (now < player.nextShotAt) {
-    return;
-}
-
-player.nextShotAt =
-    now + gun.fireRate;
 
     // ====================================
     // Ammo check
@@ -3140,6 +3134,8 @@ socket.on("selectWeapon", (gunName) => {
     player.reloading =
         false;
 
+    player.nextShotAt = 0;
+
     player.beamActive =
         false;
 
@@ -3973,6 +3969,15 @@ return;
 
                 const gun =
                     getPlayerGun(player);
+
+                 const now = Date.now();
+
+                if (now < player.nextShotAt) {
+                    return;
+                }
+
+                player.nextShotAt =
+                        now + gun.fireRate;
 
                 player.ammo--;
 
