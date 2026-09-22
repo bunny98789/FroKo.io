@@ -385,6 +385,8 @@ function createRoom() {
 
         nextBulletId: 1,
 
+        nextVortexId: 1,
+
         host: null,
 
         settings: {
@@ -455,6 +457,11 @@ function sendGameState(roomCode) {
         "updateBullets",
         room.bullets
     );
+
+    io.to(roomCode).emit(
+    "updateVortices",
+    room.vortices
+);
 
     io.to(roomCode).emit(
         "gameState",
@@ -736,6 +743,9 @@ function startCountdown(
 
     room.bullets =
         {};
+
+    room.vortices =
+    {};
 
    // ====================================
 // Prepare players
@@ -1395,6 +1405,9 @@ function startSuddenDeath(
     room.bullets =
         {};
 
+    room.vortices =
+    {};
+
     const tiedIds =
         new Set(
             tiedPlayers.map(
@@ -1582,6 +1595,9 @@ room.winningTeam =
 
     room.bullets =
         {};
+
+    room.vortices =
+    {};
 
     // Record any remaining survival time
     for (
@@ -3987,98 +4003,182 @@ return;
                     return;
                 }
 
-                player.nextShotAt =
-                        now + gun.fireRate;
+               player.nextShotAt =
+    now + gun.fireRate;
 
-                player.ammo--;
+player.ammo--;
 
-                const bulletId =
-                    String(
-                        room.nextBulletId++
-                    );
+const angle =
+    player.angle || 0;
 
-                const angle =
-                    player.angle || 0;
+const startDistance =
+    25;
 
-                const startDistance =
-                    25;
+// ========================================
+// VORTEX CANNON
+// ========================================
 
-                      room.bullets[
-            bulletId
-        ] = {
+if (player.gun === "VortexCannon") {
 
-            id:
-                bulletId,
+    const vortexId =
+        String(
+            room.nextVortexId++
+        );
 
-            x:
-                player.x +
-                Math.cos(angle) *
-                startDistance,
+    room.vortices[
+        vortexId
+    ] = {
 
-            y:
-                player.y +
-                Math.sin(angle) *
-                startDistance,
+        id:
+            vortexId,
 
-            previousX:
-                player.x +
-                Math.cos(angle) *
-                startDistance,
+        x:
+            player.x +
+            Math.cos(angle) *
+            startDistance,
 
-            previousY:
-                player.y +
-                Math.sin(angle) *
-                startDistance,
+        y:
+            player.y +
+            Math.sin(angle) *
+            startDistance,
 
-            angle:
-                angle,
+        angle:
+            angle,
 
-            owner:
-                socket.id,
+        rotation:
+            0,
 
-            createdAt:
-                Date.now(),
+        owner:
+            socket.id,
 
-            damage:
-                gun.damage,
+        createdAt:
+            now,
 
-            speed:
-                gun.bulletSpeed,
+        lastDamageAt:
+            now,
 
-            maxBounces:
-                gun.maxBounces || 0,
+        speed:
+            gun.bulletSpeed || 4,
 
-            bounces:
-                0,
+        radius:
+            gun.vortexRadius || 100,
 
-            bounceDamageReduction:
-                gun.bounceDamageReduction || 0,
-            
-            gun: player.gun,
+        duration:
+            gun.vortexDuration || 2000,
 
-            length:
-                player.gun === "JackerRifle"
-                    ? 22
-                    : 10
+        damage:
+            gun.vortexDamage || 5,
 
-            
+        damageInterval:
+            gun.vortexDamageInterval || 100,
 
-        };
+        explosionRadius:
+            gun.explosionRadius || 140,
 
-        if (player.ammo === 0) {
+        explosionDamage:
+            gun.explosionDamage || 20,
 
-            startReload(
-                roomCode,
-                socket.id
-            );
+        explosionForce:
+            gun.explosionForce || 12
 
-        }
+    };
 
-        sendGameState(
-            roomCode
+    if (player.ammo === 0) {
+
+        startReload(
+            roomCode,
+            socket.id
         );
 
     }
+
+    sendGameState(
+        roomCode
+    );
+
+    return;
+}
+
+// ========================================
+// NORMAL BULLET
+// ========================================
+
+const bulletId =
+    String(
+        room.nextBulletId++
+    );
+
+room.bullets[
+    bulletId
+] = {
+
+    id:
+        bulletId,
+
+    x:
+        player.x +
+        Math.cos(angle) *
+        startDistance,
+
+    y:
+        player.y +
+        Math.sin(angle) *
+        startDistance,
+
+    previousX:
+        player.x +
+        Math.cos(angle) *
+        startDistance,
+
+    previousY:
+        player.y +
+        Math.sin(angle) *
+        startDistance,
+
+    angle:
+        angle,
+
+    owner:
+        socket.id,
+
+    createdAt:
+        Date.now(),
+
+    damage:
+        gun.damage,
+
+    speed:
+        gun.bulletSpeed,
+
+    maxBounces:
+        gun.maxBounces || 0,
+
+    bounces:
+        0,
+
+    bounceDamageReduction:
+        gun.bounceDamageReduction || 0,
+
+    gun:
+        player.gun,
+
+    length:
+        player.gun === "JackerRifle"
+            ? 22
+            : 10
+};
+
+if (player.ammo === 0) {
+
+    startReload(
+        roomCode,
+        socket.id
+    );
+
+}
+
+sendGameState(
+    roomCode
 );
 
         // ========================================
@@ -4722,6 +4822,606 @@ if (hitObstacle) {
                     }
 
                 }
+
+            }
+
+        }
+
+    },
+    1000 / 60
+);
+
+// ========================================
+// VORTEX LOOP
+// ========================================
+
+setInterval(
+    () => {
+
+        const now =
+            Date.now();
+
+        for (
+            const roomCode in rooms
+        ) {
+
+            const room =
+                rooms[roomCode];
+
+            // ====================================
+            // Vortices only exist during combat
+            // ====================================
+
+            if (
+                room.gameState !== "playing" &&
+                room.gameState !== "suddenDeath"
+            ) {
+
+                room.vortices =
+                    {};
+
+                continue;
+
+            }
+
+            let changed =
+                false;
+
+            // ====================================
+            // Process every vortex
+            // ====================================
+
+            for (
+                const vortexId in room.vortices
+            ) {
+
+                const vortex =
+                    room.vortices[vortexId];
+
+                if (!vortex) {
+                    continue;
+                }
+
+                changed = true;
+
+                // ====================================
+                // Move vortex
+                // ====================================
+
+                vortex.x +=
+                    Math.cos(vortex.angle) *
+                    vortex.speed;
+
+                vortex.y +=
+                    Math.sin(vortex.angle) *
+                    vortex.speed;
+
+                // ====================================
+                // Slowly rotate
+                // ====================================
+
+                vortex.rotation +=
+                    0.035;
+
+                // ====================================
+                // Keep vortex inside map
+                // ====================================
+
+                if (vortex.x < 0) {
+
+                    vortex.x = 0;
+                    vortex.angle =
+                        Math.PI - vortex.angle;
+
+                } else if (vortex.x > 600) {
+
+                    vortex.x = 600;
+                    vortex.angle =
+                        Math.PI - vortex.angle;
+
+                }
+
+                if (vortex.y < 0) {
+
+                    vortex.y = 0;
+                    vortex.angle =
+                        -vortex.angle;
+
+                } else if (vortex.y > 400) {
+
+                    vortex.y = 400;
+                    vortex.angle =
+                        -vortex.angle;
+
+                }
+
+                // ====================================
+                // PULL PLAYERS
+                // ====================================
+
+                for (
+                    const playerId in room.players
+                ) {
+
+                    const player =
+                        room.players[playerId];
+
+                    if (!player) continue;
+
+                    if (player.dead) continue;
+
+                    if (player.spectating) continue;
+
+                    const dx =
+                        vortex.x -
+                        player.x;
+
+                    const dy =
+                        vortex.y -
+                        player.y;
+
+                    const distance =
+                        Math.sqrt(
+                            dx * dx +
+                            dy * dy
+                        );
+
+                    if (
+                        distance >
+                        vortex.radius
+                    ) {
+                        continue;
+                    }
+
+                    if (distance < 0.1) {
+                        continue;
+                    }
+
+                    // Stronger pull closer to center
+                    const strength =
+                        0.5 +
+                        (
+                            1 -
+                            distance /
+                            vortex.radius
+                        ) *
+                        1.5;
+
+                    player.x +=
+                        (
+                            dx /
+                            distance
+                        ) *
+                        strength;
+
+                    player.y +=
+                        (
+                            dy /
+                            distance
+                        ) *
+                        strength;
+
+                    // Keep player inside map
+                    player.x =
+                        Math.max(
+                            PLAYER_RADIUS,
+                            Math.min(
+                                600 - PLAYER_RADIUS,
+                                player.x
+                            )
+                        );
+
+                    player.y =
+                        Math.max(
+                            PLAYER_RADIUS,
+                            Math.min(
+                                400 - PLAYER_RADIUS,
+                                player.y
+                            )
+                        );
+
+                }
+
+                // ====================================
+                // PULL BULLETS
+                // ====================================
+
+                for (
+                    const bulletId in room.bullets
+                ) {
+
+                    const bullet =
+                        room.bullets[bulletId];
+
+                    if (!bullet) continue;
+
+                    const dx =
+                        vortex.x -
+                        bullet.x;
+
+                    const dy =
+                        vortex.y -
+                        bullet.y;
+
+                    const distance =
+                        Math.sqrt(
+                            dx * dx +
+                            dy * dy
+                        );
+
+                    if (
+                        distance >
+                        vortex.radius
+                    ) {
+                        continue;
+                    }
+
+                    if (distance < 0.1) {
+                        continue;
+                    }
+
+                    const strength =
+                        0.8 +
+                        (
+                            1 -
+                            distance /
+                            vortex.radius
+                        ) *
+                        2.0;
+
+                    bullet.x +=
+                        (
+                            dx /
+                            distance
+                        ) *
+                        strength;
+
+                    bullet.y +=
+                        (
+                            dy /
+                            distance
+                        ) *
+                        strength;
+
+                }
+
+                // ====================================
+                // VORTEX DAMAGE
+                // 5 damage every 100ms
+                // ====================================
+
+                if (
+                    now -
+                    vortex.lastDamageAt >=
+                    vortex.damageInterval
+                ) {
+
+                    vortex.lastDamageAt =
+                        now;
+
+                    for (
+                        const playerId in room.players
+                    ) {
+
+                        const player =
+                            room.players[playerId];
+
+                        if (!player) continue;
+
+                        if (player.dead) continue;
+
+                        if (player.spectating) continue;
+
+                        const dx =
+                            vortex.x -
+                            player.x;
+
+                        const dy =
+                            vortex.y -
+                            player.y;
+
+                        const distance =
+                            Math.sqrt(
+                                dx * dx +
+                                dy * dy
+                            );
+
+                        if (
+                            distance >
+                            vortex.radius
+                        ) {
+                            continue;
+                        }
+
+                        player.health -=
+                            room.gameState === "suddenDeath"
+                                ? SUDDEN_DEATH_HEALTH
+                                : vortex.damage;
+
+                        if (
+                            player.health <= 0
+                        ) {
+
+                            player.health =
+                                0;
+
+                            player.dead =
+                                true;
+
+                            player.reloading =
+                                false;
+
+                            recordSurvivalTime(
+                                player
+                            );
+
+                            player.deaths++;
+
+                            const owner =
+                                room.players[
+                                    vortex.owner
+                                ];
+
+                            if (
+                                owner &&
+                                owner !== player
+                            ) {
+
+                                owner.kills++;
+
+                            }
+
+                            console.log(
+                                `${player.username} died to Vortex Cannon`
+                            );
+
+                            checkRoundEnd(
+                                roomCode
+                            );
+
+                        }
+
+                    }
+
+                    sendGameState(
+                        roomCode
+                    );
+
+                }
+
+                // ====================================
+                // EXPLOSION AFTER 2 SECONDS
+                // ====================================
+
+                if (
+                    now -
+                    vortex.createdAt >=
+                    vortex.duration
+                ) {
+
+                    // ====================================
+                    // Damage + knockback players
+                    // ====================================
+
+                    for (
+                        const playerId in room.players
+                    ) {
+
+                        const player =
+                            room.players[playerId];
+
+                        if (!player) continue;
+
+                        if (player.dead) continue;
+
+                        if (player.spectating) continue;
+
+                        const dx =
+                            player.x -
+                            vortex.x;
+
+                        const dy =
+                            player.y -
+                            vortex.y;
+
+                        const distance =
+                            Math.sqrt(
+                                dx * dx +
+                                dy * dy
+                            );
+
+                        if (
+                            distance >
+                            vortex.explosionRadius
+                        ) {
+                            continue;
+                        }
+
+                        // ====================================
+                        // Explosion damage
+                        // ====================================
+
+                        player.health -=
+                            room.gameState === "suddenDeath"
+                                ? SUDDEN_DEATH_HEALTH
+                                : vortex.explosionDamage;
+
+                        // ====================================
+                        // Random knockback direction
+                        // ====================================
+
+                        const randomAngle =
+                            Math.random() *
+                            Math.PI *
+                            2;
+
+                        player.x +=
+                            Math.cos(randomAngle) *
+                            vortex.explosionForce;
+
+                        player.y +=
+                            Math.sin(randomAngle) *
+                            vortex.explosionForce;
+
+                        player.x =
+                            Math.max(
+                                PLAYER_RADIUS,
+                                Math.min(
+                                    600 - PLAYER_RADIUS,
+                                    player.x
+                                )
+                            );
+
+                        player.y =
+                            Math.max(
+                                PLAYER_RADIUS,
+                                Math.min(
+                                    400 - PLAYER_RADIUS,
+                                    player.y
+                                )
+                            );
+
+                        // ====================================
+                        // Death
+                        // ====================================
+
+                        if (
+                            player.health <= 0
+                        ) {
+
+                            player.health =
+                                0;
+
+                            player.dead =
+                                true;
+
+                            player.reloading =
+                                false;
+
+                            recordSurvivalTime(
+                                player
+                            );
+
+                            player.deaths++;
+
+                            const owner =
+                                room.players[
+                                    vortex.owner
+                                ];
+
+                            if (
+                                owner &&
+                                owner !== player
+                            ) {
+
+                                owner.kills++;
+
+                            }
+
+                            console.log(
+                                `${player.username} died in Vortex explosion`
+                            );
+
+                        }
+
+                    }
+
+                    // ====================================
+                    // Launch all nearby bullets randomly
+                    // ====================================
+
+                    for (
+                        const bulletId in room.bullets
+                    ) {
+
+                        const bullet =
+                            room.bullets[bulletId];
+
+                        if (!bullet) continue;
+
+                        const dx =
+                            bullet.x -
+                            vortex.x;
+
+                        const dy =
+                            bullet.y -
+                            vortex.y;
+
+                        const distance =
+                            Math.sqrt(
+                                dx * dx +
+                                dy * dy
+                            );
+
+                        if (
+                            distance >
+                            vortex.explosionRadius
+                        ) {
+                            continue;
+                        }
+
+                        // Random direction
+                        bullet.angle =
+                            Math.random() *
+                            Math.PI *
+                            2;
+
+                        // Make them fly outward quickly
+                        bullet.speed =
+                            Math.max(
+                                bullet.speed,
+                                12
+                            );
+
+                        // Prevent the vortex movement from
+                        // creating a giant collision segment.
+                        bullet.previousX =
+                            bullet.x;
+
+                        bullet.previousY =
+                            bullet.y;
+
+                        // Give launched bullets a fresh lifetime
+                        bullet.createdAt =
+                            now;
+
+                    }
+
+                    console.log(
+                        `Vortex ${vortexId} exploded in room ${roomCode}`
+                    );
+
+                    delete room.vortices[
+                        vortexId
+                    ];
+
+                    sendGameState(
+                        roomCode
+                    );
+
+                    checkRoundEnd(
+                        roomCode
+                    );
+
+                }
+
+            }
+
+            // ====================================
+            // Broadcast vortex movement
+            // ====================================
+
+            if (changed) {
+
+                io.to(roomCode).emit(
+                    "updateVortices",
+                    room.vortices
+                );
+
+                io.to(roomCode).emit(
+                    "updatePlayers",
+                    room.players
+                );
 
             }
 
