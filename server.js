@@ -4092,10 +4092,6 @@ if (player.gun === "VortexCannon") {
 
     }
 
-    sendGameState(
-        roomCode
-    );
-
     return;
 }
 
@@ -5185,10 +5181,6 @@ setInterval(
 
                     }
 
-                    sendGameState(
-                        roomCode
-                    );
-
                 }
 
                 // ====================================
@@ -5397,10 +5389,6 @@ setInterval(
                         vortexId
                     ];
 
-                    sendGameState(
-                        roomCode
-                    );
-
                     checkRoundEnd(
                         roomCode
                     );
@@ -5425,7 +5413,7 @@ setInterval(
         }
 
     },
-    1000 / 60
+    1000 / 30
 );
 
 // ========================================
