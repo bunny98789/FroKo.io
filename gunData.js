@@ -50,8 +50,8 @@ const GunData = {
     description: "Shoots very fast, low damage, high ammo.",
     maker: "KernWerk Industries",
     
-    damage: 2,
-    ammo: 100,
+    damage: 4,
+    ammo: 150,
 
     reloadTime: 10000,
 
