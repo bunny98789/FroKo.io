@@ -4978,13 +4978,13 @@ setInterval(
 
                     // Stronger pull closer to center
                     const strength =
-                        0.5 +
+                        1.0 +
                         (
                             1 -
                             distance /
                             vortex.pullRadius
                         ) *
-                        1.5;
+                        4.0;
 
                     player.x +=
                         (
@@ -5060,13 +5060,13 @@ setInterval(
                     }
 
                     const strength =
-                        0.8 +
+                        2.0 +
                         (
                             1 -
                             distance /
                             vortex.pullRadius
                         ) *
-                        2.0;
+                        6.0;
 
                     bullet.x +=
                         (
