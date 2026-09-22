@@ -692,7 +692,7 @@ let socket = null;
 
 let players = {};
 let bullets = {};
-let vertices = {};
+let vortices = {};
 let obstacles = [];
 
 let myPlayerId = null;
