@@ -1783,9 +1783,20 @@ function removePlayerFromRoom(
             socket.id
         ) {
 
+              console.log("BULLET DELETED:", {
+    gun: bullet.gun,
+    id: bullet.id,
+    x: bullet.x,
+    y: bullet.y,
+    speed: bullet.speed
+});
+            
+
             delete room.bullets[
                 bulletId
             ];
+
+          
 
         }
 
