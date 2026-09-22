@@ -46,7 +46,7 @@ const GunData = {
 },   
 
   MachineGun: {
-    shopImg: "Assets/mg.svg",
+    shopImg: "Assets/mg.png",
     description: "Shoots very fast, low damage, high ammo.",
     maker: "KernWerk Industries",
     
