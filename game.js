@@ -1764,6 +1764,41 @@ teamModeButton.addEventListener(
 );
 
 
+zombieModeButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !socket ||
+            !socket.connected
+        ) {
+            return;
+        }
+
+        if (
+            currentHost !==
+            myPlayerId
+        ) {
+            return;
+        }
+
+        if (
+            currentGameState !==
+            "lobby"
+        ) {
+            return;
+        }
+
+        socket.emit(
+            "setGameMode",
+            "zombie"
+        );
+
+    }
+);
+
+
+
 switchTeamButton.addEventListener(
     "click",
     () => {
@@ -1849,6 +1884,18 @@ function updateGameModeUI() {
 
     teamModeButton.disabled =
         !isHost;
+
+    zombieModeButton.disabled =
+        !isHost;
+
+    ffaModeButton.checked =
+    currentGameMode === "ffa";
+
+teamModeButton.checked =
+    currentGameMode === "team";
+
+zombieModeButton.checked =
+    currentGameMode === "zombie";
 
     /*
      * Team controls.
