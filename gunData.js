@@ -67,7 +67,7 @@ const GunData = {
     description: "Fires a black hole that pulls in players and bullets before exploding.",
     maker: "KernWerk Industries",
 
-    damage: 10,
+    damage: 5,
     ammo: 1,
 
     reloadTime: 8500,
@@ -79,7 +79,7 @@ const GunData = {
     priceType: "KoKash",
 
     vortexRadius: 70,
-    vortexPullRadius: 200,
+    vortexPullRadius: 150,
     vortexDuration: 3500,
     vortexDamage: 5,
     vortexDamageInterval: 100,
