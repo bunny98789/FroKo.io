@@ -586,6 +586,8 @@ const ffaModeButton =
 const teamModeButton =
     document.getElementById("teamModeButton");
 
+const zombieModeButton = document.getElementById("zombieModeButton");
+
 const teamDisplay =
     document.getElementById("teamDisplay");
 
