@@ -51,6 +51,11 @@ const PLAYER_START_HEALTH = 100;
 const SUDDEN_DEATH_HEALTH = 1;
 
 
+const ZOMBIE_ALPHA_HP_PER_PLAYER = 100;
+const ZOMBIE_INFECTED_HP_PER_PLAYER = 10;
+
+
+
 // ========================================
 // COLORS
 // ========================================
@@ -704,6 +709,78 @@ function recordSurvivalTime(
 }
 
 
+function startZombieMatch(roomCode) {
+
+    const room = rooms[roomCode];
+
+    if (!room) return;
+
+    const playerIds = Object.keys(room.players);
+    const playerCount = playerIds.length;
+
+    if (playerCount < 3) return;
+
+    room.gameToken++;
+    room.gameState = "playing";
+    room.currentRound = 1;
+    room.countdownEndsAt = null;
+    room.roundEndAt = null;
+    room.gameEndAt = null;
+    room.winner = null;
+    room.winningTeam = null;
+
+    room.obstacles = generateObstacles();
+    room.bullets = {};
+    room.vortices = {};
+
+    const survivorHealth =
+        playerCount === 3 ? 75 :
+        playerCount === 4 ? 50 :
+        25;
+
+    const alphaId =
+        playerIds[
+            Math.floor(Math.random() * playerCount)
+        ];
+
+    for (const playerId of playerIds) {
+
+        const player = room.players[playerId];
+
+        if (!player) continue;
+
+        resetPlayerForRound(room, player);
+
+        player.zombie = playerId === alphaId;
+        player.zombieType =
+            playerId === alphaId ? "alpha" : null;
+
+        player.health =
+            playerId === alphaId
+                ? ZOMBIE_ALPHA_HP_PER_PLAYER * playerCount
+                : survivorHealth;
+
+        player.team = null;
+        player.dead = false;
+        player.spectating = false;
+        player.joinedDuringGame = false;
+
+        player.kills = 0;
+        player.deaths = 0;
+        player.roundWins = 0;
+        player.survivalTime = 0;
+        player.roundsParticipated = 0;
+        player.currentRoundStart = Date.now();
+    }
+
+    console.log(
+        `Room ${roomCode}: Zombie Mode started. Alpha: ${alphaId}`
+    );
+
+    sendGameState(roomCode);
+
+}
+
 // ========================================
 // START COUNTDOWN
 // ========================================
@@ -1041,6 +1118,80 @@ if (room.gameMode === "team") {
 
 }
 
+
+function applyZombieDamage(
+    roomCode,
+    room,
+    attacker,
+    target,
+    damage
+) {
+
+    if (
+        room.gameMode !== "zombie" ||
+        !attacker ||
+        !target ||
+        attacker === target ||
+        attacker.dead ||
+        target.dead ||
+        attacker.spectating ||
+        target.spectating
+    ) {
+        return false;
+    }
+
+    // Same-role damage is disabled.
+    if (attacker.zombie === target.zombie) {
+        return true;
+    }
+
+    target.health -= damage;
+
+    if (target.health > 0) {
+        return true;
+    }
+
+    target.health = 0;
+    target.reloading = false;
+    target.beamActive = false;
+    target.beamSlowed = false;
+
+    // Zombie attacks survivor: infect them.
+    if (attacker.zombie && !target.zombie) {
+
+        target.zombie = true;
+        target.zombieType = "infected";
+        target.health =
+            ZOMBIE_INFECTED_HP_PER_PLAYER *
+            Object.keys(room.players).length;
+
+        target.dead = false;
+        target.spectating = false;
+
+        console.log(
+            `${target.username} was infected in room ${roomCode}`
+        );
+
+    } else {
+
+        // Survivor kills zombie: permanent elimination.
+        target.dead = true;
+        target.zombieEliminated = true;
+
+        recordSurvivalTime(target);
+        target.deaths++;
+        attacker.kills++;
+
+        console.log(
+            `${target.username} was eliminated in Zombie Mode`
+        );
+
+    }
+
+    checkRoundEnd(roomCode);
+
+    return true;
+}
 
 // ========================================
 // FINISH ROUND
@@ -2997,7 +3148,7 @@ io.on(
     if (room.host !== socket.id) return;
     if (room.gameState !== "lobby") return;
 
-    if (mode !== "ffa" && mode !== "team") {
+    if (mode !== "ffa" && mode !== "team" && mode !== "zombie") {
         return;
     }
 
@@ -3008,7 +3159,7 @@ io.on(
                  mode
             );
 
-    if (mode === "ffa") {
+    if (mode === "ffa" || mode === "zombie") {
 
         for (const playerId in room.players) {
             room.players[playerId].team = null;
@@ -3482,12 +3633,13 @@ socket.on("selectWeapon", (gunName) => {
                     ).length;
 
                 if (
-                    playerCount < 1
+                    playerCount < 2
                 ) {
 
                     return;
-
                 }
+
+                if (room.gameMode === "zombie" && playerCount < 3) return;
 
                 // Reset game stats
                 for (
@@ -3548,10 +3700,20 @@ socket.on("selectWeapon", (gunName) => {
                     `${room.players[socket.id].username} started game in ${roomCode}`
                 );
 
-                startCountdown(
-                    roomCode,
-                    1
-                );
+                
+        if (room.gameMode === "zombie") {
+
+            startZombieMatch(roomCode);
+
+        } else {
+
+             startCountdown(
+                roomCode,
+                1
+            );
+
+        }
+
 
             }
         );
