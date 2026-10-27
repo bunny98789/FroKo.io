@@ -9,7 +9,8 @@ const GunData = {
     fireRate: 250, // in ms
     bulletSpeed: 10,
     price: 0,
-    priceType: "FroKoins"
+    priceType: "FroKoins",
+    allowedGamemodes: ["ffa", "team", "zombie"]
   },
 
  JackerRifle: {
@@ -25,7 +26,9 @@ const GunData = {
     priceType: "KoKash",
 
     maxBounces: 2,
-    bounceDamageReduction: 25
+    bounceDamageReduction: 25,
+
+   allowedGamemodes: ["ffa", "team", "zombie"]
 },
 
   FoFroBeam: {
@@ -43,6 +46,8 @@ const GunData = {
 
     damageInterval: 100,
     ammoInterval: 100,
+
+    allowedGamemodes: ["ffa", "team"]
 },   
 
   MachineGun: {
@@ -59,7 +64,9 @@ const GunData = {
     priceType: "KoKash",
 
     bulletSpeed: 10,
-    fireRate: 100
+    fireRate: 100,
+
+    allowedGamemodes: ["ffa", "team", "zombie"]
   },
 
   VortexCannon: {
@@ -86,7 +93,9 @@ const GunData = {
 
     explosionRadius: 50,
     explosionDamage: 20,
-    explosionForce: 12
+    explosionForce: 12,
+
+    allowedGamemodes: ["ffa", "team"]
 },
 };
 
