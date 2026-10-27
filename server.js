@@ -4915,6 +4915,30 @@ if (hitObstacle) {
                         BULLET_RADIUS
                     ) {
 
+                        
+                        // ================================
+                        // ZOMBIE MODE DAMAGE
+                        // ================================
+
+                        if (room.gameMode === "zombie") {
+
+                            const attacker =
+                                room.players[bullet.owner];
+
+                            applyZombieDamage(
+                                roomCode,
+                                room,
+                                attacker,
+                                player,
+                                bullet.damage
+                            );
+
+                            delete room.bullets[bulletId];
+
+                            break;
+                        }
+
+
                         // ================================
                         // DAMAGE
                         // ================================
