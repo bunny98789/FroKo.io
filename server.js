@@ -3159,6 +3159,34 @@ io.on(
                  mode
             );
 
+      if (mode === "zombie") {
+
+    for (const playerId in room.players) {
+
+        const player = room.players[playerId];
+
+        if (!player) continue;
+
+        const gun = GunData[player.gun];
+
+        if (
+            !gun ||
+            !gun.allowedGamemodes ||
+            !gun.allowedGamemodes.includes("zombie")
+        ) {
+
+            player.gun = "Pistol";
+            player.ammo = GunData.Pistol.ammo;
+            player.reloading = false;
+            player.nextShotAt = 0;
+            player.beamActive = false;
+            player.beamTargets = {};
+        }
+
+    }
+
+}
+
     if (mode === "ffa" || mode === "zombie") {
 
         for (const playerId in room.players) {
@@ -3191,33 +3219,7 @@ io.on(
 
     }
 
-            if (mode === "zombie") {
-
-    for (const playerId in room.players) {
-
-        const player = room.players[playerId];
-
-        if (!player) continue;
-
-        const gun = GunData[player.gun];
-
-        if (
-            !gun ||
-            !gun.allowedGamemodes ||
-            !gun.allowedGamemodes.includes("zombie")
-        ) {
-
-            player.gun = "Pistol";
-            player.ammo = GunData.Pistol.ammo;
-            player.reloading = false;
-            player.nextShotAt = 0;
-            player.beamActive = false;
-            player.beamTargets = {};
-        }
-
-    }
-
-}
+          
 
     sendGameState(roomCode);
 });
