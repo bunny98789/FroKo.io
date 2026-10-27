@@ -2698,7 +2698,22 @@ function startReload(
     if (player.dead) return;
 
     if (player.spectating) return;
+// ====================================
+// ZOMBIE MODE WEAPON RESTRICTIONS
+// ====================================
 
+const selectedGun = GunData[player.gun];
+
+if (
+    room.gameMode === "zombie" &&
+    (
+        !gun ||
+        !gun.allowedGamemodes ||
+        !gun.allowedGamemodes.includes("zombie")
+    )
+) {
+    return;
+}
     if (player.reloading) return;
 
    const gun =
